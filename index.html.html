@@ -345,6 +345,25 @@ tr:hover .tag{transform:translateY(-1px)}
 .tag.dsc{background:var(--morado);color:#fff}
 
 /* ============================================================
+   RESUMEN SIMPLE — lo primero que ve cualquiera, sin tecnicismos
+   ============================================================ */
+.resumen-simple{display:flex;gap:12px;flex-wrap:wrap;margin-bottom:16px}
+.rs-item{
+  flex:1;min-width:150px;background:var(--papel-os);border-radius:6px;
+  padding:14px 16px 12px;text-align:center;
+}
+.rs-item.destacado{background:var(--tinta);color:#fff}
+.rs-num{font-family:'JetBrains Mono',monospace;font-size:1.6rem;font-weight:700;color:var(--rojo);line-height:1.1}
+.rs-item.destacado .rs-num{color:var(--rojo-cl)}
+.rs-label{font-family:'Barlow Condensed';font-size:.82rem;color:var(--gris-os);margin-top:4px;line-height:1.25}
+.rs-item.destacado .rs-label{color:#C9C2B4}
+.detalle-titulo{
+  font-family:'JetBrains Mono',monospace;font-size:.64rem;font-weight:600;
+  letter-spacing:.09em;text-transform:uppercase;color:var(--gris);
+  margin:4px 0 8px;padding-top:8px;border-top:1.5px dashed var(--linea);
+}
+
+/* ============================================================
    PANEL DE RESULTADO
    ============================================================ */
 .res>div{
@@ -445,9 +464,10 @@ tr:hover .tag{transform:translateY(-1px)}
 
 <div class="wrap">
 
-  <div class="aviso i anim" style="margin:0 0 22px">
-    <b>Versión de prueba local.</b> Los datos viven en la memoria del navegador:
-    si recargas la página se borran. La persistencia llega con Firebase.
+  <div class="aviso w anim" id="avisoConexion" style="display:none;margin:0 0 22px">
+    <b>No se pudo conectar con la base de datos.</b> Puedes seguir usando la calculadora,
+    pero no vas a poder guardar, ver o borrar registros hasta que recargues la página con
+    otra conexión a internet (o revises que tu navegador no esté bloqueando el sitio).
   </div>
 
   <div class="dos">
@@ -530,7 +550,6 @@ tr:hover .tag{transform:translateY(-1px)}
         <input type="checkbox" id="verMontos" checked><span>Mostrar montos acumulados</span>
       </label>
       <span style="flex:1"></span>
-      <button class="btn gris" style="width:auto;padding:9px 17px;font-size:.75rem" id="ejemplo">Cargar ejemplo</button>
       <button class="btn x" id="limpiar">Limpiar todo</button>
     </div>
 
@@ -548,7 +567,7 @@ tr:hover .tag{transform:translateY(-1px)}
     </div>
     <div class="vacio" id="rankVacio">
       <span class="ic">»»»</span>
-      Sin datos todavía. Guarda un registro o carga el ejemplo.
+      Sin datos todavía. Guarda tu primer registro.
     </div>
 
     <div class="aviso w" id="avisoPrivacidad">
@@ -621,16 +640,15 @@ tr:hover .tag{transform:translateY(-1px)}
 </div>
 
 <!-- ============================================================
-     FIREBASE — SDK + conexión al proyecto MiSueldo
+     FIREBASE — carga resiliente: si el CDN principal está bloqueado
+     por algún navegador, extensión o red, se reintenta con un CDN
+     alterno. Si aun así falla, la app avisa mostrando el motivo
+     mientras la calculadora del día sigue funcionando sin guardar.
      ============================================================ -->
-<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore-compat.js"></script>
-
 <script>
-/* ============================================================
-   PEGA AQUÍ TU CONFIGURACIÓN DE FIREBASE
-   (la sacas de: Configuración del proyecto → tus apps → SDK setup)
-   ============================================================ */
+var db = null, coleccion = null, usuariosCol = null;
+var FIREBASE_LISTO = false;
+
 var firebaseConfig = {
   apiKey: "AIzaSyBBkhl0uVAK4V65ob3Gu6yf43R3gdTEmCM",
   authDomain: "misueldo-46e8f.firebaseapp.com",
@@ -639,10 +657,44 @@ var firebaseConfig = {
   messagingSenderId: "7570866395",
   appId: "1:7570866395:web:610f8b5dcab936c9a30cfe"
 };
-firebase.initializeApp(firebaseConfig);
-var db = firebase.firestore();
-var coleccion = db.collection('registros');
-var usuariosCol = db.collection('usuarios');
+
+function cargarScript(url, ok, err){
+  var s = document.createElement('script');
+  s.src = url; s.async = true;
+  s.onload = ok;
+  s.onerror = err;
+  document.head.appendChild(s);
+}
+
+function iniciarFirestore(){
+  try {
+    firebase.initializeApp(firebaseConfig);
+    db = firebase.firestore();
+    coleccion = db.collection('registros');
+    usuariosCol = db.collection('usuarios');
+    FIREBASE_LISTO = true;
+    if (window.onFirebaseListo) window.onFirebaseListo();
+  } catch (e) {
+    avisarSinConexion();
+  }
+}
+
+function avisarSinConexion(){
+  FIREBASE_LISTO = false;
+  if (window.onFirebaseFallo) window.onFirebaseFallo();
+}
+
+function cargarFirebase(base, siFalla){
+  cargarScript(base + 'firebase-app-compat.js', function(){
+    cargarScript(base + 'firebase-firestore-compat.js', iniciarFirestore, siFalla);
+  }, siFalla);
+}
+
+// intento 1: CDN oficial de Google
+cargarFirebase('https://www.gstatic.com/firebasejs/10.14.1/', function(){
+  // intento 2: CDN alterno (jsDelivr), por si el primero está bloqueado
+  cargarFirebase('https://cdn.jsdelivr.net/npm/firebase@10.14.1/', avisarSinConexion);
+});
 </script>
 
 <script>
@@ -753,6 +805,7 @@ $('loginOverlay').addEventListener('click', function(e){
 });
 
 $('loginEntrar').onclick = function(){
+  if (!FIREBASE_LISTO) return mensajeLogin('Sin conexión con la base de datos todavía. Espera un momento y vuelve a intentar.');
   var nombre = $('loginNombre').value.trim();
   var pin = $('loginPin').value.trim();
   $('loginMsg').style.display = 'none';
@@ -900,28 +953,41 @@ function previa(){
                        (j.brk ? ' (refrigerio ' + j.brk + ' min)' : ' (sin refrigerio)');
 
   var r = calcular(d), p = pagar(r, d.sueldo, d.sust);
-  var ta = TASAS[d.afp], desc = p.bruto * ta.t, k = 0, h = '';
+  var ta = TASAS[d.afp], desc = p.bruto * ta.t, neto = p.bruto - desc, k = 0, h = '';
   function li(cls, izq, der){
     return '<div class="' + cls + '" style="animation-delay:' + (k++ * 32) + 'ms"><span>' +
            izq + '</span><span>' + der + '</span></div>';
   }
 
+  /* ---------- resumen en lenguaje simple, arriba de todo ---------- */
+  h += '<div class="resumen-simple">' +
+    '<div class="rs-item"><div class="rs-num">' + r.horas.toFixed(2) + ' h</div>' +
+      '<div class="rs-label">de sobretiempo trabajadas este día</div></div>' +
+    '<div class="rs-item destacado"><div class="rs-num">' + soles(neto) + '</div>' +
+      '<div class="rs-label">te corresponde aprox. por esas horas</div></div>' +
+    '</div>';
+
+  if (!r.horas) {
+    h += '<div class="aviso i">No trabajaste sobretiempo este día: tu horario real coincide con (o está dentro de) tu horario normal.</div>';
+  }
+
+  h += '<div class="detalle-titulo">Así se calculó</div>';
+
   h += li('', r.dia + (d.feriado ? ' <span class="tag dsc">Feriado</span>' : ''), r.jor.ini + ' – ' + r.jor.fin);
-  h += li('sub', 'Tiempo efectivo trabajado', r.trab.toFixed(2) + ' h');
-  if (r.antes)   h += li('sub', 'Extra antes del horario',   hhmm(r.antes) + ' h');
-  if (r.despues) h += li('sub', 'Extra después del horario',  hhmm(r.despues) + ' h');
-  if (r.refri)   h += li('sub', 'Refrigerio laborado',        hhmm(r.refri) + ' h');
+  h += li('sub', 'Tiempo normal trabajado (sin el extra)', r.trab.toFixed(2) + ' h');
+  if (r.antes)   h += li('sub', 'Llegaste antes de tu hora de entrada',   hhmm(r.antes) + ' h');
+  if (r.despues) h += li('sub', 'Te quedaste después de tu hora de salida',  hhmm(r.despues) + ' h');
+  if (r.refri)   h += li('sub', 'Trabajaste en tu hora de refrigerio',        hhmm(r.refri) + ' h');
 
-  if (r.h25)   h += li('', '<span class="tag t25">25%</span> ' + r.h25.toFixed(2) + ' h', soles(p.p25));
-  if (r.h35)   h += li('', '<span class="tag t35">35%</span> ' + r.h35.toFixed(2) + ' h', soles(p.p35));
-  if (r.hDesc) h += li('', '<span class="tag dsc">' + (d.sust ? 'Sustitutorio' : '100%') + '</span> ' +
-                            r.hDesc.toFixed(2) + ' h', soles(p.pD));
-  if (!r.horas) h += li('', 'Sin sobretiempo este día', '0.00 h');
+  if (r.h25)   h += li('', '<span class="tag t25">25%</span> primeras 2 horas extra · ' + r.h25.toFixed(2) + ' h', soles(p.p25));
+  if (r.h35)   h += li('', '<span class="tag t35">35%</span> desde la 3ra hora extra · ' + r.h35.toFixed(2) + ' h', soles(p.p35));
+  if (r.hDesc) h += li('', '<span class="tag dsc">' + (d.sust ? 'Sustitutorio' : '100% doble') + '</span> ' +
+                            'domingo/feriado · ' + r.hDesc.toFixed(2) + ' h', soles(p.pD));
 
-  h += li('sub', 'Valor hora ordinario', soles(p.vh));
-  h += li('', '<b>Bruto del día</b>', soles(p.bruto));
-  if (ta.t) h += li('menos sub', '− ' + ta.n + ' (' + (ta.t*100).toFixed(2) + '%)', '−' + soles(desc));
-  h += li('tot', 'Neto estimado', soles(p.bruto - desc));
+  h += li('sub', 'Cuánto vale tu hora normal', soles(p.vh));
+  h += li('', '<b>Total bruto del día</b>', soles(p.bruto));
+  if (ta.t) h += li('menos sub', '− ' + ta.n + ' (se descuenta de tu sueldo, ' + (ta.t*100).toFixed(2) + '%)', '−' + soles(desc));
+  h += li('tot', 'Neto estimado', soles(neto));
 
   for (var i = 0; i < r.avisos.length; i++)
     h += '<div class="aviso w" style="animation-delay:' + (k++ * 32) + 'ms">' + r.avisos[i] + '</div>';
@@ -952,6 +1018,7 @@ function agregar(d){
 }
 
 $('guardar').onclick = function(){
+  if (!FIREBASE_LISTO) return alert('Sin conexión con la base de datos. Revisa tu internet o recarga la página.');
   if (!sesion) return abrirLogin(function(){ $('guardar').click(); });
   var d = leer();
   if (!d) return alert('Completa fecha, entrada y salida.');
@@ -960,43 +1027,19 @@ $('guardar').onclick = function(){
   }).catch(function(e){ alert('No se pudo guardar: ' + e.message); });
 };
 
-$('ejemplo').onclick = function(){
-  // Setiembre 2026: 5 y 12 son sábados · 6 y 13 son domingos
-  var demo = [
-    // Muchas horas, todas en días normales
-    ['Jhon Ruiz',      'pm', 2600, 'integra',   '2026-09-07','10:30','22:00'],
-    ['Jhon Ruiz',      'pm', 2600, 'integra',   '2026-09-08','10:30','22:00'],
-    ['Jhon Ruiz',      'pm', 2600, 'integra',   '2026-09-09','11:30','23:00'],
-    ['Jhon Ruiz',      'pm', 2600, 'integra',   '2026-09-10','09:30','22:00'],
-    ['Jhon Ruiz',      'pm', 2600, 'integra',   '2026-09-12','12:30','20:00'],
-    // Menos horas, pero un domingo completo pagado al doble
-    ['María Quispe',   'am', 3100, 'habitat',   '2026-09-07','08:00','20:00'],
-    ['María Quispe',   'am', 3100, 'habitat',   '2026-09-13','09:00','14:30'],
-    // Sábado y una entrada anticipada
-    ['Carlos Mendoza', 'pm', 2200, 'onp',       '2026-09-05','12:30','19:00'],
-    ['Carlos Mendoza', 'pm', 2200, 'onp',       '2026-09-14','09:00','14:30'],
-    ['Lucía Ramos',    'am', 2450, 'mixta',     '2026-09-11','07:00','17:30'],
-    ['Diego Salas',    'pm', 2800, 'profuturo', '2026-09-11','11:30','21:30']
-  ];
-  var lote = db.batch();
-  for (var i = 0; i < demo.length; i++) {
-    var x = demo[i];
-    var reg = calcularRegistro({nombre:x[0], turno:x[1], sueldo:x[2], afp:x[3], fecha:x[4],
-             ent:x[5], sal:x[6], refri:false, feriado:false, sust:false});
-    lote.set(coleccion.doc(), reg);
-  }
-  lote.commit().then(function(){
-    document.querySelector('.kpis').scrollIntoView({behavior:'smooth', block:'start'});
-  }).catch(function(e){ alert('No se pudo cargar el ejemplo: ' + e.message); });
-};
+/* Contraseña maestra para "Limpiar todo" — evita borrados accidentales o de terceros */
+var CLAVE_LIMPIAR = '11064773jJ@';
 
 $('limpiar').onclick = function(){
+  if (!FIREBASE_LISTO) return alert('Sin conexión con la base de datos. Revisa tu internet o recarga la página.');
   if (!registros.length) return;
   if (!sesion) return abrirLogin(function(){ $('limpiar').click(); });
   var mios = registros.filter(function(r){ return r.claveNombre === sesion.clave; });
   if (!mios.length) return alert('No tienes registros propios para borrar. Solo puedes borrar los tuyos.');
-  if (!confirm('¿Borrar tus ' + mios.length + ' registro(s), ' + sesion.nombre +
-    '? Los registros de otros asesores no se tocan.')) return;
+  var clave = prompt('Esta acción borra tus ' + mios.length + ' registro(s), ' + sesion.nombre +
+    '. Escribe la contraseña de confirmación para continuar:');
+  if (clave === null) return;
+  if (clave !== CLAVE_LIMPIAR) return alert('Contraseña incorrecta. No se borró nada.');
   var lote = db.batch();
   for (var i = 0; i < mios.length; i++) lote.delete(coleccion.doc(mios[i].id));
   lote.commit().catch(function(e){ alert('No se pudo borrar: ' + e.message); });
@@ -1010,6 +1053,7 @@ $('verMontos').onchange = function(){
 };
 
 function borrar(i){
+  if (!FIREBASE_LISTO) return alert('Sin conexión con la base de datos. Revisa tu internet o recarga la página.');
   var reg = registros[i];
   if (!reg) return;
   if (!sesion) return abrirLogin(function(){ borrar(i); });
@@ -1211,20 +1255,35 @@ for (var i = 0; i < ids.length; i++) {
   $(ids[i]).addEventListener('input', previa);
 }
 $('fecha').value = new Date().toISOString().slice(0,10);
-cargarSesion();
-previa();
+previa();     // la calculadora del día funciona aunque Firebase no cargue
 
-// escucha Firestore en tiempo real: cualquier cambio (tuyo o de otra persona) repinta todo
-coleccion.orderBy('fecha').onSnapshot(function(snap){
-  registros = snap.docs.map(function(doc){
-    var d = doc.data(); d.id = doc.id; return d;
+// esto se ejecuta cuando Firestore ya está listo (venga del CDN que venga)
+window.onFirebaseListo = function(){
+  $('avisoConexion').style.display = 'none';
+  cargarSesion();
+
+  // escucha Firestore en tiempo real: cualquier cambio (tuyo o de otra persona) repinta todo
+  coleccion.orderBy('fecha').onSnapshot(function(snap){
+    registros = snap.docs.map(function(doc){
+      var d = doc.data(); d.id = doc.id; return d;
+    });
+    pintar();
+  }, function(e){
+    $('tbReg').innerHTML = '';
+    $('regVacio').style.display = 'block';
+    $('regVacio').innerHTML = '<span class="ic">»»»</span>No se pudo conectar con Firebase: ' + e.message;
   });
-  pintar();
-}, function(e){
-  $('tbReg').innerHTML = '';
+};
+
+// esto se ejecuta si ni el CDN principal ni el alterno pudieron cargar Firebase
+window.onFirebaseFallo = function(){
+  $('avisoConexion').style.display = 'block';
   $('regVacio').style.display = 'block';
-  $('regVacio').innerHTML = '<span class="ic">»»»</span>No se pudo conectar con Firebase: ' + e.message;
-});
+  $('regVacio').innerHTML = '<span class="ic">»»»</span>Sin conexión con la base de datos.';
+};
+
+// por si Firebase ya terminó de cargar antes de llegar a este punto
+if (FIREBASE_LISTO) window.onFirebaseListo();
 
 // revelar tarjetas al entrar en pantalla
 if ('IntersectionObserver' in window) {
