@@ -392,6 +392,35 @@ tr:hover .tag{transform:translateY(-1px)}
 .pie .ch{color:var(--rojo);letter-spacing:.2em;font-weight:900;opacity:.6;
   display:inline-block;font-family:'JetBrains Mono',monospace}
 
+/* ============================================================
+   SESIÓN — recuadro "quién eres" dentro del formulario
+   ============================================================ */
+.sesion-box{
+  display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;
+  padding:10px 12px;border:1.5px dashed var(--linea);border-radius:4px;
+  background:#fff;font-size:.94rem;transition:border-color .25s var(--ease),background .25s var(--ease);
+}
+.sesion-box.on{border-style:solid;border-color:var(--teal);background:#EAF7F6}
+.sesion-box span{color:var(--gris-os)}
+.sesion-box b{color:var(--tinta)}
+
+/* ============================================================
+   LOGIN — ventana modal para crear/entrar con nombre + PIN
+   ============================================================ */
+.login-overlay{
+  position:fixed;inset:0;background:rgba(15,13,12,.6);
+  display:none;align-items:center;justify-content:center;z-index:999;
+  padding:20px;animation:desvanecer .2s var(--ease) both;
+}
+.login-overlay.on{display:flex}
+.login-card{
+  background:var(--crema);max-width:380px;width:100%;
+  padding:26px 24px 24px;box-shadow:var(--s3);border-left:5px solid var(--rojo);
+}
+.login-card h3{font-size:1.22rem;margin-bottom:8px}
+.login-sub{font-size:.85rem;color:var(--gris-os);margin-bottom:16px;line-height:1.45}
+.login-card .btn{margin-top:8px}
+
 @media(prefers-reduced-motion:reduce){
   *,*::before,*::after{animation-duration:.01ms!important;animation-iteration-count:1!important;
     transition-duration:.01ms!important;scroll-behavior:auto!important}
@@ -429,8 +458,11 @@ tr:hover .tag{transform:translateY(-1px)}
 
       <div class="fila">
         <div class="campo">
-          <label for="nombre">Asesor</label>
-          <input type="text" id="nombre" placeholder="Jhon Ruiz" autocomplete="off">
+          <label>Asesor</label>
+          <div class="sesion-box" id="sesionBox">
+            <span id="sesionTexto">No has iniciado sesión</span>
+            <button type="button" class="btn mini" id="btnSesion" style="color:var(--rojo-os)">Entrar / crear usuario</button>
+          </div>
         </div>
         <div class="campo">
           <label for="turno">Turno</label>
@@ -559,6 +591,29 @@ tr:hover .tag{transform:translateY(-1px)}
 
 </div>
 
+<!-- ---------- LOGIN: nombre + PIN corto ---------- -->
+<div class="login-overlay" id="loginOverlay">
+  <div class="login-card boleto">
+    <h3>Identifícate para registrar</h3>
+    <p class="login-sub">
+      Escribe tu nombre de asesor y un PIN corto (mínimo 4 dígitos).
+      Si es tu primera vez, ese PIN queda guardado como tuyo — la próxima vez
+      solo repites nombre y PIN para entrar. Nadie más puede editar ni borrar tus registros.
+    </p>
+    <div class="campo">
+      <label for="loginNombre">Nombre de asesor</label>
+      <input type="text" id="loginNombre" placeholder="Jhon Ruiz" autocomplete="off">
+    </div>
+    <div class="campo">
+      <label for="loginPin">PIN</label>
+      <input type="password" id="loginPin" placeholder="••••" maxlength="6" inputmode="numeric" autocomplete="off">
+    </div>
+    <div class="aviso w" id="loginMsg" style="display:none"></div>
+    <button class="btn" id="loginEntrar">Entrar</button>
+    <button class="btn x" id="loginCancelar" style="width:100%">Cancelar</button>
+  </div>
+</div>
+
 <div class="pie">
   <span class="ch">»»»»»»»</span><br>
   <b>SISE</b> Instituto Superior — Herramienta de estimación.<br>
@@ -587,6 +642,7 @@ var firebaseConfig = {
 firebase.initializeApp(firebaseConfig);
 var db = firebase.firestore();
 var coleccion = db.collection('registros');
+var usuariosCol = db.collection('usuarios');
 </script>
 
 <script>
@@ -629,6 +685,136 @@ function soles(n){ return 'S/ ' + n.toFixed(2); }
 function dow(iso){ var p = iso.split('-'); return new Date(p[0], p[1]-1, p[2]).getDay(); }
 function esc(t){ return String(t||'').replace(/[<>&"]/g, function(c){
   return {'<':'&lt;','>':'&gt;','&':'&amp;','"':'&quot;'}[c]; }); }
+
+/* ============================================================
+   SESIÓN — nombre + PIN corto, sin backend de autenticación real.
+   Sirve para que cada asesor tenga "su" nombre y nadie más pueda
+   borrar sus registros desde este panel. No es cifrado fuerte,
+   es una traba simple pensada para uso interno del equipo.
+   ============================================================ */
+function normalizar(s){
+  return String(s || '').trim().toLowerCase()
+    .normalize('NFD').replace(/[\u0300-\u036f]/g, '')   // quita tildes
+    .replace(/\s+/g, ' ');
+}
+function hashPin(pin, clave){
+  var s = clave + '::' + pin, h = 5381;
+  for (var i = 0; i < s.length; i++) h = ((h * 33) ^ s.charCodeAt(i)) >>> 0;
+  h = (h ^ (h >>> 16)) >>> 0;
+  return h.toString(16);
+}
+
+var sesion = null; // {nombre, clave}
+
+function cargarSesion(){
+  try {
+    var s = localStorage.getItem('sise_sesion');
+    if (s) sesion = JSON.parse(s);
+  } catch(e) { sesion = null; }
+  pintarSesion();
+}
+function guardarSesionLocal(){
+  try { localStorage.setItem('sise_sesion', JSON.stringify(sesion)); } catch(e){}
+}
+function pintarSesion(){
+  var box = $('sesionBox'), txt = $('sesionTexto'), btn = $('btnSesion');
+  if (sesion) {
+    box.classList.add('on');
+    txt.innerHTML = 'Conectado como <b>' + esc(sesion.nombre) + '</b>';
+    btn.textContent = 'Cambiar';
+  } else {
+    box.classList.remove('on');
+    txt.textContent = 'No has iniciado sesión';
+    btn.textContent = 'Entrar / crear usuario';
+  }
+}
+
+var loginCallback = null;
+function abrirLogin(cb){
+  loginCallback = cb || null;
+  $('loginNombre').value = sesion ? sesion.nombre : '';
+  $('loginPin').value = '';
+  $('loginMsg').style.display = 'none';
+  $('loginOverlay').classList.add('on');
+  setTimeout(function(){ $('loginNombre').focus(); }, 10);
+}
+function cerrarLogin(){
+  $('loginOverlay').classList.remove('on');
+  loginCallback = null;
+}
+function mensajeLogin(t){
+  var msg = $('loginMsg');
+  msg.textContent = t; msg.style.display = 'block';
+}
+
+$('loginCancelar').onclick = cerrarLogin;
+$('loginOverlay').addEventListener('click', function(e){
+  if (e.target === $('loginOverlay')) cerrarLogin();
+});
+
+$('loginEntrar').onclick = function(){
+  var nombre = $('loginNombre').value.trim();
+  var pin = $('loginPin').value.trim();
+  $('loginMsg').style.display = 'none';
+
+  if (!nombre) return mensajeLogin('Escribe tu nombre de asesor.');
+  var clave = normalizar(nombre);
+  if (!clave) return mensajeLogin('Ese nombre no es válido.');
+  if (pin.length < 4) return mensajeLogin('El PIN debe tener al menos 4 dígitos.');
+
+  var btn = this;
+  btn.disabled = true; btn.textContent = 'Verificando…';
+
+  usuariosCol.doc(clave).get().then(function(doc){
+    var h = hashPin(pin, clave);
+    if (doc.exists) {
+      var datos = doc.data();
+      if (datos.pin !== h) {
+        btn.disabled = false; btn.textContent = 'Entrar';
+        return mensajeLogin('PIN incorrecto para ' + datos.nombre + '.');
+      }
+      sesion = {nombre: datos.nombre, clave: clave};
+      finalizarLogin(btn);
+    } else {
+      // primera vez que se usa este nombre: se crea el usuario con este PIN
+      usuariosCol.doc(clave).set({
+        nombre: nombre, pin: h, creado: firebase.firestore.FieldValue.serverTimestamp()
+      }).then(function(){
+        sesion = {nombre: nombre, clave: clave};
+        finalizarLogin(btn);
+      }).catch(function(e){
+        btn.disabled = false; btn.textContent = 'Entrar';
+        mensajeLogin('No se pudo crear el usuario: ' + e.message);
+      });
+    }
+  }).catch(function(e){
+    btn.disabled = false; btn.textContent = 'Entrar';
+    mensajeLogin('Error de conexión: ' + e.message);
+  });
+};
+
+function finalizarLogin(btn){
+  guardarSesionLocal();
+  pintarSesion();
+  btn.disabled = false; btn.textContent = 'Entrar';
+  cerrarLogin();
+  var cb = loginCallback; loginCallback = null;
+  pintar();               // repinta para mostrar/ocultar botones de borrar según dueño
+  if (cb) cb();
+}
+
+$('btnSesion').onclick = function(){
+  if (sesion) {
+    if (confirm('¿Cerrar sesión de ' + sesion.nombre + '?')) {
+      sesion = null;
+      try { localStorage.removeItem('sise_sesion'); } catch(e){}
+      pintarSesion();
+      pintar();
+    }
+  } else {
+    abrirLogin();
+  }
+};
 
 /* ============================================================
    CÁLCULO DE UN DÍA
@@ -684,7 +870,7 @@ function pagar(r, sueldo, sust){
 function leer(){
   if (!$('fecha').value || !$('ent').value || !$('sal').value) return null;
   return {
-    nombre: $('nombre').value.trim(),
+    nombre: sesion ? sesion.nombre : '',
     turno:  $('turno').value,
     sueldo: +$('sueldo').value || 0,
     afp:    $('afp').value,
@@ -752,7 +938,7 @@ function previa(){
 function calcularRegistro(d){
   var r = calcular(d), p = pagar(r, d.sueldo, d.sust);
   return {
-    nombre:d.nombre, turno:d.turno, fecha:d.fecha, dia:r.dia,
+    nombre:d.nombre, claveNombre:normalizar(d.nombre), turno:d.turno, fecha:d.fecha, dia:r.dia,
     jor:r.jor.ini + '–' + r.jor.fin, real:d.ent + '–' + d.sal,
     h25:r.h25, h35:r.h35, hDesc:r.hDesc, horas:r.horas,
     sust:d.sust, feriado:d.feriado,
@@ -766,9 +952,9 @@ function agregar(d){
 }
 
 $('guardar').onclick = function(){
+  if (!sesion) return abrirLogin(function(){ $('guardar').click(); });
   var d = leer();
-  if (!d)        return alert('Completa fecha, entrada y salida.');
-  if (!d.nombre) { $('nombre').focus(); return alert('Escribe el nombre del asesor.'); }
+  if (!d) return alert('Completa fecha, entrada y salida.');
   agregar(d).then(function(){
     document.querySelector('.kpis').scrollIntoView({behavior:'smooth', block:'center'});
   }).catch(function(e){ alert('No se pudo guardar: ' + e.message); });
@@ -806,9 +992,13 @@ $('ejemplo').onclick = function(){
 
 $('limpiar').onclick = function(){
   if (!registros.length) return;
-  if (!confirm('¿Borrar los ' + registros.length + ' registros? Esto los borra para todos.')) return;
+  if (!sesion) return abrirLogin(function(){ $('limpiar').click(); });
+  var mios = registros.filter(function(r){ return r.claveNombre === sesion.clave; });
+  if (!mios.length) return alert('No tienes registros propios para borrar. Solo puedes borrar los tuyos.');
+  if (!confirm('¿Borrar tus ' + mios.length + ' registro(s), ' + sesion.nombre +
+    '? Los registros de otros asesores no se tocan.')) return;
   var lote = db.batch();
-  for (var i = 0; i < registros.length; i++) lote.delete(coleccion.doc(registros[i].id));
+  for (var i = 0; i < mios.length; i++) lote.delete(coleccion.doc(mios[i].id));
   lote.commit().catch(function(e){ alert('No se pudo borrar: ' + e.message); });
 };
 
@@ -822,6 +1012,8 @@ $('verMontos').onchange = function(){
 function borrar(i){
   var reg = registros[i];
   if (!reg) return;
+  if (!sesion) return abrirLogin(function(){ borrar(i); });
+  if (reg.claveNombre !== sesion.clave) return alert('Solo puedes borrar tus propios registros.');
   coleccion.doc(reg.id).delete().catch(function(e){ alert('No se pudo borrar: ' + e.message); });
 }
 
@@ -850,14 +1042,19 @@ function pintar(){
     h += '<tr style="animation-delay:' + Math.min(i * 30, 400) + 'ms">' +
       '<td><b>' + r.fecha.slice(8) + '/' + r.fecha.slice(5,7) + '</b></td>' +
       '<td>' + r.dia + (r.feriado ? ' <span class="tag dsc">Fer.</span>' : '') + '</td>' +
-      '<td>' + esc(r.nombre) + '</td>' +
+      '<td>' + esc(r.nombre) +
+        (sesion && r.claveNombre === sesion.clave
+          ? ' <span class="tag" style="background:var(--teal);color:#fff">Tú</span>' : '') + '</td>' +
       '<td style="color:var(--gris)">' + r.jor + '</td>' +
       '<td><b>' + r.real + '</b></td>' +
       '<td class="num">' + (r.h25 ? r.h25.toFixed(2) : '—') + '</td>' +
       '<td class="num">' + (r.h35 ? r.h35.toFixed(2) : '—') + '</td>' +
       '<td class="num">' + (r.hDesc ? r.hDesc.toFixed(2) + (r.sust ? ' *' : '') : '—') + '</td>' +
       '<td class="num money rojo"' + (verM ? '' : ' style="display:none"') + '>' + soles(r.neto) + '</td>' +
-      '<td><button class="btn mini" onclick="borrar(' + i + ')" title="Eliminar">✕</button></td></tr>';
+      '<td>' + (sesion && r.claveNombre === sesion.clave
+        ? '<button class="btn mini" onclick="borrar(' + i + ')" title="Eliminar">✕</button>'
+        : '<span class="btn mini" style="opacity:.28;cursor:default" title="Solo el autor puede borrar su registro">✕</span>') +
+      '</td></tr>';
   }
   $('tbReg').innerHTML = h;
 
@@ -1014,6 +1211,7 @@ for (var i = 0; i < ids.length; i++) {
   $(ids[i]).addEventListener('input', previa);
 }
 $('fecha').value = new Date().toISOString().slice(0,10);
+cargarSesion();
 previa();
 
 // escucha Firestore en tiempo real: cualquier cambio (tuyo o de otra persona) repinta todo
