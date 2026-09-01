@@ -1,0 +1,1048 @@
+<!DOCTYPE html>
+<html lang="es-PE">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>SISE » Horas Extra</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+/* ============================================================
+   SISE » Horas Extra — capa visual
+   Concepto: tarjeta marcadora de tiempo / boleto perforado / sello de tinta
+   Rojo #FF0E49 · Tinta #1C1918 · Papel kraft · Barlow Condensed + JetBrains Mono
+   ============================================================ */
+:root{
+  --rojo:#FF0E49; --rojo-os:#B4002F; --rojo-cl:#FF6B8E;
+  --tinta:#1C1918; --tinta-cl:#312B27; --tinta-mas:#0F0D0C;
+
+  --teal:#0E8C89; --azul:#1D5C97; --morado:#7C3AA0; --ambar:#FFB627;
+
+  --papel:#F3ECDC; --crema:#FFFBF1; --papel-os:#E9DFC7;
+  --linea:#D8CCA9; --linea-cl:#E7DDC1;
+  --gris:#847A67; --gris-os:#544B3C;
+
+  --s1:0 1px 2px rgba(28,25,24,.08);
+  --s2:0 3px 10px rgba(28,25,24,.10);
+  --s3:0 14px 34px rgba(28,25,24,.18);
+  --s-rojo:0 10px 26px rgba(255,14,73,.32);
+
+  --ease:cubic-bezier(.22,.61,.36,1);
+  --spring:cubic-bezier(.34,1.5,.62,1);
+  --muesca:12px; /* tamaño de la esquina cortada estilo boleto */
+}
+
+*{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{
+  font-family:'Barlow Condensed','Arial Narrow',sans-serif;
+  font-size:17px;color:var(--tinta);line-height:1.45;
+  -webkit-font-smoothing:antialiased;overflow-x:hidden;
+  background:var(--papel);
+  background-image:radial-gradient(circle,rgba(28,25,24,.055) 1px,transparent 1.3px);
+  background-size:20px 20px;
+}
+h1,h2,h3{font-weight:800;line-height:1.05;letter-spacing:.002em}
+
+/* números y datos medidos → siempre en mono, texto humano → condensada */
+:where(.num,.money,.val,.pod .horas,.pos,.res>div span:last-child,
+       input[type=number],input[type=time],input[type=date]){
+  font-family:'JetBrains Mono',monospace;font-variant-numeric:tabular-nums;
+}
+
+/* ---------- animaciones ---------- */
+@keyframes subir{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:none}}
+@keyframes entrar{from{opacity:0;transform:translateX(-12px)}to{opacity:1;transform:none}}
+@keyframes brotar{0%{opacity:0;transform:scale(.88)}60%{transform:scale(1.02)}100%{opacity:1;transform:scale(1)}}
+@keyframes latir{0%,100%{transform:scale(1)}45%{transform:scale(1.04)}}
+@keyframes deslizar{from{transform:translateX(-120%) skewX(-12deg)}to{transform:translateX(220%) skewX(-12deg)}}
+@keyframes desvanecer{from{opacity:0}to{opacity:1}}
+@keyframes sello{
+  0%{opacity:0;transform:translate(-50%,-40%) rotate(13deg) scale(1.7)}
+  55%{opacity:1;transform:translate(-50%,-40%) rotate(-7deg) scale(.94)}
+  100%{opacity:1;transform:translate(-50%,-40%) rotate(-4deg) scale(1)}
+}
+.anim{animation:subir .5s var(--ease) both}
+
+/* ============================================================
+   FORMA DE BOLETO — esquinas cortadas, se usa en toda la app
+   ============================================================ */
+.boleto{
+  clip-path:polygon(
+    var(--muesca) 0, 100% 0, 100% calc(100% - var(--muesca)),
+    calc(100% - var(--muesca)) 100%, 0 100%, 0 var(--muesca)
+  );
+}
+
+/* ============================================================
+   HEADER — placa de reloj marcador
+   ============================================================ */
+header{
+  background:
+    repeating-linear-gradient(124deg,rgba(255,255,255,.05) 0 2px,transparent 2px 22px),
+    linear-gradient(120deg,var(--rojo) 0%,var(--rojo) 55%,var(--rojo-os) 100%);
+  color:#fff;position:relative;overflow:visible;padding-bottom:26px;
+}
+.head-in{
+  max-width:1080px;margin:0 auto;padding:26px 22px 14px;
+  display:flex;align-items:flex-end;justify-content:space-between;gap:14px;flex-wrap:wrap;
+  position:relative;z-index:2;
+}
+.marca-wrap{animation:entrar .6s var(--ease) both}
+.marca{font-size:2.4rem;font-weight:900;letter-spacing:-.01em;display:inline-flex;align-items:baseline;gap:2px}
+.chev{font-size:1.55rem;opacity:.85;display:inline-block}
+.desc{display:block;font-family:'JetBrains Mono',monospace;font-size:.64rem;font-weight:500;
+  letter-spacing:.09em;text-transform:uppercase;opacity:.85;margin-top:2px}
+
+/* franja perforada que "separa" el header del papel de abajo */
+header::after{
+  content:'';position:absolute;left:0;right:0;bottom:0;height:16px;
+  background-image:radial-gradient(circle at 10px 8px, var(--papel) 8px, transparent 8.4px);
+  background-size:20px 16px;background-repeat:repeat-x;transform:translateY(50%);z-index:3;
+}
+
+/* el "sello de tinta" — la pieza característica de la página */
+.sello{
+  position:relative;z-index:4;
+  border:2px solid rgba(255,255,255,.9);border-radius:5px;
+  padding:8px 16px 9px;text-align:center;
+  transform:rotate(-4deg);
+  animation:sello .75s var(--spring) .25s both;
+  transform-origin:center;
+}
+.sello::before{
+  content:'';position:absolute;inset:3px;border:1px dashed rgba(255,255,255,.55);border-radius:3px;
+}
+.sello b{display:block;font-size:1.02rem;font-weight:800;letter-spacing:.04em;text-transform:uppercase}
+.sello span{display:block;font-family:'JetBrains Mono',monospace;font-size:.6rem;letter-spacing:.13em;
+  text-transform:uppercase;opacity:.9;margin-top:2px}
+
+/* ============================================================
+   LAYOUT
+   ============================================================ */
+.wrap{max-width:1080px;margin:0 auto;padding:34px 22px 60px}
+
+.card{
+  background:var(--crema);box-shadow:var(--s2);
+  padding:24px 24px 22px;margin-bottom:22px;position:relative;
+  border-left:5px solid var(--rojo);
+  transition:transform .3s var(--ease),filter .3s var(--ease);
+  filter:drop-shadow(0 1px 0 rgba(0,0,0,0));
+}
+.card:hover{transform:translateY(-2px)}
+.card>h3{
+  font-size:1.32rem;padding-bottom:12px;margin-bottom:18px;
+  border-bottom:1.5px dashed var(--linea);display:flex;align-items:center;gap:10px;
+}
+.card>h3::before{
+  content:'»';display:inline-flex;align-items:center;justify-content:center;
+  width:26px;height:26px;border-radius:50%;border:2px solid var(--rojo);color:var(--rojo);
+  font-size:1rem;font-weight:900;flex:none;transform:rotate(-8deg);
+  transition:transform .3s var(--spring),background .25s var(--ease),color .25s var(--ease);
+}
+.card:hover>h3::before{transform:rotate(0deg);background:var(--rojo);color:#fff}
+
+.dos{display:grid;grid-template-columns:1.05fr .95fr;gap:20px;align-items:start}
+.fila{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:12px}
+@media(max-width:860px){.dos{grid-template-columns:1fr}}
+
+.rev{opacity:0;transform:translateY(22px);transition:opacity .55s var(--ease),transform .55s var(--ease)}
+.rev.on{opacity:1;transform:none}
+
+/* ============================================================
+   FORMULARIO
+   ============================================================ */
+.campo{margin-bottom:14px;position:relative}
+label{
+  display:inline-block;font-family:'JetBrains Mono',monospace;
+  font-size:.66rem;font-weight:500;letter-spacing:.08em;
+  text-transform:uppercase;color:var(--gris);margin-bottom:6px;
+  padding:1px 7px;background:var(--papel-os);border-radius:2px;
+  transition:color .25s var(--ease),background .25s var(--ease);
+}
+.campo:focus-within label{color:#fff;background:var(--rojo)}
+
+input,select{
+  width:100%;padding:10px 12px;border:1.5px solid var(--linea);border-radius:4px;
+  font-family:'Barlow Condensed',sans-serif;font-size:1.02rem;background:#fff;color:var(--tinta);
+  transition:border-color .25s var(--ease),box-shadow .25s var(--ease);
+}
+input:hover:not([readonly]),select:hover{border-color:#B9A97B}
+input:focus,select:focus{
+  outline:none;border-color:var(--rojo);
+  box-shadow:0 0 0 3.5px rgba(255,14,73,.14);
+}
+input[readonly]{background:var(--papel-os);color:var(--gris-os);border-style:dashed}
+
+.check{
+  display:flex;align-items:center;gap:9px;margin-bottom:7px;cursor:pointer;
+  padding:7px 9px;border-radius:4px;margin-left:-9px;
+  transition:background .22s var(--ease);
+}
+.check:hover{background:var(--papel-os)}
+.check input{width:17px;height:17px;accent-color:var(--rojo);cursor:pointer;
+  transition:transform .18s var(--spring)}
+.check input:checked{transform:scale(1.14)}
+.check span{font-size:.97rem}
+
+.btn{
+  background:var(--tinta);color:#fff;border:2px solid var(--tinta);cursor:pointer;
+  font-family:'JetBrains Mono',monospace;font-size:.82rem;font-weight:600;
+  text-transform:uppercase;letter-spacing:.09em;
+  padding:12px 22px;border-radius:4px;width:100%;
+  position:relative;overflow:hidden;
+  transition:transform .16s var(--spring),box-shadow .3s var(--ease),background .2s var(--ease);
+}
+.btn::after{
+  content:'';position:absolute;inset:0;
+  background:linear-gradient(100deg,transparent 30%,rgba(255,255,255,.28) 50%,transparent 70%);
+  transform:translateX(-120%);
+}
+.btn:hover{background:var(--rojo);border-color:var(--rojo);transform:translateY(-2px);box-shadow:var(--s-rojo)}
+.btn:hover::after{animation:deslizar .8s var(--ease)}
+.btn:active{transform:translateY(0) scale(.97)}
+.btn.gris{background:#fff;color:var(--tinta);border-color:var(--linea)}
+.btn.gris:hover{background:var(--tinta);color:#fff;border-color:var(--tinta);box-shadow:0 8px 22px rgba(28,25,24,.28)}
+.btn.x{
+  width:auto;padding:7px 14px;font-size:.72rem;background:transparent;
+  color:var(--gris);border:1.5px solid var(--linea);box-shadow:none;
+}
+.btn.x:hover{background:#fff;color:var(--rojo);border-color:var(--rojo);
+  transform:translateY(-1px);box-shadow:var(--s1)}
+.btn.mini{width:auto;padding:3px 9px;font-size:.68rem;background:transparent;
+  color:#C9BE9E;border:1.5px solid transparent;letter-spacing:.04em}
+.btn.mini:hover{color:var(--rojo-os);border-color:#FFC7D3;background:#FFF1F4;
+  transform:none;box-shadow:none}
+
+/* ============================================================
+   KPIs — panel tipo contador mecánico
+   ============================================================ */
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:16px;margin-bottom:22px}
+.kpi{
+  background:var(--tinta);color:#fff;padding:22px 18px 17px;position:relative;
+  animation:brotar .5s var(--ease) both;
+  filter:drop-shadow(var(--s2));
+  transition:transform .3s var(--ease),filter .3s var(--ease);
+  background-image:repeating-linear-gradient(180deg,rgba(255,255,255,.025) 0 2px,transparent 2px 5px);
+}
+.kpi:hover{transform:translateY(-4px);filter:drop-shadow(var(--s3))}
+.kpi .et{
+  position:absolute;top:-11px;left:16px;background:var(--papel);color:var(--tinta);
+  font-family:'JetBrains Mono',monospace;font-size:.62rem;font-weight:600;
+  letter-spacing:.07em;text-transform:uppercase;padding:3px 9px;border-radius:2px;
+}
+.kpi .val{font-size:2.15rem;font-weight:700;line-height:1.05;color:var(--rojo-cl);margin-top:4px}
+.kpi.teal .val{color:#5FD9D4}
+.kpi.azul .val{color:#6FB2E8}
+.kpi.morado .val{color:#CB94DD}
+.kpi .nota{font-family:'Barlow Condensed';font-size:.86rem;color:#C9C2B4;margin-top:3px}
+.kpi.nombre .val{font-family:'Barlow Condensed',sans-serif;font-size:1.4rem;font-weight:800;color:#fff}
+
+.kpi.alerta{
+  grid-column:1/-1;background:var(--crema);color:var(--tinta);
+  border:1.5px dashed var(--ambar);
+  background-image:repeating-linear-gradient(135deg,rgba(255,182,39,.16) 0 10px,transparent 10px 20px);
+  background-size:auto,100% 8px;
+}
+.kpi.alerta::before{content:'!';position:absolute;top:-13px;left:16px;
+  width:24px;height:24px;border-radius:50%;background:var(--ambar);color:var(--tinta-mas);
+  display:flex;align-items:center;justify-content:center;font-weight:900;font-size:.95rem;}
+.kpi.alerta .nota{font-family:'Barlow Condensed';font-size:.98rem;color:var(--gris-os);line-height:1.5;margin-top:6px}
+.kpi.alerta .nota b{color:var(--tinta)}
+
+/* ============================================================
+   PODIO — bloques de altura desigual, como tarima real
+   ============================================================ */
+.podio{display:flex;align-items:flex-end;gap:13px;margin-bottom:22px;min-height:1px}
+.podio .pod{flex:1}
+.podio .pod.o1{order:2}
+.podio .pod.o2{order:1}
+.podio .pod.o3{order:3}
+@media(max-width:640px){.podio{flex-direction:column}.podio .pod.o1,.podio .pod.o2,.podio .pod.o3{order:0}}
+
+.pod{
+  background:var(--crema);padding:18px 16px 20px;text-align:center;position:relative;
+  filter:drop-shadow(var(--s2));
+  animation:brotar .55s var(--spring) both;
+  transition:transform .3s var(--ease),filter .3s var(--ease);
+  border-top:4px solid var(--linea);
+}
+.pod:hover{transform:translateY(-5px);filter:drop-shadow(var(--s3))}
+.pod.o1{padding-top:26px;border-top-color:var(--rojo)}
+.pod.o2{padding-bottom:14px;border-top-color:var(--tinta)}
+.pod.o3{padding-bottom:8px;border-top-color:var(--teal)}
+.pod .medalla{
+  width:38px;height:38px;border-radius:50%;margin:0 auto 9px;
+  display:flex;align-items:center;justify-content:center;
+  font-family:'JetBrains Mono',monospace;font-size:1.05rem;font-weight:700;color:#fff;background:var(--gris);
+  transition:transform .35s var(--spring);
+}
+.pod:hover .medalla{transform:scale(1.12) rotate(-8deg)}
+.pod.o1 .medalla{background:var(--rojo);box-shadow:0 5px 16px rgba(255,14,73,.4);width:44px;height:44px;font-size:1.2rem}
+.pod.o2 .medalla{background:var(--tinta)}
+.pod.o3 .medalla{background:var(--teal)}
+.pod .quien{font-weight:700;font-size:1.05rem;line-height:1.2}
+.pod .horas{font-size:1.7rem;font-weight:700;color:var(--rojo);line-height:1.1;margin-top:5px}
+.pod.o2 .horas{color:var(--tinta)}
+.pod.o3 .horas{color:var(--teal)}
+.pod .sub{font-size:.82rem;color:var(--gris);font-family:'Barlow Condensed'}
+.pod .cinta{display:none}
+
+/* ============================================================
+   TABLAS — estilo libro de registro / ledger
+   ============================================================ */
+.tabla{overflow-x:auto;transition:opacity .22s var(--ease)}
+.tabla.fade{opacity:.25}
+table{width:100%;border-collapse:collapse;font-size:.93rem}
+th{
+  background:var(--tinta);color:#fff;font-family:'JetBrains Mono',monospace;
+  font-size:.64rem;font-weight:600;letter-spacing:.09em;text-transform:uppercase;
+  padding:11px 12px;text-align:left;white-space:nowrap;position:relative;
+}
+th:nth-child(2){border-right:2px solid var(--rojo)}
+td{padding:10px 12px;border-bottom:1px dashed var(--linea);transition:background .2s var(--ease)}
+td:nth-child(2){border-right:2px solid var(--linea)}
+tbody tr{animation:entrar .42s var(--ease) both}
+tbody tr:hover td{background:var(--papel-os)}
+tbody tr.lider td{background:linear-gradient(90deg,#FFE9EF,#FFF6F8 75%,var(--crema))}
+tbody tr.lider:hover td{background:linear-gradient(90deg,#FFDDE6,#FFECF0 75%,var(--crema))}
+tbody tr.total td{background:var(--papel-os);font-weight:700;border-bottom:none}
+tbody tr.total:hover td{background:var(--papel-os)}
+.num{text-align:right}
+.rojo{color:var(--rojo);font-weight:700}
+.money{transition:opacity .25s var(--ease)}
+
+.pos{
+  display:inline-flex;align-items:center;justify-content:center;
+  width:25px;height:25px;border-radius:50%;background:var(--linea);
+  font-weight:700;font-size:.8rem;transition:transform .28s var(--spring);
+}
+tr:hover .pos{transform:scale(1.15)}
+.pos.p1{background:var(--rojo);color:#fff;box-shadow:0 3px 10px rgba(255,14,73,.35)}
+.pos.p2{background:var(--tinta);color:#fff}
+.pos.p3{background:var(--teal);color:#fff}
+
+.barra{height:6px;background:var(--linea);border-radius:0;overflow:hidden;min-width:64px}
+.barra i{
+  display:block;height:100%;width:0;
+  background:repeating-linear-gradient(115deg,var(--rojo) 0 8px,var(--rojo-cl) 8px 16px);
+  transition:width 1s var(--ease);
+}
+
+.tag{
+  display:inline-block;padding:2px 9px 2px 8px;font-size:.68rem;
+  font-family:'JetBrains Mono',monospace;font-weight:600;text-transform:uppercase;letter-spacing:.04em;
+  background:var(--linea);border-radius:2px;
+  clip-path:polygon(0 0,100% 0,100% 100%,6px 100%,0 65%);
+  transition:transform .22s var(--spring);
+}
+tr:hover .tag{transform:translateY(-1px)}
+.tag.am{background:var(--ambar);color:var(--tinta-mas)}
+.tag.pm{background:var(--azul);color:#fff}
+.tag.t25{background:var(--teal);color:#fff}
+.tag.t35{background:var(--azul);color:#fff}
+.tag.dsc{background:var(--morado);color:#fff}
+
+/* ============================================================
+   PANEL DE RESULTADO
+   ============================================================ */
+.res>div{
+  display:flex;justify-content:space-between;gap:12px;padding:9px 0;
+  border-bottom:1px dashed var(--linea-cl);
+  animation:entrar .34s var(--ease) both;
+}
+.res>div span:first-child{font-family:'Barlow Condensed'}
+.res>div span:last-child{font-weight:700;white-space:nowrap}
+.res>div.sub{color:var(--gris);font-size:.86rem;padding-left:13px}
+.res>div.tot{
+  border-bottom:none;border-top:2px solid var(--tinta);
+  margin-top:8px;padding-top:13px;font-size:1.1rem;font-weight:800;align-items:baseline;
+}
+.res>div.tot span:first-child{font-family:'Barlow Condensed'}
+.res>div.tot span:last-child{color:var(--rojo);font-size:1.5rem}
+.res>div.menos span:last-child{color:var(--rojo-os)}
+.res.pulso{animation:latir .35s var(--ease)}
+
+/* ============================================================
+   AVISOS Y VARIOS
+   ============================================================ */
+.aviso{
+  padding:11px 14px;border-radius:3px;font-size:.9rem;
+  border-left:3px solid;margin-top:11px;background:var(--crema);
+  animation:subir .38s var(--ease) both;
+}
+.aviso.i{background:#EAF3FA;border-color:var(--azul)}
+.aviso.w{background:#FFF6E4;border-color:#C2790A;color:#5C3E08}
+
+.acciones{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-bottom:16px}
+.vacio{text-align:center;padding:38px;color:var(--gris)}
+.vacio .ic{font-size:1.6rem;color:var(--linea);letter-spacing:.2em;display:block;margin-bottom:6px;font-family:'JetBrains Mono',monospace}
+
+.pie{
+  text-align:center;padding:34px 26px 26px;color:#C9C2B4;font-size:.84rem;
+  background:var(--tinta);margin-top:32px;position:relative;
+}
+.pie::before{
+  content:'';position:absolute;left:0;right:0;top:0;height:14px;
+  background-image:radial-gradient(circle at 10px 6px, var(--papel) 7px, transparent 7.3px);
+  background-size:20px 14px;background-repeat:repeat-x;transform:translateY(-50%);
+}
+.pie b{color:var(--rojo-cl)}
+.pie .ch{color:var(--rojo);letter-spacing:.2em;font-weight:900;opacity:.6;
+  display:inline-block;font-family:'JetBrains Mono',monospace}
+
+@media(prefers-reduced-motion:reduce){
+  *,*::before,*::after{animation-duration:.01ms!important;animation-iteration-count:1!important;
+    transition-duration:.01ms!important;scroll-behavior:auto!important}
+  .rev{opacity:1;transform:none}
+}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="head-in">
+    <div class="marca-wrap">
+      <span class="marca">SISE<span class="chev">»</span></span>
+      <span class="desc">Instituto Superior</span>
+    </div>
+    <div class="sello">
+      <b>Horas Extra</b>
+      <span>Registro · Turno AM / PM</span>
+    </div>
+  </div>
+</header>
+
+<div class="wrap">
+
+  <div class="aviso i anim" style="margin:0 0 22px">
+    <b>Versión de prueba local.</b> Los datos viven en la memoria del navegador:
+    si recargas la página se borran. La persistencia llega con Firebase.
+  </div>
+
+  <div class="dos">
+
+    <!-- ---------- FORMULARIO ---------- -->
+    <div class="card anim boleto" style="animation-delay:.05s">
+      <h3>Registrar un día</h3>
+
+      <div class="fila">
+        <div class="campo">
+          <label for="nombre">Asesor</label>
+          <input type="text" id="nombre" placeholder="Jhon Ruiz" autocomplete="off">
+        </div>
+        <div class="campo">
+          <label for="turno">Turno</label>
+          <select id="turno">
+            <option value="pm">Tarde</option>
+            <option value="am">Mañana</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="fila">
+        <div class="campo">
+          <label for="sueldo">Sueldo bruto (S/)</label>
+          <input type="number" id="sueldo" value="2500" min="0" step="50">
+        </div>
+        <div class="campo">
+          <label for="afp">Sistema pensionario</label>
+          <select id="afp">
+            <option value="habitat">AFP Habitat — 1.47%</option>
+            <option value="integra" selected>AFP Integra — 1.55%</option>
+            <option value="prima">AFP Prima — 1.60%</option>
+            <option value="profuturo">AFP Profuturo — 1.69%</option>
+            <option value="mixta">AFP comisión mixta — 0%</option>
+            <option value="onp">ONP — 13%</option>
+            <option value="ninguno">Sin sistema</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="fila">
+        <div class="campo"><label for="fecha">Fecha</label><input type="date" id="fecha"></div>
+        <div class="campo"><label for="ent">Entrada real</label><input type="time" id="ent" value="10:30"></div>
+        <div class="campo"><label for="sal">Salida real</label><input type="time" id="sal" value="22:00"></div>
+      </div>
+
+      <div class="campo">
+        <label>Horario que te corresponde</label>
+        <input type="text" id="horario" readonly value="—">
+      </div>
+
+      <label class="check"><input type="checkbox" id="refri"><span>Trabajé durante el refrigerio</span></label>
+      <label class="check"><input type="checkbox" id="feriado"><span>Fue feriado no laborable</span></label>
+      <label class="check"><input type="checkbox" id="sust"><span>Me dieron descanso sustitutorio</span></label>
+
+      <button class="btn" id="guardar" style="margin-top:13px">Guardar registro</button>
+    </div>
+
+    <!-- ---------- RESULTADO ---------- -->
+    <div class="card anim boleto" style="animation-delay:.12s">
+      <h3>Cálculo del día</h3>
+      <div class="res" id="res"></div>
+    </div>
+
+  </div>
+
+  <!-- ---------- KPIs + PODIO + RANKING ---------- -->
+  <div class="kpis rev" id="kpis"></div>
+  <div class="podio rev" id="podio"></div>
+
+  <div class="card rev boleto">
+    <h3>Ranking general de asesores</h3>
+
+    <div class="acciones">
+      <label class="check" style="margin:0">
+        <input type="checkbox" id="verMontos" checked><span>Mostrar montos acumulados</span>
+      </label>
+      <span style="flex:1"></span>
+      <button class="btn gris" style="width:auto;padding:9px 17px;font-size:.75rem" id="ejemplo">Cargar ejemplo</button>
+      <button class="btn x" id="limpiar">Limpiar todo</button>
+    </div>
+
+    <div class="tabla" id="wrapRank">
+      <table>
+        <thead><tr>
+          <th style="width:46px">#</th><th>Asesor</th><th>Turno</th>
+          <th class="num">Días</th><th class="num">25%</th><th class="num">35%</th>
+          <th class="num">Descanso</th><th class="num">Total horas</th>
+          <th style="width:104px">Avance</th>
+          <th class="num money">Acumulado</th>
+        </tr></thead>
+        <tbody id="tbRank"></tbody>
+      </table>
+    </div>
+    <div class="vacio" id="rankVacio">
+      <span class="ic">»»»</span>
+      Sin datos todavía. Guarda un registro o carga el ejemplo.
+    </div>
+
+    <div class="aviso w" id="avisoPrivacidad">
+      <b>Los montos están visibles para todos.</b> Como también se ven las horas, cualquiera
+      puede dividir monto entre horas y deducir el sueldo de un compañero. Si eso no conviene,
+      desmarca «Mostrar montos acumulados» y el ranking queda solo con horas.
+    </div>
+  </div>
+
+  <!-- ---------- DETALLE ---------- -->
+  <div class="card rev boleto">
+    <h3>Registros guardados</h3>
+    <div class="tabla">
+      <table>
+        <thead><tr>
+          <th>Fecha</th><th>Día</th><th>Asesor</th><th>Horario</th><th>Real</th>
+          <th class="num">25%</th><th class="num">35%</th><th class="num">Desc.</th>
+          <th class="num money">Pago</th><th style="width:40px"></th>
+        </tr></thead>
+        <tbody id="tbReg"></tbody>
+      </table>
+    </div>
+    <div class="vacio" id="regVacio"><span class="ic">»»»</span>Aún no hay registros.</div>
+  </div>
+
+  <!-- ---------- HORARIOS ---------- -->
+  <div class="card rev boleto">
+    <h3>Horarios configurados</h3>
+    <div class="tabla">
+      <table>
+        <thead><tr><th>Día</th><th>Turno mañana</th><th>Turno tarde</th><th>Refrigerio</th><th class="num">Horas efectivas</th></tr></thead>
+        <tbody id="tbHor"></tbody>
+      </table>
+    </div>
+    <div class="aviso w">
+      <b>Sábados y domingos no hay refrigerio.</b> De lunes a viernes se descuenta 1 hora
+      en ambos turnos. La semana suma <b>48 horas efectivas</b> (8.5 × 5 + 5.5), el tope legal.
+    </div>
+  </div>
+
+</div>
+
+<div class="pie">
+  <span class="ch">»»»»»»»</span><br>
+  <b>SISE</b> Instituto Superior — Herramienta de estimación.<br>
+  No reemplaza el cálculo oficial de Gestión Humana.
+</div>
+
+<!-- ============================================================
+     FIREBASE — SDK + conexión al proyecto MiSueldo
+     ============================================================ -->
+<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore-compat.js"></script>
+
+<script>
+/* ============================================================
+   PEGA AQUÍ TU CONFIGURACIÓN DE FIREBASE
+   (la sacas de: Configuración del proyecto → tus apps → SDK setup)
+   ============================================================ */
+var firebaseConfig = {
+  apiKey: "AIzaSyBBkhl0uVAK4V65ob3Gu6yf43R3gdTEmCM",
+  authDomain: "misueldo-46e8f.firebaseapp.com",
+  projectId: "misueldo-46e8f",
+  storageBucket: "misueldo-46e8f.firebasestorage.app",
+  messagingSenderId: "7570866395",
+  appId: "1:7570866395:web:610f8b5dcab936c9a30cfe"
+};
+firebase.initializeApp(firebaseConfig);
+var db = firebase.firestore();
+var coleccion = db.collection('registros');
+</script>
+
+<script>
+/* ============================================================
+   JORNADAS  ·  0=Dom 1=Lun ... 6=Sáb
+   Refrigerio solo de lunes a viernes. Sábado y domingo: sin break.
+   ============================================================ */
+var LV_AM = {ini:'08:00', fin:'17:30', brk:60};
+var LV_PM = {ini:'11:30', fin:'21:00', brk:60};
+
+var JORNADAS = {
+  am: {1:LV_AM, 2:LV_AM, 3:LV_AM, 4:LV_AM, 5:LV_AM,
+       6:{ini:'08:00', fin:'13:30', brk:0},
+       0:{ini:'09:00', fin:'14:30', brk:0, descanso:true}},
+  pm: {1:LV_PM, 2:LV_PM, 3:LV_PM, 4:LV_PM, 5:LV_PM,
+       6:{ini:'12:30', fin:'18:00', brk:0},
+       0:{ini:'09:00', fin:'14:30', brk:0, descanso:true}}
+};
+
+var DIAS = ['Domingo','Lunes','Martes','Miércoles','Jueves','Viernes','Sábado'];
+
+/* Tasas previsionales 2026. Prima de seguro 1.37% (Ley 32123, enero 2026). */
+var TASAS = {
+  habitat:  {n:'AFP Habitat',   t:0.10 + 0.0137 + 0.0147},
+  integra:  {n:'AFP Integra',   t:0.10 + 0.0137 + 0.0155},
+  prima:    {n:'AFP Prima',     t:0.10 + 0.0137 + 0.0160},
+  profuturo:{n:'AFP Profuturo', t:0.10 + 0.0137 + 0.0169},
+  mixta:    {n:'AFP mixta',     t:0.10 + 0.0137},
+  onp:      {n:'ONP',           t:0.13},
+  ninguno:  {n:'Sin sistema',   t:0}
+};
+
+var registros = [];   // ahora se llena desde Firestore, no a mano
+
+/* ---------- utilidades ---------- */
+function $(id){ return document.getElementById(id); }
+function aMin(t){ var p = t.split(':'); return (+p[0]) * 60 + (+p[1]); }
+function hhmm(m){ return Math.floor(m/60) + ':' + String(Math.round(m%60)).padStart(2,'0'); }
+function soles(n){ return 'S/ ' + n.toFixed(2); }
+function dow(iso){ var p = iso.split('-'); return new Date(p[0], p[1]-1, p[2]).getDay(); }
+function esc(t){ return String(t||'').replace(/[<>&"]/g, function(c){
+  return {'<':'&lt;','>':'&gt;','&':'&amp;','"':'&quot;'}[c]; }); }
+
+/* ============================================================
+   CÁLCULO DE UN DÍA
+   ============================================================ */
+function calcular(d){
+  var w = dow(d.fecha);
+  var j = JORNADAS[d.turno][w];
+  var descanso = !!j.descanso || d.feriado;
+
+  var ini = aMin(d.ent), fin = aMin(d.sal);
+  if (fin <= ini) fin += 1440;                    // cruzó medianoche
+
+  var r = {dia:DIAS[w], w:w, jor:j, descanso:descanso,
+           h25:0, h35:0, hDesc:0, antes:0, despues:0, refri:0, avisos:[]};
+
+  if (descanso) {
+    // Domingo o feriado: toda la jornada tiene tratamiento especial.
+    r.hDesc = (fin - ini) / 60;
+    r.avisos.push(d.sust
+      ? 'Con descanso sustitutorio: se compensa con otro día libre, sin sobretasa.'
+      : 'Sin descanso sustitutorio: pago del día + sobretasa 100% (D.Leg. 713).');
+  } else {
+    r.antes   = Math.max(0, aMin(j.ini) - ini);
+    r.despues = Math.max(0, fin - aMin(j.fin));
+    r.refri   = d.refri ? j.brk : 0;              // solo suma si ese día tiene refrigerio
+
+    var extra = (r.antes + r.despues + r.refri) / 60;
+    r.h25 = Math.min(extra, 2);                   // primeras 2 h → 25%
+    r.h35 = Math.max(0, extra - 2);               // resto → 35%
+
+    if (r.refri) r.avisos.push('Refrigerio laborado computado como sobretiempo.');
+    if (j.brk === 0 && d.refri) r.avisos.push('Ese día no tiene refrigerio asignado: no suma horas.');
+    if (extra > 4) r.avisos.push('Más de 4 horas extra. El sobretiempo requiere autorización de jefatura.');
+  }
+
+  if (fin > 1320) r.avisos.push('Trabajo después de las 22:00: puede corresponder sobretasa nocturna, no incluida aquí.');
+
+  r.horas = r.h25 + r.h35 + r.hDesc;
+  r.trab  = (fin - ini - (descanso ? 0 : (d.refri ? 0 : j.brk))) / 60;
+  return r;
+}
+
+/* Valor hora = (sueldo / 30) / 8 */
+function pagar(r, sueldo, sust){
+  var vh = (sueldo / 30) / 8;
+  var p25 = r.h25 * vh * 1.25;
+  var p35 = r.h35 * vh * 1.35;
+  var pD  = sust ? 0 : r.hDesc * vh * 2;
+  return {vh:vh, p25:p25, p35:p35, pD:pD, bruto:p25 + p35 + pD};
+}
+
+/* ---------- leer el formulario ---------- */
+function leer(){
+  if (!$('fecha').value || !$('ent').value || !$('sal').value) return null;
+  return {
+    nombre: $('nombre').value.trim(),
+    turno:  $('turno').value,
+    sueldo: +$('sueldo').value || 0,
+    afp:    $('afp').value,
+    fecha:  $('fecha').value,
+    ent:    $('ent').value,
+    sal:    $('sal').value,
+    refri:  $('refri').checked,
+    feriado:$('feriado').checked,
+    sust:   $('sust').checked
+  };
+}
+
+/* ============================================================
+   VISTA PREVIA
+   ============================================================ */
+function previa(){
+  var d = leer(), box = $('res');
+
+  if (!d) {
+    $('horario').value = '—';
+    box.innerHTML = '<div class="vacio"><span class="ic">»»»</span>Completa fecha, entrada y salida.</div>';
+    return;
+  }
+
+  var j = JORNADAS[d.turno][dow(d.fecha)];
+  $('horario').value = DIAS[dow(d.fecha)] + ' · ' + j.ini + ' a ' + j.fin +
+                       (j.brk ? ' (refrigerio ' + j.brk + ' min)' : ' (sin refrigerio)');
+
+  var r = calcular(d), p = pagar(r, d.sueldo, d.sust);
+  var ta = TASAS[d.afp], desc = p.bruto * ta.t, k = 0, h = '';
+  function li(cls, izq, der){
+    return '<div class="' + cls + '" style="animation-delay:' + (k++ * 32) + 'ms"><span>' +
+           izq + '</span><span>' + der + '</span></div>';
+  }
+
+  h += li('', r.dia + (d.feriado ? ' <span class="tag dsc">Feriado</span>' : ''), r.jor.ini + ' – ' + r.jor.fin);
+  h += li('sub', 'Tiempo efectivo trabajado', r.trab.toFixed(2) + ' h');
+  if (r.antes)   h += li('sub', 'Extra antes del horario',   hhmm(r.antes) + ' h');
+  if (r.despues) h += li('sub', 'Extra después del horario',  hhmm(r.despues) + ' h');
+  if (r.refri)   h += li('sub', 'Refrigerio laborado',        hhmm(r.refri) + ' h');
+
+  if (r.h25)   h += li('', '<span class="tag t25">25%</span> ' + r.h25.toFixed(2) + ' h', soles(p.p25));
+  if (r.h35)   h += li('', '<span class="tag t35">35%</span> ' + r.h35.toFixed(2) + ' h', soles(p.p35));
+  if (r.hDesc) h += li('', '<span class="tag dsc">' + (d.sust ? 'Sustitutorio' : '100%') + '</span> ' +
+                            r.hDesc.toFixed(2) + ' h', soles(p.pD));
+  if (!r.horas) h += li('', 'Sin sobretiempo este día', '0.00 h');
+
+  h += li('sub', 'Valor hora ordinario', soles(p.vh));
+  h += li('', '<b>Bruto del día</b>', soles(p.bruto));
+  if (ta.t) h += li('menos sub', '− ' + ta.n + ' (' + (ta.t*100).toFixed(2) + '%)', '−' + soles(desc));
+  h += li('tot', 'Neto estimado', soles(p.bruto - desc));
+
+  for (var i = 0; i < r.avisos.length; i++)
+    h += '<div class="aviso w" style="animation-delay:' + (k++ * 32) + 'ms">' + r.avisos[i] + '</div>';
+
+  box.innerHTML = h;
+  box.classList.remove('pulso');
+  void box.offsetWidth;               // reinicia la animación
+  box.classList.add('pulso');
+}
+
+/* ============================================================
+   GUARDAR / EJEMPLO / LIMPIAR  →  ahora contra Firestore
+   ============================================================ */
+function calcularRegistro(d){
+  var r = calcular(d), p = pagar(r, d.sueldo, d.sust);
+  return {
+    nombre:d.nombre, turno:d.turno, fecha:d.fecha, dia:r.dia,
+    jor:r.jor.ini + '–' + r.jor.fin, real:d.ent + '–' + d.sal,
+    h25:r.h25, h35:r.h35, hDesc:r.hDesc, horas:r.horas,
+    sust:d.sust, feriado:d.feriado,
+    bruto:p.bruto, neto:p.bruto * (1 - TASAS[d.afp].t)
+  };
+}
+
+// agrega UN registro a Firestore (la tabla se actualiza sola por el listener de abajo)
+function agregar(d){
+  return coleccion.add(calcularRegistro(d));
+}
+
+$('guardar').onclick = function(){
+  var d = leer();
+  if (!d)        return alert('Completa fecha, entrada y salida.');
+  if (!d.nombre) { $('nombre').focus(); return alert('Escribe el nombre del asesor.'); }
+  agregar(d).then(function(){
+    document.querySelector('.kpis').scrollIntoView({behavior:'smooth', block:'center'});
+  }).catch(function(e){ alert('No se pudo guardar: ' + e.message); });
+};
+
+$('ejemplo').onclick = function(){
+  // Setiembre 2026: 5 y 12 son sábados · 6 y 13 son domingos
+  var demo = [
+    // Muchas horas, todas en días normales
+    ['Jhon Ruiz',      'pm', 2600, 'integra',   '2026-09-07','10:30','22:00'],
+    ['Jhon Ruiz',      'pm', 2600, 'integra',   '2026-09-08','10:30','22:00'],
+    ['Jhon Ruiz',      'pm', 2600, 'integra',   '2026-09-09','11:30','23:00'],
+    ['Jhon Ruiz',      'pm', 2600, 'integra',   '2026-09-10','09:30','22:00'],
+    ['Jhon Ruiz',      'pm', 2600, 'integra',   '2026-09-12','12:30','20:00'],
+    // Menos horas, pero un domingo completo pagado al doble
+    ['María Quispe',   'am', 3100, 'habitat',   '2026-09-07','08:00','20:00'],
+    ['María Quispe',   'am', 3100, 'habitat',   '2026-09-13','09:00','14:30'],
+    // Sábado y una entrada anticipada
+    ['Carlos Mendoza', 'pm', 2200, 'onp',       '2026-09-05','12:30','19:00'],
+    ['Carlos Mendoza', 'pm', 2200, 'onp',       '2026-09-14','09:00','14:30'],
+    ['Lucía Ramos',    'am', 2450, 'mixta',     '2026-09-11','07:00','17:30'],
+    ['Diego Salas',    'pm', 2800, 'profuturo', '2026-09-11','11:30','21:30']
+  ];
+  var lote = db.batch();
+  for (var i = 0; i < demo.length; i++) {
+    var x = demo[i];
+    var reg = calcularRegistro({nombre:x[0], turno:x[1], sueldo:x[2], afp:x[3], fecha:x[4],
+             ent:x[5], sal:x[6], refri:false, feriado:false, sust:false});
+    lote.set(coleccion.doc(), reg);
+  }
+  lote.commit().then(function(){
+    document.querySelector('.kpis').scrollIntoView({behavior:'smooth', block:'start'});
+  }).catch(function(e){ alert('No se pudo cargar el ejemplo: ' + e.message); });
+};
+
+$('limpiar').onclick = function(){
+  if (!registros.length) return;
+  if (!confirm('¿Borrar los ' + registros.length + ' registros? Esto los borra para todos.')) return;
+  var lote = db.batch();
+  for (var i = 0; i < registros.length; i++) lote.delete(coleccion.doc(registros[i].id));
+  lote.commit().catch(function(e){ alert('No se pudo borrar: ' + e.message); });
+};
+
+$('verMontos').onchange = function(){
+  // transición suave al mostrar u ocultar la columna de dinero
+  var t = $('wrapRank');
+  t.classList.add('fade');
+  setTimeout(function(){ pintar(); t.classList.remove('fade'); }, 180);
+};
+
+function borrar(i){
+  var reg = registros[i];
+  if (!reg) return;
+  coleccion.doc(reg.id).delete().catch(function(e){ alert('No se pudo borrar: ' + e.message); });
+}
+
+/* ---------- contador animado ---------- */
+function contar(el, hasta, dec, pre){
+  var desde = 0, ini = null, dur = 750;
+  function paso(t){
+    if (!ini) ini = t;
+    var k = Math.min((t - ini) / dur, 1);
+    var suave = 1 - Math.pow(1 - k, 3);            // easing cúbico de salida
+    el.textContent = (pre || '') + (desde + (hasta - desde) * suave).toFixed(dec);
+    if (k < 1) requestAnimationFrame(paso);
+  }
+  requestAnimationFrame(paso);
+}
+
+/* ============================================================
+   RENDERIZADO
+   ============================================================ */
+function pintar(){
+  /* ----- tabla de registros ----- */
+  var verM = $('verMontos').checked, h = '';
+  $('regVacio').style.display = registros.length ? 'none' : 'block';
+  for (var i = 0; i < registros.length; i++) {
+    var r = registros[i];
+    h += '<tr style="animation-delay:' + Math.min(i * 30, 400) + 'ms">' +
+      '<td><b>' + r.fecha.slice(8) + '/' + r.fecha.slice(5,7) + '</b></td>' +
+      '<td>' + r.dia + (r.feriado ? ' <span class="tag dsc">Fer.</span>' : '') + '</td>' +
+      '<td>' + esc(r.nombre) + '</td>' +
+      '<td style="color:var(--gris)">' + r.jor + '</td>' +
+      '<td><b>' + r.real + '</b></td>' +
+      '<td class="num">' + (r.h25 ? r.h25.toFixed(2) : '—') + '</td>' +
+      '<td class="num">' + (r.h35 ? r.h35.toFixed(2) : '—') + '</td>' +
+      '<td class="num">' + (r.hDesc ? r.hDesc.toFixed(2) + (r.sust ? ' *' : '') : '—') + '</td>' +
+      '<td class="num money rojo"' + (verM ? '' : ' style="display:none"') + '>' + soles(r.neto) + '</td>' +
+      '<td><button class="btn mini" onclick="borrar(' + i + ')" title="Eliminar">✕</button></td></tr>';
+  }
+  $('tbReg').innerHTML = h;
+
+  /* ----- agrupar por asesor ----- */
+  var mapa = {};
+  for (var k = 0; k < registros.length; k++) {
+    var g = registros[k], m = mapa[g.nombre];
+    if (!m) m = mapa[g.nombre] = {nombre:g.nombre, turno:g.turno, dias:0,
+                                  h25:0, h35:0, hDesc:0, horas:0, bruto:0, neto:0};
+    m.dias++; m.h25 += g.h25; m.h35 += g.h35; m.hDesc += g.hDesc;
+    m.horas += g.horas; m.bruto += g.bruto; m.neto += g.neto;
+    m.turno = g.turno;
+  }
+  var lista = Object.keys(mapa).map(function(k){ return mapa[k]; })
+                    .sort(function(a,b){ return b.horas - a.horas; });
+
+  var maxH = lista.length ? lista[0].horas : 1;
+  var totH = 0, totB = 0, totN = 0, totD = 0;
+  for (var t = 0; t < lista.length; t++) {
+    totH += lista[t].horas; totB += lista[t].bruto;
+    totN += lista[t].neto;  totD += lista[t].hDesc;
+  }
+
+  // encabezado de la columna de dinero
+  var ths = document.querySelectorAll('th.money');
+  for (var c = 0; c < ths.length; c++) ths[c].style.display = verM ? '' : 'none';
+  $('avisoPrivacidad').style.display = verM ? 'block' : 'none';
+  $('rankVacio').style.display = lista.length ? 'none' : 'block';
+
+  /* ----- tabla del ranking ----- */
+  var h2 = '';
+  for (var n = 0; n < lista.length; n++) {
+    var e = lista[n];
+    h2 += '<tr class="' + (n === 0 ? 'lider' : '') + '" style="animation-delay:' + (n * 55) + 'ms">' +
+      '<td><span class="pos ' + (n < 3 ? 'p' + (n+1) : '') + '">' + (n+1) + '</span></td>' +
+      '<td><b>' + esc(e.nombre) + '</b></td>' +
+      '<td><span class="tag ' + e.turno + '">' + (e.turno === 'am' ? 'Mañana' : 'Tarde') + '</span></td>' +
+      '<td class="num">' + e.dias + '</td>' +
+      '<td class="num">' + e.h25.toFixed(2) + '</td>' +
+      '<td class="num">' + e.h35.toFixed(2) + '</td>' +
+      '<td class="num">' + e.hDesc.toFixed(2) + '</td>' +
+      '<td class="num rojo">' + e.horas.toFixed(2) + '</td>' +
+      '<td><div class="barra"><i data-w="' + (e.horas / maxH * 100).toFixed(1) + '"></i></div></td>' +
+      '<td class="num money"' + (verM ? '' : ' style="display:none"') + '><b>' + soles(e.neto) + '</b></td>' +
+      '</tr>';
+  }
+  if (lista.length) {
+    h2 += '<tr class="total" style="animation-delay:' + (lista.length * 55) + 'ms">' +
+      '<td></td><td><b>TOTAL EQUIPO</b></td><td></td>' +
+      '<td class="num">' + registros.length + '</td><td colspan="3"></td>' +
+      '<td class="num rojo">' + totH.toFixed(2) + '</td><td></td>' +
+      '<td class="num money"' + (verM ? '' : ' style="display:none"') + '>' + soles(totN) + '</td></tr>';
+  }
+  $('tbRank').innerHTML = h2;
+
+  // las barras se llenan un instante después, para que se vea el recorrido
+  requestAnimationFrame(function(){
+    var bs = document.querySelectorAll('.barra i');
+    for (var b = 0; b < bs.length; b++) {
+      (function(el, d){ setTimeout(function(){ el.style.width = el.dataset.w + '%'; }, d); })(bs[b], 90 + b * 55);
+    }
+  });
+
+  /* ----- podio ----- */
+  var pod = $('podio');
+  if (lista.length < 2) { pod.innerHTML = ''; }
+  else {
+    var top = lista.slice(0, 3), ph = '';
+    for (var q = 0; q < top.length; q++) {
+      ph += '<div class="pod o' + (q+1) + '" style="animation-delay:' + (q * 90) + 'ms">' +
+        '<div class="cinta"></div>' +
+        '<div class="medalla">' + (q+1) + '</div>' +
+        '<div class="quien">' + esc(top[q].nombre) + '</div>' +
+        '<div class="horas">' + top[q].horas.toFixed(2) + ' h</div>' +
+        '<div class="sub">' + top[q].dias + ' día' + (top[q].dias === 1 ? '' : 's') +
+        (verM ? ' · ' + soles(top[q].neto) : '') + '</div></div>';
+    }
+    pod.innerHTML = ph;
+  }
+
+  /* ----- KPIs ----- */
+  var kp = $('kpis');
+  if (!lista.length) { kp.innerHTML = ''; return; }
+
+  // El líder en horas no siempre es el líder en soles: los sueldos son distintos.
+  var porPlata = lista.slice().sort(function(a,b){ return b.neto - a.neto; });
+  var mismoLider = porPlata[0].nombre === lista[0].nombre;
+
+  kp.innerHTML =
+    '<div class="kpi nombre" style="animation-delay:0ms"><div class="et">Líder en horas</div>' +
+      '<div class="val">' + esc(lista[0].nombre) + '</div>' +
+      '<div class="nota">' + lista[0].horas.toFixed(2) + ' h en ' + lista[0].dias + ' día' +
+      (lista[0].dias === 1 ? '' : 's') + (verM ? ' · ' + soles(lista[0].neto) : '') + '</div></div>' +
+
+    '<div class="kpi teal" style="animation-delay:70ms"><div class="et">Asesores con registros</div>' +
+      '<div class="val" data-n="' + lista.length + '" data-d="0">0</div>' +
+      '<div class="nota">' + registros.length + ' día' + (registros.length === 1 ? '' : 's') +
+      ' registrado' + (registros.length === 1 ? '' : 's') + '</div></div>' +
+
+    '<div class="kpi azul" style="animation-delay:140ms"><div class="et">Horas extra del equipo</div>' +
+      '<div class="val" data-n="' + totH + '" data-d="1">0</div>' +
+      '<div class="nota">promedio ' + (totH / lista.length).toFixed(1) + ' h por asesor</div></div>' +
+
+    (verM
+      ? '<div class="kpi morado" style="animation-delay:210ms"><div class="et">Acumulado del equipo</div>' +
+        '<div class="val" data-n="' + totN + '" data-d="2" data-p="S/ ">0</div>' +
+        '<div class="nota">costo bruto ' + soles(totB) + '</div></div>'
+      : '<div class="kpi morado" style="animation-delay:210ms"><div class="et">Horas en día de descanso</div>' +
+        '<div class="val" data-n="' + totD + '" data-d="1">0</div>' +
+        '<div class="nota">domingos y feriados laborados</div></div>') +
+
+    (verM && !mismoLider
+      ? '<div class="kpi alerta" style="animation-delay:280ms"><div class="et">Ojo con esto</div>' +
+        '<div class="nota"><b>' + esc(lista[0].nombre) + '</b> lidera en horas (' +
+        lista[0].horas.toFixed(2) + ' h), pero <b>' + esc(porPlata[0].nombre) +
+        '</b> acumula más dinero (' + soles(porPlata[0].neto) + '). Los sueldos base son ' +
+        'distintos y el domingo se paga al doble, así que más horas no significa más pago.</div></div>'
+      : '');
+
+  // animar los números
+  var vals = kp.querySelectorAll('.val[data-n]');
+  for (var v = 0; v < vals.length; v++)
+    contar(vals[v], +vals[v].dataset.n, +vals[v].dataset.d, vals[v].dataset.p);
+}
+
+/* ============================================================
+   TABLA DE HORARIOS
+   ============================================================ */
+(function(){
+  var orden = [1,2,3,4,5,6,0], h = '';
+  for (var i = 0; i < orden.length; i++) {
+    var d = orden[i], a = JORNADAS.am[d], p = JORNADAS.pm[d];
+    var ef = ((aMin(a.fin) - aMin(a.ini) - a.brk) / 60).toFixed(1);
+    h += '<tr style="animation-delay:' + (i * 55) + 'ms">' +
+      '<td><b>' + (d === 1 ? 'Lunes a viernes' : DIAS[d]) + '</b>' +
+        (d === 0 ? ' <span class="tag dsc">Descanso</span>' : '') + '</td>' +
+      '<td>' + a.ini + ' – ' + a.fin + '</td>' +
+      '<td>' + p.ini + ' – ' + p.fin + '</td>' +
+      '<td>' + (a.brk ? a.brk + ' min' : '<b>sin refrigerio</b>') + '</td>' +
+      '<td class="num"><b>' + ef + '</b></td></tr>';
+    if (d === 1) i += 4;                       // lunes a viernes en una sola fila
+  }
+  h += '<tr class="total"><td colspan="4"><b>TOTAL SEMANAL (lunes a sábado)</b></td>' +
+       '<td class="num rojo"><b>48.0</b></td></tr>';
+  $('tbHor').innerHTML = h;
+})();
+
+/* ============================================================
+   ARRANQUE
+   ============================================================ */
+var ids = ['fecha','ent','sal','turno','sueldo','afp','refri','feriado','sust'];
+for (var i = 0; i < ids.length; i++) {
+  $(ids[i]).addEventListener('change', previa);
+  $(ids[i]).addEventListener('input', previa);
+}
+$('fecha').value = new Date().toISOString().slice(0,10);
+previa();
+
+// escucha Firestore en tiempo real: cualquier cambio (tuyo o de otra persona) repinta todo
+coleccion.orderBy('fecha').onSnapshot(function(snap){
+  registros = snap.docs.map(function(doc){
+    var d = doc.data(); d.id = doc.id; return d;
+  });
+  pintar();
+}, function(e){
+  $('tbReg').innerHTML = '';
+  $('regVacio').style.display = 'block';
+  $('regVacio').innerHTML = '<span class="ic">»»»</span>No se pudo conectar con Firebase: ' + e.message;
+});
+
+// revelar tarjetas al entrar en pantalla
+if ('IntersectionObserver' in window) {
+  var obs = new IntersectionObserver(function(entradas){
+    for (var i = 0; i < entradas.length; i++)
+      if (entradas[i].isIntersecting) {
+        entradas[i].target.classList.add('on');
+        obs.unobserve(entradas[i].target);
+      }
+  }, {threshold:.08, rootMargin:'0px 0px -40px 0px'});
+  var revs = document.querySelectorAll('.rev');
+  for (var j = 0; j < revs.length; j++) obs.observe(revs[j]);
+} else {
+  var r2 = document.querySelectorAll('.rev');
+  for (var m = 0; m < r2.length; m++) r2[m].classList.add('on');
+}
+</script>
+</body>
+</html>
