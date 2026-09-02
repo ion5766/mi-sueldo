@@ -481,7 +481,10 @@ tr:hover .tag{transform:translateY(-1px)}
           <label>Asesor</label>
           <div class="sesion-box" id="sesionBox">
             <span id="sesionTexto">No has iniciado sesión</span>
-            <button type="button" class="btn mini" id="btnSesion" style="color:var(--rojo-os)">Entrar / crear usuario</button>
+            <span style="display:flex;gap:6px;flex-wrap:wrap">
+              <button type="button" class="btn mini" id="btnPrivacidad" style="display:none"></button>
+              <button type="button" class="btn mini" id="btnSesion" style="color:var(--rojo-os)">Entrar / crear usuario</button>
+            </span>
           </div>
         </div>
         <div class="campo">
@@ -546,10 +549,10 @@ tr:hover .tag{transform:translateY(-1px)}
     <h3>Ranking general de asesores</h3>
 
     <div class="acciones">
-      <label class="check" style="margin:0">
-        <input type="checkbox" id="verMontos" checked><span>Mostrar montos acumulados</span>
-      </label>
-      <span style="flex:1"></span>
+      <span style="flex:1;font-size:.86rem;color:var(--gris-os)">
+        Las horas son visibles para todo el equipo. El monto acumulado de cada asesor
+        solo se muestra a los demás si esa persona decide compartirlo.
+      </span>
       <button class="btn x" id="limpiar">Limpiar todo</button>
     </div>
 
@@ -571,9 +574,9 @@ tr:hover .tag{transform:translateY(-1px)}
     </div>
 
     <div class="aviso w" id="avisoPrivacidad">
-      <b>Los montos están visibles para todos.</b> Como también se ven las horas, cualquiera
-      puede dividir monto entre horas y deducir el sueldo de un compañero. Si eso no conviene,
-      desmarca «Mostrar montos acumulados» y el ranking queda solo con horas.
+      <b>El monto es privado por defecto.</b> Cada asesor decide, desde su recuadro de sesión,
+      si quiere que los demás vean cuánto acumula. Las horas trabajadas siempre son visibles
+      para todo el equipo, sin excepción.
     </div>
   </div>
 
@@ -757,6 +760,16 @@ function hashPin(pin, clave){
 }
 
 var sesion = null; // {nombre, clave}
+var preferencias = {}; // clave -> {nombre, compartirMonto, ...} de la colección usuarios
+
+// decide si el monto de un asesor (por su clave normalizada) puede mostrarse:
+// siempre a sí mismo, y a los demás solo si esa persona activó "compartir"
+function puedeVerMonto(clave){
+  if (!clave) return false;
+  if (sesion && clave === sesion.clave) return true;
+  var p = preferencias[clave];
+  return !!(p && p.compartirMonto);
+}
 
 function cargarSesion(){
   try {
@@ -769,17 +782,31 @@ function guardarSesionLocal(){
   try { localStorage.setItem('sise_sesion', JSON.stringify(sesion)); } catch(e){}
 }
 function pintarSesion(){
-  var box = $('sesionBox'), txt = $('sesionTexto'), btn = $('btnSesion');
+  var box = $('sesionBox'), txt = $('sesionTexto'), btn = $('btnSesion'), btnP = $('btnPrivacidad');
   if (sesion) {
     box.classList.add('on');
     txt.innerHTML = 'Conectado como <b>' + esc(sesion.nombre) + '</b>';
     btn.textContent = 'Cambiar';
+    var comparte = preferencias[sesion.clave] && preferencias[sesion.clave].compartirMonto;
+    btnP.style.display = '';
+    btnP.textContent = comparte ? '💰 Monto visible' : '🔒 Monto privado';
+    btnP.title = comparte
+      ? 'Los demás pueden ver tu monto acumulado. Toca para ocultarlo.'
+      : 'Solo tú ves tu monto acumulado. Toca para compartirlo con el equipo.';
   } else {
     box.classList.remove('on');
     txt.textContent = 'No has iniciado sesión';
     btn.textContent = 'Entrar / crear usuario';
+    btnP.style.display = 'none';
   }
 }
+
+$('btnPrivacidad').onclick = function(){
+  if (!sesion || !FIREBASE_LISTO) return;
+  var actual = !!(preferencias[sesion.clave] && preferencias[sesion.clave].compartirMonto);
+  usuariosCol.doc(sesion.clave).set({compartirMonto: !actual}, {merge:true})
+    .catch(function(e){ alert('No se pudo actualizar tu preferencia: ' + e.message); });
+};
 
 var loginCallback = null;
 function abrirLogin(cb){
@@ -831,7 +858,8 @@ $('loginEntrar').onclick = function(){
     } else {
       // primera vez que se usa este nombre: se crea el usuario con este PIN
       usuariosCol.doc(clave).set({
-        nombre: nombre, pin: h, creado: firebase.firestore.FieldValue.serverTimestamp()
+        nombre: nombre, pin: h, compartirMonto: false,
+        creado: firebase.firestore.FieldValue.serverTimestamp()
       }).then(function(){
         sesion = {nombre: nombre, clave: clave};
         finalizarLogin(btn);
@@ -1045,13 +1073,6 @@ $('limpiar').onclick = function(){
   lote.commit().catch(function(e){ alert('No se pudo borrar: ' + e.message); });
 };
 
-$('verMontos').onchange = function(){
-  // transición suave al mostrar u ocultar la columna de dinero
-  var t = $('wrapRank');
-  t.classList.add('fade');
-  setTimeout(function(){ pintar(); t.classList.remove('fade'); }, 180);
-};
-
 function borrar(i){
   if (!FIREBASE_LISTO) return alert('Sin conexión con la base de datos. Revisa tu internet o recarga la página.');
   var reg = registros[i];
@@ -1079,10 +1100,11 @@ function contar(el, hasta, dec, pre){
    ============================================================ */
 function pintar(){
   /* ----- tabla de registros ----- */
-  var verM = $('verMontos').checked, h = '';
+  var h = '';
   $('regVacio').style.display = registros.length ? 'none' : 'block';
   for (var i = 0; i < registros.length; i++) {
     var r = registros[i];
+    var veo = puedeVerMonto(r.claveNombre);
     h += '<tr style="animation-delay:' + Math.min(i * 30, 400) + 'ms">' +
       '<td><b>' + r.fecha.slice(8) + '/' + r.fecha.slice(5,7) + '</b></td>' +
       '<td>' + r.dia + (r.feriado ? ' <span class="tag dsc">Fer.</span>' : '') + '</td>' +
@@ -1094,7 +1116,7 @@ function pintar(){
       '<td class="num">' + (r.h25 ? r.h25.toFixed(2) : '—') + '</td>' +
       '<td class="num">' + (r.h35 ? r.h35.toFixed(2) : '—') + '</td>' +
       '<td class="num">' + (r.hDesc ? r.hDesc.toFixed(2) + (r.sust ? ' *' : '') : '—') + '</td>' +
-      '<td class="num money rojo"' + (verM ? '' : ' style="display:none"') + '>' + soles(r.neto) + '</td>' +
+      '<td class="num money' + (veo ? ' rojo' : '') + '">' + (veo ? soles(r.neto) : '<span style="color:var(--linea);font-size:.8rem">🔒 privado</span>') + '</td>' +
       '<td>' + (sesion && r.claveNombre === sesion.clave
         ? '<button class="btn mini" onclick="borrar(' + i + ')" title="Eliminar">✕</button>'
         : '<span class="btn mini" style="opacity:.28;cursor:default" title="Solo el autor puede borrar su registro">✕</span>') +
@@ -1106,7 +1128,7 @@ function pintar(){
   var mapa = {};
   for (var k = 0; k < registros.length; k++) {
     var g = registros[k], m = mapa[g.nombre];
-    if (!m) m = mapa[g.nombre] = {nombre:g.nombre, turno:g.turno, dias:0,
+    if (!m) m = mapa[g.nombre] = {nombre:g.nombre, claveNombre:g.claveNombre, turno:g.turno, dias:0,
                                   h25:0, h35:0, hDesc:0, horas:0, bruto:0, neto:0};
     m.dias++; m.h25 += g.h25; m.h35 += g.h35; m.hDesc += g.hDesc;
     m.horas += g.horas; m.bruto += g.bruto; m.neto += g.neto;
@@ -1116,25 +1138,23 @@ function pintar(){
                     .sort(function(a,b){ return b.horas - a.horas; });
 
   var maxH = lista.length ? lista[0].horas : 1;
-  var totH = 0, totB = 0, totN = 0, totD = 0;
+  var totH = 0, totD = 0, totNvisible = 0, visibles = 0;
   for (var t = 0; t < lista.length; t++) {
-    totH += lista[t].horas; totB += lista[t].bruto;
-    totN += lista[t].neto;  totD += lista[t].hDesc;
+    totH += lista[t].horas; totD += lista[t].hDesc;
+    if (puedeVerMonto(lista[t].claveNombre)) { totNvisible += lista[t].neto; visibles++; }
   }
 
-  // encabezado de la columna de dinero
-  var ths = document.querySelectorAll('th.money');
-  for (var c = 0; c < ths.length; c++) ths[c].style.display = verM ? '' : 'none';
-  $('avisoPrivacidad').style.display = verM ? 'block' : 'none';
   $('rankVacio').style.display = lista.length ? 'none' : 'block';
 
   /* ----- tabla del ranking ----- */
   var h2 = '';
   for (var n = 0; n < lista.length; n++) {
-    var e = lista[n];
+    var e = lista[n], veoE = puedeVerMonto(e.claveNombre);
     h2 += '<tr class="' + (n === 0 ? 'lider' : '') + '" style="animation-delay:' + (n * 55) + 'ms">' +
       '<td><span class="pos ' + (n < 3 ? 'p' + (n+1) : '') + '">' + (n+1) + '</span></td>' +
-      '<td><b>' + esc(e.nombre) + '</b></td>' +
+      '<td><b>' + esc(e.nombre) + '</b>' +
+        (sesion && e.claveNombre === sesion.clave
+          ? ' <span class="tag" style="background:var(--teal);color:#fff">Tú</span>' : '') + '</td>' +
       '<td><span class="tag ' + e.turno + '">' + (e.turno === 'am' ? 'Mañana' : 'Tarde') + '</span></td>' +
       '<td class="num">' + e.dias + '</td>' +
       '<td class="num">' + e.h25.toFixed(2) + '</td>' +
@@ -1142,7 +1162,7 @@ function pintar(){
       '<td class="num">' + e.hDesc.toFixed(2) + '</td>' +
       '<td class="num rojo">' + e.horas.toFixed(2) + '</td>' +
       '<td><div class="barra"><i data-w="' + (e.horas / maxH * 100).toFixed(1) + '"></i></div></td>' +
-      '<td class="num money"' + (verM ? '' : ' style="display:none"') + '><b>' + soles(e.neto) + '</b></td>' +
+      '<td class="num money">' + (veoE ? '<b>' + soles(e.neto) + '</b>' : '<span style="color:var(--linea);font-size:.8rem">🔒 privado</span>') + '</td>' +
       '</tr>';
   }
   if (lista.length) {
@@ -1150,7 +1170,9 @@ function pintar(){
       '<td></td><td><b>TOTAL EQUIPO</b></td><td></td>' +
       '<td class="num">' + registros.length + '</td><td colspan="3"></td>' +
       '<td class="num rojo">' + totH.toFixed(2) + '</td><td></td>' +
-      '<td class="num money"' + (verM ? '' : ' style="display:none"') + '>' + soles(totN) + '</td></tr>';
+      '<td class="num money">' + soles(totNvisible) +
+      (visibles < lista.length ? ' <span style="font-size:.68rem;color:var(--gris)">(' + visibles + '/' + lista.length + ' comparten)</span>' : '') +
+      '</td></tr>';
   }
   $('tbRank').innerHTML = h2;
 
@@ -1168,13 +1190,14 @@ function pintar(){
   else {
     var top = lista.slice(0, 3), ph = '';
     for (var q = 0; q < top.length; q++) {
+      var veoQ = puedeVerMonto(top[q].claveNombre);
       ph += '<div class="pod o' + (q+1) + '" style="animation-delay:' + (q * 90) + 'ms">' +
         '<div class="cinta"></div>' +
         '<div class="medalla">' + (q+1) + '</div>' +
         '<div class="quien">' + esc(top[q].nombre) + '</div>' +
         '<div class="horas">' + top[q].horas.toFixed(2) + ' h</div>' +
         '<div class="sub">' + top[q].dias + ' día' + (top[q].dias === 1 ? '' : 's') +
-        (verM ? ' · ' + soles(top[q].neto) : '') + '</div></div>';
+        (veoQ ? ' · ' + soles(top[q].neto) : '') + '</div></div>';
     }
     pod.innerHTML = ph;
   }
@@ -1183,15 +1206,19 @@ function pintar(){
   var kp = $('kpis');
   if (!lista.length) { kp.innerHTML = ''; return; }
 
+  var veoLider = puedeVerMonto(lista[0].claveNombre);
+
   // El líder en horas no siempre es el líder en soles: los sueldos son distintos.
-  var porPlata = lista.slice().sort(function(a,b){ return b.neto - a.neto; });
-  var mismoLider = porPlata[0].nombre === lista[0].nombre;
+  // Solo se calcula con quienes decidieron compartir su monto (o contigo mismo).
+  var porPlata = lista.filter(function(x){ return puedeVerMonto(x.claveNombre); })
+                       .sort(function(a,b){ return b.neto - a.neto; });
+  var mismoLider = porPlata.length && porPlata[0].nombre === lista[0].nombre;
 
   kp.innerHTML =
     '<div class="kpi nombre" style="animation-delay:0ms"><div class="et">Líder en horas</div>' +
       '<div class="val">' + esc(lista[0].nombre) + '</div>' +
       '<div class="nota">' + lista[0].horas.toFixed(2) + ' h en ' + lista[0].dias + ' día' +
-      (lista[0].dias === 1 ? '' : 's') + (verM ? ' · ' + soles(lista[0].neto) : '') + '</div></div>' +
+      (lista[0].dias === 1 ? '' : 's') + (veoLider ? ' · ' + soles(lista[0].neto) : '') + '</div></div>' +
 
     '<div class="kpi teal" style="animation-delay:70ms"><div class="et">Asesores con registros</div>' +
       '<div class="val" data-n="' + lista.length + '" data-d="0">0</div>' +
@@ -1202,15 +1229,15 @@ function pintar(){
       '<div class="val" data-n="' + totH + '" data-d="1">0</div>' +
       '<div class="nota">promedio ' + (totH / lista.length).toFixed(1) + ' h por asesor</div></div>' +
 
-    (verM
-      ? '<div class="kpi morado" style="animation-delay:210ms"><div class="et">Acumulado del equipo</div>' +
-        '<div class="val" data-n="' + totN + '" data-d="2" data-p="S/ ">0</div>' +
-        '<div class="nota">costo bruto ' + soles(totB) + '</div></div>'
+    (visibles
+      ? '<div class="kpi morado" style="animation-delay:210ms"><div class="et">Acumulado visible del equipo</div>' +
+        '<div class="val" data-n="' + totNvisible + '" data-d="2" data-p="S/ ">0</div>' +
+        '<div class="nota">solo suma a los ' + visibles + ' de ' + lista.length + ' que comparten su monto</div></div>'
       : '<div class="kpi morado" style="animation-delay:210ms"><div class="et">Horas en día de descanso</div>' +
         '<div class="val" data-n="' + totD + '" data-d="1">0</div>' +
         '<div class="nota">domingos y feriados laborados</div></div>') +
 
-    (verM && !mismoLider
+    (porPlata.length && !mismoLider
       ? '<div class="kpi alerta" style="animation-delay:280ms"><div class="et">Ojo con esto</div>' +
         '<div class="nota"><b>' + esc(lista[0].nombre) + '</b> lidera en horas (' +
         lista[0].horas.toFixed(2) + ' h), pero <b>' + esc(porPlata[0].nombre) +
@@ -1273,6 +1300,14 @@ window.onFirebaseListo = function(){
     $('regVacio').style.display = 'block';
     $('regVacio').innerHTML = '<span class="ic">»»»</span>No se pudo conectar con Firebase: ' + e.message;
   });
+
+  // escucha las preferencias de privacidad de cada asesor (quién comparte su monto)
+  usuariosCol.onSnapshot(function(snap){
+    preferencias = {};
+    for (var i = 0; i < snap.docs.length; i++) preferencias[snap.docs[i].id] = snap.docs[i].data();
+    pintarSesion();
+    pintar();
+  }, function(e){ /* si esto falla, simplemente no se muestran montos ajenos */ });
 };
 
 // esto se ejecuta si ni el CDN principal ni el alterno pudieron cargar Firebase
