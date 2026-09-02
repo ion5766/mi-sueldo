@@ -412,6 +412,21 @@ tr:hover .tag{transform:translateY(-1px)}
   display:inline-block;font-family:'JetBrains Mono',monospace}
 
 /* ============================================================
+   PANEL ADMIN
+   ============================================================ */
+.panel-admin{
+  background:var(--papel-os);border:1.5px dashed var(--gris);border-radius:6px;
+  padding:16px 18px;margin-bottom:18px;
+}
+.panel-admin-tit{font-weight:700;font-size:1.02rem;margin-bottom:12px}
+.panel-admin-bloque{
+  background:#fff;border-radius:5px;padding:14px 16px;margin-bottom:12px;
+  border-left:4px solid var(--rojo);
+}
+.panel-admin-bloque b{display:block;margin-bottom:4px;font-size:.96rem}
+.panel-admin-bloque p{font-size:.82rem;color:var(--gris-os);margin-bottom:10px;line-height:1.4}
+
+/* ============================================================
    SESIÓN — recuadro "quién eres" dentro del formulario
    ============================================================ */
 .sesion-box{
@@ -549,11 +564,47 @@ tr:hover .tag{transform:translateY(-1px)}
     <h3>Ranking general de asesores</h3>
 
     <div class="acciones">
-      <span style="flex:1;font-size:.86rem;color:var(--gris-os)">
-        Las horas son visibles para todo el equipo. El monto acumulado de cada asesor
-        solo se muestra a los demás si esa persona decide compartirlo.
-      </span>
+      <input type="text" id="filtroAsesor" placeholder="🔎 Buscar asesor (ej. Jhon Ruiz)…"
+             autocomplete="off" style="flex:1 1 260px;min-width:180px">
+      <span style="flex:1"></span>
+      <button class="btn gris" id="btnAdmin" style="width:auto;padding:9px 17px;font-size:.75rem">🛠 Modo admin</button>
       <button class="btn x" id="limpiar">Limpiar todo</button>
+    </div>
+
+    <div class="panel-admin" id="panelAdmin" style="display:none">
+      <div class="panel-admin-tit">🛠 Panel de administración</div>
+
+      <div class="panel-admin-bloque">
+        <b>Borrar todos los registros de un mes</b>
+        <p>Esto borra los registros de <u>todos los asesores</u> para el mes elegido. No se puede deshacer.</p>
+        <div class="fila" style="margin:0">
+          <input type="month" id="adminMes" style="max-width:180px">
+          <button class="btn x" id="adminLimpiarMes" style="width:auto;padding:10px 16px">Borrar mes completo</button>
+        </div>
+      </div>
+
+      <div class="panel-admin-bloque">
+        <b>Temporada de matrícula</b>
+        <p>Define el rango de fechas de la campaña. Mientras esté activa, cada asesor verá un
+        recordatorio con su avance al entrar.</p>
+        <div class="fila" style="margin:0">
+          <div class="campo" style="margin:0">
+            <label>Inicio</label>
+            <input type="date" id="tempInicio">
+          </div>
+          <div class="campo" style="margin:0">
+            <label>Fin</label>
+            <input type="date" id="tempFin">
+          </div>
+        </div>
+        <div class="fila" style="margin:10px 0 0">
+          <button class="btn" id="guardarTemporada" style="width:auto;padding:10px 16px">Guardar temporada</button>
+          <button class="btn gris" id="quitarTemporada" style="width:auto;padding:10px 16px">Quitar temporada activa</button>
+        </div>
+        <div class="aviso i" id="temporadaEstado" style="margin-top:12px;display:none"></div>
+      </div>
+
+      <button class="btn gris" id="salirAdmin" style="width:auto;padding:9px 17px;font-size:.75rem">Salir de modo admin</button>
     </div>
 
     <div class="tabla" id="wrapRank">
@@ -633,6 +684,15 @@ tr:hover .tag{transform:translateY(-1px)}
     <div class="aviso w" id="loginMsg" style="display:none"></div>
     <button class="btn" id="loginEntrar">Entrar</button>
     <button class="btn x" id="loginCancelar" style="width:100%">Cancelar</button>
+  </div>
+</div>
+
+<!-- ---------- RECORDATORIO de temporada de matrícula ---------- -->
+<div class="login-overlay" id="recordatorioOverlay">
+  <div class="login-card boleto" style="border-left-color:var(--teal)">
+    <h3 id="recTitulo">¡Vamos!</h3>
+    <p class="login-sub" id="recTexto"></p>
+    <button class="btn" id="recCerrar">Entendido</button>
   </div>
 </div>
 
@@ -761,6 +821,9 @@ function hashPin(pin, clave){
 
 var sesion = null; // {nombre, clave}
 var preferencias = {}; // clave -> {nombre, compartirMonto, ...} de la colección usuarios
+var filtroAsesor = '';  // texto normalizado para filtrar tablas por asesor
+var modoAdmin = false;  // se activa con la clave maestra, no se guarda entre sesiones
+var temporada = null;   // {inicio, fin, activa} de config/temporada
 
 // decide si el monto de un asesor (por su clave normalizada) puede mostrarse:
 // siempre a sí mismo, y a los demás solo si esa persona activó "compartir"
@@ -895,6 +958,138 @@ $('btnSesion').onclick = function(){
   } else {
     abrirLogin();
   }
+};
+
+/* ============================================================
+   FILTRO POR ASESOR
+   ============================================================ */
+$('filtroAsesor').addEventListener('input', function(){
+  filtroAsesor = normalizar(this.value);
+  pintar();
+});
+
+/* ============================================================
+   MODO ADMIN — borrar el mes completo y configurar la temporada
+   de matrícula. Usa la misma clave maestra que "Limpiar todo".
+   ============================================================ */
+$('btnAdmin').onclick = function(){
+  if (modoAdmin) { $('panelAdmin').style.display = 'block'; $('panelAdmin').scrollIntoView({behavior:'smooth', block:'nearest'}); return; }
+  var clave = prompt('Escribe la clave maestra para entrar en modo admin:');
+  if (clave === null) return;
+  if (clave !== CLAVE_LIMPIAR) return alert('Clave incorrecta.');
+  modoAdmin = true;
+  $('btnAdmin').textContent = '🛠 Admin activo';
+  $('btnAdmin').style.background = 'var(--teal)';
+  $('btnAdmin').style.color = '#fff';
+  $('panelAdmin').style.display = 'block';
+  $('adminMes').value = new Date().toISOString().slice(0,7);
+  pintarTemporadaEstado();
+  pintar();  // para que se habiliten los botones de borrar de todos en las tablas
+};
+
+$('salirAdmin').onclick = function(){
+  modoAdmin = false;
+  $('btnAdmin').textContent = '🛠 Modo admin';
+  $('btnAdmin').style.background = '';
+  $('btnAdmin').style.color = '';
+  $('panelAdmin').style.display = 'none';
+  pintar();
+};
+
+$('adminLimpiarMes').onclick = function(){
+  if (!FIREBASE_LISTO) return alert('Sin conexión con la base de datos.');
+  var mes = $('adminMes').value;   // formato YYYY-MM
+  if (!mes) return alert('Elige un mes.');
+  var delMes = registros.filter(function(r){ return r.fecha.slice(0,7) === mes; });
+  if (!delMes.length) return alert('No hay registros guardados en ese mes.');
+  if (!confirm('¿Borrar los ' + delMes.length + ' registro(s) de TODOS los asesores en ' + mes +
+    '? Esto no se puede deshacer.')) return;
+  var lote = db.batch();
+  for (var i = 0; i < delMes.length; i++) lote.delete(coleccion.doc(delMes[i].id));
+  lote.commit().then(function(){
+    alert('Listo, se borraron los registros de ' + mes + '.');
+  }).catch(function(e){ alert('No se pudo borrar: ' + e.message); });
+};
+
+function pintarTemporadaEstado(){
+  var box = $('temporadaEstado');
+  if (temporada && temporada.activa) {
+    box.style.display = 'block';
+    box.innerHTML = '<b>Temporada activa:</b> del ' + fechaLarga(temporada.inicio) +
+      ' al ' + fechaLarga(temporada.fin) + '.';
+    $('tempInicio').value = temporada.inicio;
+    $('tempFin').value = temporada.fin;
+  } else {
+    box.style.display = 'block';
+    box.innerHTML = 'No hay una temporada de matrícula activa por ahora.';
+  }
+}
+
+function fechaLarga(iso){
+  var p = iso.split('-');
+  return p[2] + '/' + p[1] + '/' + p[0];
+}
+
+function diffDias(a, b){   // a, b en formato 'YYYY-MM-DD'
+  var da = new Date(a + 'T00:00:00'), dbb = new Date(b + 'T00:00:00');
+  return Math.round((dbb - da) / 86400000);
+}
+
+/* ============================================================
+   RECORDATORIO de temporada de matrícula — se muestra una vez
+   al día por asesor, mientras la temporada esté activa y vigente.
+   ============================================================ */
+var regsListos = false, temporadaListo = false;
+
+function intentarRecordatorio(){
+  if (!regsListos || !temporadaListo) return;
+  if (!sesion || !temporada || !temporada.activa) return;
+
+  var hoy = new Date().toISOString().slice(0,10);
+  if (hoy < temporada.inicio || hoy > temporada.fin) return;
+
+  var flagKey = 'sise_recordatorio_' + sesion.clave + '_' + hoy;
+  try { if (localStorage.getItem(flagKey)) return; } catch(e){}
+
+  var propios = registros.filter(function(r){
+    return r.claveNombre === sesion.clave && r.fecha >= temporada.inicio && r.fecha <= hoy;
+  });
+  var horas = 0, neto = 0;
+  for (var i = 0; i < propios.length; i++) { horas += propios[i].horas; neto += propios[i].neto; }
+
+  var diaActual = diffDias(temporada.inicio, hoy) + 1;
+  var diasTotales = diffDias(temporada.inicio, temporada.fin) + 1;
+
+  $('recTitulo').textContent = '¡Vamos, ' + sesion.nombre.split(' ')[0] + '!';
+  $('recTexto').innerHTML =
+    'Día <b>' + diaActual + '</b> de <b>' + diasTotales + '</b> de la temporada de matrícula.<br><br>' +
+    'Llevas acumulado hasta hoy: <b>' + soles(neto) + '</b><br>' +
+    'Has hecho en total <b>' + horas.toFixed(2) + ' horas</b> extra en ' + propios.length +
+    ' día' + (propios.length === 1 ? '' : 's') + '.<br><br>¡Sigue así!';
+  $('recordatorioOverlay').classList.add('on');
+
+  try { localStorage.setItem(flagKey, '1'); } catch(e){}
+}
+$('recCerrar').onclick = function(){ $('recordatorioOverlay').classList.remove('on'); };
+
+$('guardarTemporada').onclick = function(){
+  if (!FIREBASE_LISTO) return alert('Sin conexión con la base de datos.');
+  var ini = $('tempInicio').value, fin = $('tempFin').value;
+  if (!ini || !fin) return alert('Completa las dos fechas.');
+  if (fin < ini) return alert('La fecha de fin no puede ser antes que la de inicio.');
+  db.collection('config').doc('temporada').set({
+    inicio: ini, fin: fin, activa: true,
+    actualizado: firebase.firestore.FieldValue.serverTimestamp()
+  }).then(function(){
+    alert('Temporada guardada: del ' + fechaLarga(ini) + ' al ' + fechaLarga(fin) + '.');
+  }).catch(function(e){ alert('No se pudo guardar: ' + e.message); });
+};
+
+$('quitarTemporada').onclick = function(){
+  if (!FIREBASE_LISTO) return alert('Sin conexión con la base de datos.');
+  if (!confirm('¿Quitar la temporada activa? Los asesores dejarán de ver el recordatorio.')) return;
+  db.collection('config').doc('temporada').set({activa:false}, {merge:true})
+    .catch(function(e){ alert('No se pudo actualizar: ' + e.message); });
 };
 
 /* ============================================================
@@ -1073,12 +1268,13 @@ $('limpiar').onclick = function(){
   lote.commit().catch(function(e){ alert('No se pudo borrar: ' + e.message); });
 };
 
-function borrar(i){
+function borrar(id){
   if (!FIREBASE_LISTO) return alert('Sin conexión con la base de datos. Revisa tu internet o recarga la página.');
-  var reg = registros[i];
+  var reg = null;
+  for (var i = 0; i < registros.length; i++) if (registros[i].id === id) { reg = registros[i]; break; }
   if (!reg) return;
-  if (!sesion) return abrirLogin(function(){ borrar(i); });
-  if (reg.claveNombre !== sesion.clave) return alert('Solo puedes borrar tus propios registros.');
+  if (!sesion) return abrirLogin(function(){ borrar(id); });
+  if (reg.claveNombre !== sesion.clave && !modoAdmin) return alert('Solo puedes borrar tus propios registros.');
   coleccion.doc(reg.id).delete().catch(function(e){ alert('No se pudo borrar: ' + e.message); });
 }
 
@@ -1099,26 +1295,38 @@ function contar(el, hasta, dec, pre){
    RENDERIZADO
    ============================================================ */
 function pintar(){
+  /* ----- filtro por asesor ----- */
+  var vista = filtroAsesor
+    ? registros.filter(function(r){ return normalizar(r.nombre).indexOf(filtroAsesor) !== -1; })
+    : registros;
+
   /* ----- tabla de registros ----- */
   var h = '';
-  $('regVacio').style.display = registros.length ? 'none' : 'block';
-  for (var i = 0; i < registros.length; i++) {
-    var r = registros[i];
+  if (!vista.length) {
+    $('regVacio').style.display = 'block';
+    $('regVacio').innerHTML = filtroAsesor
+      ? '<span class="ic">»»»</span>Ningún registro coincide con «' + esc($('filtroAsesor').value) + '».'
+      : '<span class="ic">»»»</span>Aún no hay registros.';
+  } else {
+    $('regVacio').style.display = 'none';
+  }
+  for (var i = 0; i < vista.length; i++) {
+    var r = vista[i];
     var veo = puedeVerMonto(r.claveNombre);
+    var esTuyo = sesion && r.claveNombre === sesion.clave;
     h += '<tr style="animation-delay:' + Math.min(i * 30, 400) + 'ms">' +
       '<td><b>' + r.fecha.slice(8) + '/' + r.fecha.slice(5,7) + '</b></td>' +
       '<td>' + r.dia + (r.feriado ? ' <span class="tag dsc">Fer.</span>' : '') + '</td>' +
       '<td>' + esc(r.nombre) +
-        (sesion && r.claveNombre === sesion.clave
-          ? ' <span class="tag" style="background:var(--teal);color:#fff">Tú</span>' : '') + '</td>' +
+        (esTuyo ? ' <span class="tag" style="background:var(--teal);color:#fff">Tú</span>' : '') + '</td>' +
       '<td style="color:var(--gris)">' + r.jor + '</td>' +
       '<td><b>' + r.real + '</b></td>' +
       '<td class="num">' + (r.h25 ? r.h25.toFixed(2) : '—') + '</td>' +
       '<td class="num">' + (r.h35 ? r.h35.toFixed(2) : '—') + '</td>' +
       '<td class="num">' + (r.hDesc ? r.hDesc.toFixed(2) + (r.sust ? ' *' : '') : '—') + '</td>' +
       '<td class="num money' + (veo ? ' rojo' : '') + '">' + (veo ? soles(r.neto) : '<span style="color:var(--linea);font-size:.8rem">🔒 privado</span>') + '</td>' +
-      '<td>' + (sesion && r.claveNombre === sesion.clave
-        ? '<button class="btn mini" onclick="borrar(' + i + ')" title="Eliminar">✕</button>'
+      '<td>' + ((esTuyo || modoAdmin)
+        ? '<button class="btn mini" onclick="borrar(\'' + r.id + '\')" title="Eliminar">✕</button>'
         : '<span class="btn mini" style="opacity:.28;cursor:default" title="Solo el autor puede borrar su registro">✕</span>') +
       '</td></tr>';
   }
@@ -1126,8 +1334,8 @@ function pintar(){
 
   /* ----- agrupar por asesor ----- */
   var mapa = {};
-  for (var k = 0; k < registros.length; k++) {
-    var g = registros[k], m = mapa[g.nombre];
+  for (var k = 0; k < vista.length; k++) {
+    var g = vista[k], m = mapa[g.nombre];
     if (!m) m = mapa[g.nombre] = {nombre:g.nombre, claveNombre:g.claveNombre, turno:g.turno, dias:0,
                                   h25:0, h35:0, hDesc:0, horas:0, bruto:0, neto:0};
     m.dias++; m.h25 += g.h25; m.h35 += g.h35; m.hDesc += g.hDesc;
@@ -1145,6 +1353,9 @@ function pintar(){
   }
 
   $('rankVacio').style.display = lista.length ? 'none' : 'block';
+  $('rankVacio').innerHTML = filtroAsesor
+    ? '<span class="ic">»»»</span>Ningún asesor coincide con «' + esc($('filtroAsesor').value) + '».'
+    : '<span class="ic">»»»</span>Sin datos todavía. Guarda tu primer registro.';
 
   /* ----- tabla del ranking ----- */
   var h2 = '';
@@ -1168,7 +1379,7 @@ function pintar(){
   if (lista.length) {
     h2 += '<tr class="total" style="animation-delay:' + (lista.length * 55) + 'ms">' +
       '<td></td><td><b>TOTAL EQUIPO</b></td><td></td>' +
-      '<td class="num">' + registros.length + '</td><td colspan="3"></td>' +
+      '<td class="num">' + vista.length + '</td><td colspan="3"></td>' +
       '<td class="num rojo">' + totH.toFixed(2) + '</td><td></td>' +
       '<td class="num money">' + soles(totNvisible) +
       (visibles < lista.length ? ' <span style="font-size:.68rem;color:var(--gris)">(' + visibles + '/' + lista.length + ' comparten)</span>' : '') +
@@ -1222,8 +1433,8 @@ function pintar(){
 
     '<div class="kpi teal" style="animation-delay:70ms"><div class="et">Asesores con registros</div>' +
       '<div class="val" data-n="' + lista.length + '" data-d="0">0</div>' +
-      '<div class="nota">' + registros.length + ' día' + (registros.length === 1 ? '' : 's') +
-      ' registrado' + (registros.length === 1 ? '' : 's') + '</div></div>' +
+      '<div class="nota">' + vista.length + ' día' + (vista.length === 1 ? '' : 's') +
+      ' registrado' + (vista.length === 1 ? '' : 's') + '</div></div>' +
 
     '<div class="kpi azul" style="animation-delay:140ms"><div class="et">Horas extra del equipo</div>' +
       '<div class="val" data-n="' + totH + '" data-d="1">0</div>' +
@@ -1294,7 +1505,9 @@ window.onFirebaseListo = function(){
     registros = snap.docs.map(function(doc){
       var d = doc.data(); d.id = doc.id; return d;
     });
+    regsListos = true;
     pintar();
+    intentarRecordatorio();
   }, function(e){
     $('tbReg').innerHTML = '';
     $('regVacio').style.display = 'block';
@@ -1308,6 +1521,14 @@ window.onFirebaseListo = function(){
     pintarSesion();
     pintar();
   }, function(e){ /* si esto falla, simplemente no se muestran montos ajenos */ });
+
+  // escucha la configuración de la temporada de matrícula
+  db.collection('config').doc('temporada').onSnapshot(function(doc){
+    temporada = doc.exists ? doc.data() : null;
+    temporadaListo = true;
+    pintarTemporadaEstado();
+    intentarRecordatorio();
+  }, function(e){ temporadaListo = true; });
 };
 
 // esto se ejecuta si ni el CDN principal ni el alterno pudieron cargar Firebase
