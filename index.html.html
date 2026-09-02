@@ -521,6 +521,7 @@ tr:hover .tag{transform:translateY(-1px)}
         <div class="campo">
           <label for="turno">Turno</label>
           <select id="turno">
+            <option value="" selected>— Elige tu turno —</option>
             <option value="pm">Tarde</option>
             <option value="am">Mañana</option>
           </select>
@@ -556,20 +557,21 @@ tr:hover .tag{transform:translateY(-1px)}
         <div class="reloj-info">
           <span class="reloj-ic" id="relojIc">⏱️</span>
           <div>
-            <div class="reloj-estado" id="relojEstado">Toca el botón cuando llegues, para marcar tu hora de entrada</div>
+            <div class="reloj-estado" id="relojEstado">Elige tu turno arriba y toca el botón cuando llegues, para marcar tu hora de entrada</div>
             <div class="reloj-tiempo" id="relojTiempo" style="display:none">00:00:00</div>
           </div>
         </div>
-        <span style="display:flex;gap:8px;align-items:center">
+        <span style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
           <button type="button" class="btn mini" id="relojCancelar" style="display:none">✕ Cancelar</button>
+          <button type="button" class="btn gris" id="btnBreak" style="display:none;width:auto;padding:11px 16px;white-space:nowrap">☕ Iniciar break</button>
           <button type="button" class="btn" id="btnReloj" style="width:auto;padding:11px 20px;white-space:nowrap">▶ Marcar hora de entrada</button>
         </span>
       </div>
 
       <div class="fila">
         <div class="campo"><label for="fecha">Fecha</label><input type="date" id="fecha"></div>
-        <div class="campo"><label for="ent">Entrada real</label><input type="time" id="ent" value="10:30"></div>
-        <div class="campo"><label for="sal">Salida real</label><input type="time" id="sal" value="22:00"></div>
+        <div class="campo"><label for="ent">Entrada real</label><input type="time" id="ent"></div>
+        <div class="campo"><label for="sal">Salida real</label><input type="time" id="sal"></div>
       </div>
 
       <div class="campo">
@@ -1009,12 +1011,14 @@ $('btnSesion').onclick = function(){
 };
 
 /* ============================================================
-   RELOJ RÁPIDO — un botón para marcar entrada y otro para
-   marcar salida, que solo rellenan los mismos campos de hora
-   que ya existían. La forma manual sigue funcionando igual.
+   RELOJ RÁPIDO — marcar entrada/salida con un botón. Exige elegir
+   turno antes de arrancar, tiene un break con pausa real, y el
+   panel "Cálculo del día" se actualiza solo mientras corre.
+   La forma manual sigue funcionando igual cuando el reloj está apagado.
    ============================================================ */
-var relojEnCurso = null;   // {fecha, horaInicio, ts}
+var relojEnCurso = null;   // {fecha, horaInicio, ts, turno, descansoAcumMs, descansoInicioTs}
 var relojInterval = null;
+var calculoEnVivoInterval = null;
 
 function claveReloj(){ return sesion ? 'sise_reloj_' + sesion.clave : null; }
 
@@ -1023,56 +1027,126 @@ function horaAhora(){
   return String(d.getHours()).padStart(2,'0') + ':' + String(d.getMinutes()).padStart(2,'0');
 }
 
+// milisegundos realmente trabajados (descuenta el break, y si el break
+// sigue activo, el contador queda congelado hasta que termine)
+function msTrabajadosReloj(){
+  if (!relojEnCurso) return 0;
+  var descansoTotal = (relojEnCurso.descansoAcumMs || 0) +
+    (relojEnCurso.descansoInicioTs ? (Date.now() - relojEnCurso.descansoInicioTs) : 0);
+  var ms = (Date.now() - relojEnCurso.ts) - descansoTotal;
+  return ms > 0 ? ms : 0;
+}
+
+// hora HH:MM que representaría "ahora" si el turno hubiera sido continuo,
+// es decir, entrada + tiempo realmente trabajado (sin contar el break)
+function horaEfectivaReloj(){
+  var d = new Date(relojEnCurso.ts + msTrabajadosReloj());
+  return String(d.getHours()).padStart(2,'0') + ':' + String(d.getMinutes()).padStart(2,'0');
+}
+
 function cargarReloj(){
   pararRelojUI();
   var k = claveReloj();
-  if (!k) return;
+  relojEnCurso = null;
+  if (!k) { pintarReloj(); bloquearCamposReloj(false); return; }
   try {
     var s = localStorage.getItem(k);
     if (s) relojEnCurso = JSON.parse(s);
   } catch(e) { relojEnCurso = null; }
   pintarReloj();
-  if (relojEnCurso) iniciarTickReloj();
+  bloquearCamposReloj(!!relojEnCurso);
+  if (relojEnCurso) {
+    iniciarTickReloj();
+    renderCalculoEnVivo(true);
+    iniciarCalculoEnVivo();
+  } else {
+    previa();
+  }
 }
 
 function pararRelojUI(){
   if (relojInterval) { clearInterval(relojInterval); relojInterval = null; }
+  if (calculoEnVivoInterval) { clearInterval(calculoEnVivoInterval); calculoEnVivoInterval = null; }
 }
 
 function iniciarTickReloj(){
-  pararRelojUI();
+  if (relojInterval) clearInterval(relojInterval);
   tickReloj();
   relojInterval = setInterval(tickReloj, 1000);
 }
 
+function iniciarCalculoEnVivo(){
+  if (calculoEnVivoInterval) clearInterval(calculoEnVivoInterval);
+  calculoEnVivoInterval = setInterval(function(){ renderCalculoEnVivo(true); }, 20000);
+}
+
 function tickReloj(){
   if (!relojEnCurso) return;
-  var ms = Date.now() - relojEnCurso.ts;
-  if (ms < 0) ms = 0;
+  var ms = msTrabajadosReloj();
   var s = Math.floor(ms / 1000);
   var hh = String(Math.floor(s / 3600)).padStart(2,'0');
   var mm = String(Math.floor((s % 3600) / 60)).padStart(2,'0');
   var ss = String(s % 60).padStart(2,'0');
-  $('relojTiempo').textContent = hh + ':' + mm + ':' + ss;
+  $('relojTiempo').textContent = hh + ':' + mm + ':' + ss + (relojEnCurso.descansoInicioTs ? ' (en pausa)' : '');
+}
+
+// arma el mismo objeto "d" que usa el cálculo normal, pero con la hora
+// de salida = ahora mismo (o congelada si está en break), y pinta el panel
+function renderCalculoEnVivo(silencioso){
+  if (!relojEnCurso) return;
+  var d = {
+    nombre: sesion ? sesion.nombre : '',
+    turno:  relojEnCurso.turno,
+    sueldo: +$('sueldo').value || 0,
+    afp:    $('afp').value,
+    fecha:  relojEnCurso.fecha,
+    ent:    relojEnCurso.horaInicio,
+    sal:    horaEfectivaReloj(),
+    refri:  $('refri').checked,
+    feriado:$('feriado').checked,
+    sust:   $('sust').checked
+  };
+  renderCalculo(d, {live:true, enPausa: !!relojEnCurso.descansoInicioTs, silencioso: !!silencioso});
+}
+
+// mientras el reloj corre, los campos de fecha/entrada/turno quedan
+// fijos (los define el propio reloj); salida se completa recién al terminar
+function bloquearCamposReloj(bloquear){
+  $('fecha').disabled = bloquear;
+  $('ent').disabled = bloquear;
+  $('turno').disabled = bloquear;
+  $('sal').disabled = bloquear;
+  $('sal').placeholder = bloquear ? 'Se completa al marcar salida' : '';
+  if (bloquear) { $('sal').value = ''; }
 }
 
 function pintarReloj(){
   var caja = $('relojRapido'), ic = $('relojIc'), est = $('relojEstado'),
-      tiempo = $('relojTiempo'), btn = $('btnReloj'), cancelar = $('relojCancelar');
+      tiempo = $('relojTiempo'), btn = $('btnReloj'), cancelar = $('relojCancelar'), brk = $('btnBreak');
   if (relojEnCurso) {
     caja.classList.add('activo');
-    ic.textContent = '🟢';
-    est.textContent = 'Entrada marcada a las ' + relojEnCurso.horaInicio + ' — contando tu turno:';
+    brk.style.display = '';
+    cancelar.style.display = '';
+    if (relojEnCurso.descansoInicioTs) {
+      ic.textContent = '⏸️';
+      est.textContent = 'En break desde las ' + relojEnCurso.descansoInicioHora + ' — el conteo está en pausa:';
+      brk.textContent = '▶️ Terminar break';
+    } else {
+      ic.textContent = '🟢';
+      est.textContent = 'Entrada marcada a las ' + relojEnCurso.horaInicio + ' (' +
+        (relojEnCurso.turno === 'am' ? 'Mañana' : 'Tarde') + ') — contando tu turno:';
+      brk.textContent = '☕ Iniciar break';
+    }
     tiempo.style.display = 'block';
     btn.textContent = '⏹ Marcar hora de salida';
-    cancelar.style.display = '';
   } else {
     caja.classList.remove('activo');
     ic.textContent = '⏱️';
-    est.textContent = 'Toca el botón cuando llegues, para marcar tu hora de entrada';
+    est.textContent = 'Elige tu turno arriba y toca el botón cuando llegues, para marcar tu hora de entrada';
     tiempo.style.display = 'none';
     btn.textContent = '▶ Marcar hora de entrada';
     cancelar.style.display = 'none';
+    brk.style.display = 'none';
   }
 }
 
@@ -1081,28 +1155,57 @@ $('btnReloj').onclick = function(){
 
   if (!relojEnCurso) {
     // ---- marcar entrada ----
+    if (!$('turno').value) {
+      alert('Primero elige tu turno (Mañana o Tarde), justo arriba, y luego marca tu entrada.');
+      $('turno').focus();
+      return;
+    }
     var hoy = new Date().toISOString().slice(0,10);
-    relojEnCurso = {fecha: hoy, horaInicio: horaAhora(), ts: Date.now()};
+    relojEnCurso = {
+      fecha: hoy, horaInicio: horaAhora(), ts: Date.now(), turno: $('turno').value,
+      descansoAcumMs: 0, descansoInicioTs: null, descansoInicioHora: null
+    };
     $('fecha').value = hoy;
     $('ent').value = relojEnCurso.horaInicio;
-    previa();
     try { localStorage.setItem(claveReloj(), JSON.stringify(relojEnCurso)); } catch(e){}
+    bloquearCamposReloj(true);
     pintarReloj();
     iniciarTickReloj();
+    renderCalculoEnVivo(false);
+    iniciarCalculoEnVivo();
   } else {
     // ---- marcar salida ----
-    var horaFin = horaAhora();
+    var horaFin = horaEfectivaReloj();
     $('fecha').value = relojEnCurso.fecha;
     $('ent').value = relojEnCurso.horaInicio;
+    $('turno').value = relojEnCurso.turno;
+    bloquearCamposReloj(false);
     $('sal').value = horaFin;
-    previa();
     try { localStorage.removeItem(claveReloj()); } catch(e){}
     relojEnCurso = null;
     pararRelojUI();
     pintarReloj();
+    previa();
     guardarBorrador();   // por si se corta la luz o el wifi antes de tocar "Guardar registro"
     document.querySelector('.card.anim.boleto').scrollIntoView({behavior:'smooth', block:'nearest'});
   }
+};
+
+$('btnBreak').onclick = function(){
+  if (!relojEnCurso) return;
+  if (relojEnCurso.descansoInicioTs) {
+    // ---- terminar break ----
+    relojEnCurso.descansoAcumMs = (relojEnCurso.descansoAcumMs || 0) + (Date.now() - relojEnCurso.descansoInicioTs);
+    relojEnCurso.descansoInicioTs = null;
+    relojEnCurso.descansoInicioHora = null;
+  } else {
+    // ---- iniciar break ----
+    relojEnCurso.descansoInicioTs = Date.now();
+    relojEnCurso.descansoInicioHora = horaAhora();
+  }
+  try { localStorage.setItem(claveReloj(), JSON.stringify(relojEnCurso)); } catch(e){}
+  pintarReloj();
+  renderCalculoEnVivo(false);
 };
 
 $('relojCancelar').onclick = function(){
@@ -1110,7 +1213,9 @@ $('relojCancelar').onclick = function(){
   try { if (claveReloj()) localStorage.removeItem(claveReloj()); } catch(e){}
   relojEnCurso = null;
   pararRelojUI();
+  bloquearCamposReloj(false);
   pintarReloj();
+  previa();
 };
 
 /* ============================================================
@@ -1377,7 +1482,7 @@ function pagar(r, sueldo, sust){
 
 /* ---------- leer el formulario ---------- */
 function leer(){
-  if (!$('fecha').value || !$('ent').value || !$('sal').value) return null;
+  if (!$('fecha').value || !$('ent').value || !$('sal').value || !$('turno').value) return null;
   return {
     nombre: sesion ? sesion.nombre : '',
     turno:  $('turno').value,
@@ -1393,14 +1498,16 @@ function leer(){
 }
 
 /* ============================================================
-   VISTA PREVIA
+   CÁLCULO Y RENDER — un solo motor de render que usan tanto el
+   modo manual (previa) como el reloj en vivo (renderCalculoEnVivo)
    ============================================================ */
-function previa(){
-  var d = leer(), box = $('res');
+function renderCalculo(d, opts){
+  opts = opts || {};
+  var box = $('res');
 
   if (!d) {
     $('horario').value = '—';
-    box.innerHTML = '<div class="vacio"><span class="ic">»»»</span>Completa fecha, entrada y salida.</div>';
+    box.innerHTML = '<div class="vacio"><span class="ic">»»»</span>Elige tu turno y completa fecha, entrada y salida.</div>';
     return;
   }
 
@@ -1415,21 +1522,32 @@ function previa(){
            izq + '</span><span>' + der + '</span></div>';
   }
 
+  /* ---------- aviso de estado en vivo, si aplica ---------- */
+  if (opts.enPausa) {
+    h += '<div class="aviso w" style="margin-bottom:12px">⏸️ <b>En pausa (break)</b> — el cálculo está ' +
+      'congelado hasta que toques «Terminar break».</div>';
+  } else if (opts.live) {
+    h += '<div class="aviso i" style="margin-bottom:12px">🔴 <b>En vivo</b> — esto se actualiza solo ' +
+      'mientras tu reloj sigue corriendo. Al marcar salida, queda fijo y puedes guardar tu registro.</div>';
+  }
+
   /* ---------- resumen en lenguaje simple, arriba de todo ---------- */
   h += '<div class="resumen-simple">' +
     '<div class="rs-item"><div class="rs-num">' + r.horas.toFixed(2) + ' h</div>' +
-      '<div class="rs-label">de sobretiempo trabajadas este día</div></div>' +
+      '<div class="rs-label">' + (opts.live ? 'de sobretiempo llevas hasta este momento' : 'de sobretiempo trabajadas este día') + '</div></div>' +
     '<div class="rs-item destacado"><div class="rs-num">' + soles(neto) + '</div>' +
-      '<div class="rs-label">te corresponde aprox. por esas horas</div></div>' +
+      '<div class="rs-label">' + (opts.live ? 'llevas acumulado en lo que va del turno' : 'te corresponde aprox. por esas horas') + '</div></div>' +
     '</div>';
 
   if (!r.horas) {
-    h += '<div class="aviso i">No trabajaste sobretiempo este día: tu horario real coincide con (o está dentro de) tu horario normal.</div>';
+    h += '<div class="aviso i">' + (opts.live
+      ? 'Todavía no llevas sobretiempo: sigues dentro de tu horario normal.'
+      : 'No trabajaste sobretiempo este día: tu horario real coincide con (o está dentro de) tu horario normal.') + '</div>';
   }
 
   h += '<div class="detalle-titulo">Así se calculó</div>';
 
-  h += li('', r.dia + (d.feriado ? ' <span class="tag dsc">Feriado</span>' : ''), r.jor.ini + ' – ' + r.jor.fin);
+  h += li('', r.dia + (d.feriado ? ' <span class="tag dsc">Feriado</span>' : ''), r.jor.ini + ' – ' + (opts.live ? 'ahora' : r.jor.fin));
   h += li('sub', 'Tiempo normal trabajado (sin el extra)', r.trab.toFixed(2) + ' h');
   if (r.antes)   h += li('sub', 'Llegaste antes de tu hora de entrada',   hhmm(r.antes) + ' h');
   if (r.despues) h += li('sub', 'Te quedaste después de tu hora de salida',  hhmm(r.despues) + ' h');
@@ -1441,7 +1559,7 @@ function previa(){
                             'domingo/feriado · ' + r.hDesc.toFixed(2) + ' h', soles(p.pD));
 
   h += li('sub', 'Cuánto vale tu hora normal', soles(p.vh));
-  h += li('', '<b>Total bruto del día</b>', soles(p.bruto));
+  h += li('', '<b>Total bruto ' + (opts.live ? 'hasta ahora' : 'del día') + '</b>', soles(p.bruto));
   if (ta.t) h += li('menos sub', '− ' + ta.n + ' (se descuenta de tu sueldo, ' + (ta.t*100).toFixed(2) + '%)', '−' + soles(desc));
   h += li('tot', 'Neto estimado', soles(neto));
 
@@ -1449,9 +1567,19 @@ function previa(){
     h += '<div class="aviso w" style="animation-delay:' + (k++ * 32) + 'ms">' + r.avisos[i] + '</div>';
 
   box.innerHTML = h;
-  box.classList.remove('pulso');
-  void box.offsetWidth;               // reinicia la animación
-  box.classList.add('pulso');
+  if (!opts.silencioso) {
+    box.classList.remove('pulso');
+    void box.offsetWidth;               // reinicia la animación
+    box.classList.add('pulso');
+  }
+}
+
+/* ============================================================
+   VISTA PREVIA (modo manual)
+   ============================================================ */
+function previa(){
+  if (relojEnCurso) return;   // mientras el reloj corre, manda el cálculo en vivo
+  renderCalculo(leer());
 }
 
 /* ============================================================
