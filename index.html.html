@@ -382,6 +382,7 @@ tr:hover .tag{transform:translateY(-1px)}
 .res>div.tot span:last-child{color:var(--rojo);font-size:1.5rem}
 .res>div.menos span:last-child{color:var(--rojo-os)}
 .res.pulso{animation:latir .35s var(--ease)}
+.res.sin-anim>div{animation:none}
 
 /* ============================================================
    AVISOS Y VARIOS
@@ -1536,7 +1537,7 @@ function calcular(d){
   if (fin > 1320) r.avisos.push('Trabajo después de las 22:00: puede corresponder sobretasa nocturna, no incluida aquí.');
 
   r.horas = r.h25 + r.h35 + r.hDesc;
-  r.trab  = (fin - ini - (descanso ? 0 : (d.refri ? 0 : j.brk))) / 60;
+  r.trab  = Math.max(0, (fin - ini - (descanso ? 0 : (d.refri ? 0 : j.brk))) / 60);
   return r;
 }
 
@@ -1635,6 +1636,7 @@ function renderCalculo(d, opts){
   for (var i = 0; i < r.avisos.length; i++)
     h += '<div class="aviso w" style="animation-delay:' + (k++ * 32) + 'ms">' + r.avisos[i] + '</div>';
 
+  box.classList.toggle('sin-anim', !!opts.silencioso);
   box.innerHTML = h;
   if (!opts.silencioso) {
     box.classList.remove('pulso');
