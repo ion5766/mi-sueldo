@@ -441,6 +441,14 @@ tr:hover .tag{transform:translateY(-1px)}
 .reloj-ic{font-size:1.7rem;line-height:1}
 .reloj-estado{font-family:'Barlow Condensed';font-size:.88rem;color:var(--gris-os);max-width:280px}
 .reloj-tiempo{font-family:'JetBrains Mono',monospace;font-size:1.35rem;font-weight:700;color:var(--teal);margin-top:2px}
+.reloj-stats{display:flex;flex-direction:column;gap:6px;margin-top:8px}
+.reloj-stat{display:flex;align-items:center;gap:7px;font-family:'Barlow Condensed';font-size:.94rem;color:var(--gris-os)}
+.reloj-stat b{font-family:'JetBrains Mono',monospace;color:var(--teal)}
+.reloj-stat.principal{font-size:1.1rem}
+.reloj-stat.principal b{font-size:1.35rem}
+.reloj-stat.alerta b{color:var(--rojo)}
+.reloj-stat.break b{color:#B8860B}
+.reloj-stat-ic{font-size:1rem;line-height:1}
 
 /* ============================================================
    SESIÓN — recuadro "quién eres" dentro del formulario
@@ -556,9 +564,26 @@ tr:hover .tag{transform:translateY(-1px)}
       <div class="reloj-rapido" id="relojRapido">
         <div class="reloj-info">
           <span class="reloj-ic" id="relojIc">⏱️</span>
-          <div>
+          <div style="flex:1">
             <div class="reloj-estado" id="relojEstado">Elige tu turno arriba y toca el botón cuando llegues, para marcar tu hora de entrada</div>
-            <div class="reloj-tiempo" id="relojTiempo" style="display:none">00:00:00</div>
+            <div class="reloj-stats" id="relojStats" style="display:none">
+              <div class="reloj-stat principal">
+                <span class="reloj-stat-ic">⏱️</span>
+                <span class="reloj-stat-txt">Llevas trabajando: <b id="relojTiempo">00:00:00</b></span>
+              </div>
+              <div class="reloj-stat" id="relojAntesBox" style="display:none">
+                <span class="reloj-stat-ic">🌅</span>
+                <span class="reloj-stat-txt" id="relojAntesTxt"></span>
+              </div>
+              <div class="reloj-stat alerta" id="relojDespuesBox" style="display:none">
+                <span class="reloj-stat-ic">🌙</span>
+                <span class="reloj-stat-txt">Después de tu hora de salida: <b id="relojDespuesTiempo">00:00:00</b></span>
+              </div>
+              <div class="reloj-stat break" id="relojBreakBox" style="display:none">
+                <span class="reloj-stat-ic">☕</span>
+                <span class="reloj-stat-txt">Llevas en break: <b id="relojBreakTiempo">00:00:00</b></span>
+              </div>
+            </div>
           </div>
         </div>
         <span style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
@@ -1044,6 +1069,21 @@ function horaEfectivaReloj(){
   return String(d.getHours()).padStart(2,'0') + ':' + String(d.getMinutes()).padStart(2,'0');
 }
 
+// timestamp real de una hora "HH:MM" del horario oficial, en la fecha del turno
+function tsDeHoraOficial(fechaISO, horaHHMM){
+  var p = fechaISO.split('-'), hm = horaHHMM.split(':');
+  return new Date(+p[0], +p[1] - 1, +p[2], +hm[0], +hm[1], 0, 0).getTime();
+}
+
+function formatoHMS(ms){
+  if (ms < 0) ms = 0;
+  var s = Math.floor(ms / 1000);
+  var hh = String(Math.floor(s / 3600)).padStart(2,'0');
+  var mm = String(Math.floor((s % 3600) / 60)).padStart(2,'0');
+  var ss = String(s % 60).padStart(2,'0');
+  return hh + ':' + mm + ':' + ss;
+}
+
 function cargarReloj(){
   pararRelojUI();
   var k = claveReloj();
@@ -1075,19 +1115,48 @@ function iniciarTickReloj(){
   relojInterval = setInterval(tickReloj, 1000);
 }
 
+// el panel "Cálculo del día" también se refresca cada segundo mientras
+// el reloj está corriendo, para que se sienta realmente en vivo
 function iniciarCalculoEnVivo(){
   if (calculoEnVivoInterval) clearInterval(calculoEnVivoInterval);
-  calculoEnVivoInterval = setInterval(function(){ renderCalculoEnVivo(true); }, 20000);
+  calculoEnVivoInterval = setInterval(function(){ renderCalculoEnVivo(true); }, 1000);
 }
 
 function tickReloj(){
   if (!relojEnCurso) return;
-  var ms = msTrabajadosReloj();
-  var s = Math.floor(ms / 1000);
-  var hh = String(Math.floor(s / 3600)).padStart(2,'0');
-  var mm = String(Math.floor((s % 3600) / 60)).padStart(2,'0');
-  var ss = String(s % 60).padStart(2,'0');
-  $('relojTiempo').textContent = hh + ':' + mm + ':' + ss + (relojEnCurso.descansoInicioTs ? ' (en pausa)' : '');
+
+  // contador principal: tiempo realmente trabajado (sin contar el break)
+  $('relojTiempo').textContent = formatoHMS(msTrabajadosReloj());
+
+  var j = JORNADAS[relojEnCurso.turno][dow(relojEnCurso.fecha)];
+
+  // cuánto llegaste antes de tu hora de entrada oficial (fijo desde que marcas entrada)
+  var tsOficialIni = tsDeHoraOficial(relojEnCurso.fecha, j.ini);
+  var antesMs = Math.max(0, tsOficialIni - relojEnCurso.ts);
+  if (antesMs > 0 && !j.descanso) {
+    $('relojAntesBox').style.display = '';
+    $('relojAntesTxt').innerHTML = 'Llegaste <b>' + formatoHMS(antesMs) + '</b> antes de tu entrada oficial (' + j.ini + ')';
+  } else {
+    $('relojAntesBox').style.display = 'none';
+  }
+
+  // cuánto llevas después de tu hora de salida oficial (crece en vivo, se congela en el break)
+  var tsOficialFin = tsDeHoraOficial(relojEnCurso.fecha, j.fin);
+  var despuesMs = Math.max(0, (relojEnCurso.ts + msTrabajadosReloj()) - tsOficialFin);
+  if (despuesMs > 0 && !j.descanso) {
+    $('relojDespuesBox').style.display = '';
+    $('relojDespuesTiempo').textContent = formatoHMS(despuesMs);
+  } else {
+    $('relojDespuesBox').style.display = 'none';
+  }
+
+  // cuánto llevas en el break actual (solo mientras está activo)
+  if (relojEnCurso.descansoInicioTs) {
+    $('relojBreakBox').style.display = '';
+    $('relojBreakTiempo').textContent = formatoHMS(Date.now() - relojEnCurso.descansoInicioTs);
+  } else {
+    $('relojBreakBox').style.display = 'none';
+  }
 }
 
 // arma el mismo objeto "d" que usa el cálculo normal, pero con la hora
@@ -1122,7 +1191,7 @@ function bloquearCamposReloj(bloquear){
 
 function pintarReloj(){
   var caja = $('relojRapido'), ic = $('relojIc'), est = $('relojEstado'),
-      tiempo = $('relojTiempo'), btn = $('btnReloj'), cancelar = $('relojCancelar'), brk = $('btnBreak');
+      stats = $('relojStats'), btn = $('btnReloj'), cancelar = $('relojCancelar'), brk = $('btnBreak');
   if (relojEnCurso) {
     caja.classList.add('activo');
     brk.style.display = '';
@@ -1137,13 +1206,13 @@ function pintarReloj(){
         (relojEnCurso.turno === 'am' ? 'Mañana' : 'Tarde') + ') — contando tu turno:';
       brk.textContent = '☕ Iniciar break';
     }
-    tiempo.style.display = 'block';
+    stats.style.display = 'flex';
     btn.textContent = '⏹ Marcar hora de salida';
   } else {
     caja.classList.remove('activo');
     ic.textContent = '⏱️';
     est.textContent = 'Elige tu turno arriba y toca el botón cuando llegues, para marcar tu hora de entrada';
-    tiempo.style.display = 'none';
+    stats.style.display = 'none';
     btn.textContent = '▶ Marcar hora de entrada';
     cancelar.style.display = 'none';
     brk.style.display = 'none';
