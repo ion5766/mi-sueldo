@@ -731,23 +731,59 @@ tr:hover .tag{transform:translateY(-1px)}
 <!-- ---------- LOGIN: nombre + PIN corto ---------- -->
 <div class="login-overlay" id="loginOverlay">
   <div class="login-card boleto">
-    <h3>Identifícate para registrar</h3>
-    <p class="login-sub">
-      Escribe tu nombre de asesor y un PIN corto (mínimo 4 dígitos).
-      Si es tu primera vez, ese PIN queda guardado como tuyo — la próxima vez
-      solo repites nombre y PIN para entrar. Nadie más puede editar ni borrar tus registros.
-    </p>
-    <div class="campo">
-      <label for="loginNombre">Nombre de asesor</label>
-      <input type="text" id="loginNombre" placeholder="Jhon Ruiz" autocomplete="off">
+    <div id="loginPaso1">
+      <h3>Identifícate para registrar</h3>
+      <p class="login-sub">
+        Escribe tu nombre de asesor y un PIN corto (mínimo 4 dígitos).
+        Si es tu primera vez, ese PIN queda guardado como tuyo — la próxima vez
+        solo repites nombre y PIN para entrar. Nadie más puede editar ni borrar tus registros.
+      </p>
+      <div class="campo">
+        <label for="loginNombre">Nombre de asesor</label>
+        <input type="text" id="loginNombre" placeholder="Jhon Ruiz" autocomplete="off">
+      </div>
+      <div class="campo">
+        <label for="loginPin">PIN</label>
+        <input type="password" id="loginPin" placeholder="••••" maxlength="6" inputmode="numeric" autocomplete="off">
+      </div>
+      <div class="aviso w" id="loginMsg" style="display:none"></div>
+      <button class="btn" id="loginEntrar">Entrar</button>
+      <button class="btn x" id="loginCancelar" style="width:100%">Cancelar</button>
     </div>
-    <div class="campo">
-      <label for="loginPin">PIN</label>
-      <input type="password" id="loginPin" placeholder="••••" maxlength="6" inputmode="numeric" autocomplete="off">
+
+    <div id="loginPaso2" style="display:none">
+      <h3>¡Bienvenido, <span id="loginPaso2Nombre"></span>!</h3>
+      <p class="login-sub">
+        Como es tu primera vez, guardemos estos datos en tu usuario para que no tengas
+        que escribirlos cada vez que entres.
+      </p>
+      <div class="campo">
+        <label for="perfilSueldo">Sueldo bruto (S/)</label>
+        <input type="number" id="perfilSueldo" value="1600" min="0" step="50">
+      </div>
+      <div class="campo">
+        <label for="perfilAfp">Sistema pensionario</label>
+        <select id="perfilAfp">
+          <option value="habitat">AFP Habitat — 1.47%</option>
+          <option value="integra" selected>AFP Integra — 1.55%</option>
+          <option value="prima">AFP Prima — 1.60%</option>
+          <option value="profuturo">AFP Profuturo — 1.69%</option>
+          <option value="mixta">AFP comisión mixta — 0%</option>
+          <option value="onp">ONP — 13%</option>
+          <option value="ninguno">Sin sistema</option>
+        </select>
+      </div>
+      <div class="campo">
+        <label for="perfilTurno">Turno habitual</label>
+        <select id="perfilTurno">
+          <option value="pm" selected>Tarde</option>
+          <option value="am">Mañana</option>
+        </select>
+      </div>
+      <div class="aviso w" id="perfilMsg" style="display:none"></div>
+      <button class="btn" id="perfilGuardar">Crear mi usuario</button>
+      <button class="btn x" id="perfilCancelar" style="width:100%">Cancelar</button>
     </div>
-    <div class="aviso w" id="loginMsg" style="display:none"></div>
-    <button class="btn" id="loginEntrar">Entrar</button>
-    <button class="btn x" id="loginCancelar" style="width:100%">Cancelar</button>
   </div>
 </div>
 
@@ -884,7 +920,9 @@ function hashPin(pin, clave){
 }
 
 var sesion = null; // {nombre, clave}
-var preferencias = {}; // clave -> {nombre, compartirMonto, ...} de la colección usuarios
+var preferencias = {}; // clave -> {nombre, compartirMonto, sueldo, afp, turnoHabitual, ...} de usuarios
+var perfilAplicado = false; // evita reaplicar sueldo/afp/turno del perfil más de una vez por sesión
+var borradorActivo = false; // true si hay un borrador sin guardar restaurado en el formulario
 var filtroAsesor = '';  // texto normalizado para filtrar tablas por asesor
 var modoAdmin = false;  // se activa con la clave maestra, no se guarda entre sesiones
 var temporada = null;   // {inicio, fin, activa} de config/temporada
@@ -910,9 +948,15 @@ function cargarSesion(){
     var s = localStorage.getItem('sise_sesion');
     if (s) sesion = JSON.parse(s);
   } catch(e) { sesion = null; }
+  perfilAplicado = false;
   pintarSesion();
   cargarReloj();
   cargarBorrador();
+  // si ya tenemos su perfil (por ejemplo, la sesión venía de antes), lo aplicamos ya mismo
+  if (sesion && preferencias[sesion.clave]) {
+    aplicarPerfilCampos(preferencias[sesion.clave]);
+    perfilAplicado = true;
+  }
 }
 function guardarSesionLocal(){
   try { localStorage.setItem('sise_sesion', JSON.stringify(sesion)); } catch(e){}
@@ -945,24 +989,37 @@ $('btnPrivacidad').onclick = function(){
 };
 
 var loginCallback = null;
+var pendienteRegistro = null; // {nombre, clave, hash} mientras se completa el paso 2
+
 function abrirLogin(cb){
   loginCallback = cb || null;
+  pendienteRegistro = null;
+  $('loginPaso1').style.display = '';
+  $('loginPaso2').style.display = 'none';
   $('loginNombre').value = sesion ? sesion.nombre : '';
   $('loginPin').value = '';
   $('loginMsg').style.display = 'none';
+  $('perfilGuardar').disabled = false;
+  $('perfilGuardar').textContent = 'Crear mi usuario';
   $('loginOverlay').classList.add('on');
   setTimeout(function(){ $('loginNombre').focus(); }, 10);
 }
 function cerrarLogin(){
   $('loginOverlay').classList.remove('on');
   loginCallback = null;
+  pendienteRegistro = null;
 }
 function mensajeLogin(t){
   var msg = $('loginMsg');
   msg.textContent = t; msg.style.display = 'block';
 }
+function mensajePerfil(t){
+  var msg = $('perfilMsg');
+  msg.textContent = t; msg.style.display = 'block';
+}
 
 $('loginCancelar').onclick = cerrarLogin;
+$('perfilCancelar').onclick = cerrarLogin;
 $('loginOverlay').addEventListener('click', function(e){
   if (e.target === $('loginOverlay')) cerrarLogin();
 });
@@ -983,26 +1040,19 @@ $('loginEntrar').onclick = function(){
 
   usuariosCol.doc(clave).get().then(function(doc){
     var h = hashPin(pin, clave);
+    btn.disabled = false; btn.textContent = 'Entrar';
     if (doc.exists) {
       var datos = doc.data();
-      if (datos.pin !== h) {
-        btn.disabled = false; btn.textContent = 'Entrar';
-        return mensajeLogin('PIN incorrecto para ' + datos.nombre + '.');
-      }
+      if (datos.pin !== h) return mensajeLogin('PIN incorrecto para ' + datos.nombre + '.');
       sesion = {nombre: datos.nombre, clave: clave};
-      finalizarLogin(btn);
+      finalizarLogin(btn, datos);
     } else {
-      // primera vez que se usa este nombre: se crea el usuario con este PIN
-      usuariosCol.doc(clave).set({
-        nombre: nombre, pin: h, compartirMonto: true,
-        creado: firebase.firestore.FieldValue.serverTimestamp()
-      }).then(function(){
-        sesion = {nombre: nombre, clave: clave};
-        finalizarLogin(btn);
-      }).catch(function(e){
-        btn.disabled = false; btn.textContent = 'Entrar';
-        mensajeLogin('No se pudo crear el usuario: ' + e.message);
-      });
+      // primera vez que se usa este nombre: pedimos sus datos antes de crear la cuenta
+      pendienteRegistro = {nombre: nombre, clave: clave, hash: h};
+      $('loginPaso2Nombre').textContent = nombre;
+      $('perfilMsg').style.display = 'none';
+      $('loginPaso1').style.display = 'none';
+      $('loginPaso2').style.display = '';
     }
   }).catch(function(e){
     btn.disabled = false; btn.textContent = 'Entrar';
@@ -1010,12 +1060,55 @@ $('loginEntrar').onclick = function(){
   });
 };
 
-function finalizarLogin(btn){
+$('perfilGuardar').onclick = function(){
+  if (!pendienteRegistro) return;
+  if (!FIREBASE_LISTO) return mensajePerfil('Sin conexión con la base de datos todavía.');
+
+  var sueldo = +$('perfilSueldo').value || 0;
+  var afp = $('perfilAfp').value;
+  var turnoHabitual = $('perfilTurno').value;
+  if (sueldo <= 0) return mensajePerfil('Escribe tu sueldo bruto.');
+
+  var btn = this;
+  btn.disabled = true; btn.textContent = 'Creando…';
+
+  var perfil = {
+    nombre: pendienteRegistro.nombre, pin: pendienteRegistro.hash, compartirMonto: true,
+    sueldo: sueldo, afp: afp, turnoHabitual: turnoHabitual,
+    creado: firebase.firestore.FieldValue.serverTimestamp()
+  };
+
+  usuariosCol.doc(pendienteRegistro.clave).set(perfil).then(function(){
+    sesion = {nombre: pendienteRegistro.nombre, clave: pendienteRegistro.clave};
+    pendienteRegistro = null;
+    finalizarLogin(btn, perfil);
+  }).catch(function(e){
+    btn.disabled = false; btn.textContent = 'Crear mi usuario';
+    mensajePerfil('No se pudo crear el usuario: ' + e.message);
+  });
+};
+
+// aplica sueldo/AFP/turno guardados en el perfil del asesor a los campos del
+// formulario, sin pisar un reloj en curso ni un borrador recuperado
+function aplicarPerfilCampos(perfil){
+  if (!perfil || relojEnCurso || borradorActivo) return;
+  if (perfil.sueldo) $('sueldo').value = perfil.sueldo;
+  if (perfil.afp) $('afp').value = perfil.afp;
+  if (perfil.turnoHabitual) $('turno').value = perfil.turnoHabitual;
+  previa();
+}
+
+function finalizarLogin(btn, perfil){
   guardarSesionLocal();
   pintarSesion();
+  perfilAplicado = false;
   cargarReloj();
   cargarBorrador();
-  btn.disabled = false; btn.textContent = 'Entrar';
+  if (perfil && !perfilAplicado) {
+    aplicarPerfilCampos(perfil);
+    perfilAplicado = true;
+  }
+  btn.disabled = false;
   cerrarLogin();
   var cb = loginCallback; loginCallback = null;
   pintar();               // repinta para mostrar/ocultar botones de borrar según dueño
@@ -1026,6 +1119,7 @@ $('btnSesion').onclick = function(){
   if (sesion) {
     if (confirm('¿Cerrar sesión de ' + sesion.nombre + '?')) {
       sesion = null;
+      perfilAplicado = false;
       try { localStorage.removeItem('sise_sesion'); } catch(e){}
       pararRelojUI();
       pintarSesion();
@@ -1051,6 +1145,14 @@ function claveReloj(){ return sesion ? 'sise_reloj_' + sesion.clave : null; }
 function horaAhora(){
   var d = new Date();
   return String(d.getHours()).padStart(2,'0') + ':' + String(d.getMinutes()).padStart(2,'0');
+}
+
+// fecha de HOY en la zona horaria del dispositivo (evita el bug de usar
+// toISOString(), que da la fecha en UTC y puede adelantarse un día
+// en Perú, apenas pasadas las 7pm hora local)
+function fechaHoyLocal(){
+  var d = new Date();
+  return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0');
 }
 
 // milisegundos realmente trabajados (descuenta el break, y si el break
@@ -1230,7 +1332,7 @@ $('btnReloj').onclick = function(){
       $('turno').focus();
       return;
     }
-    var hoy = new Date().toISOString().slice(0,10);
+    var hoy = fechaHoyLocal();
     relojEnCurso = {
       fecha: hoy, horaInicio: horaAhora(), ts: Date.now(), turno: $('turno').value,
       descansoAcumMs: 0, descansoInicioTs: null, descansoInicioHora: null
@@ -1311,9 +1413,11 @@ function borrarBorrador(){
   var k = claveBorrador();
   if (k) { try { localStorage.removeItem(k); } catch(e){} }
   $('avisoBorrador').style.display = 'none';
+  borradorActivo = false;
 }
 
 function cargarBorrador(){
+  borradorActivo = false;
   var k = claveBorrador();
   if (!k) return;
   var s = null;
@@ -1334,6 +1438,7 @@ function cargarBorrador(){
   $('sust').checked    = !!d.sust;
   previa();
   $('avisoBorrador').style.display = 'block';
+  borradorActivo = true;
 }
 
 $('descartarBorrador').onclick = function(){
@@ -1445,7 +1550,7 @@ function intentarRecordatorio(){
   if (!regsListos || !temporadaListo) return;
   if (!sesion || !temporada || !temporada.activa) return;
 
-  var hoy = new Date().toISOString().slice(0,10);
+  var hoy = fechaHoyLocal();
   if (hoy < temporada.inicio || hoy > temporada.fin) return;
 
   var flagKey = 'sise_recordatorio_' + sesion.clave;
@@ -1935,7 +2040,7 @@ for (var i = 0; i < ids.length; i++) {
   $(ids[i]).addEventListener('change', previa);
   $(ids[i]).addEventListener('input', previa);
 }
-$('fecha').value = new Date().toISOString().slice(0,10);
+$('fecha').value = fechaHoyLocal();
 previa();     // la calculadora del día funciona aunque Firebase no cargue
 
 // esto se ejecuta cuando Firestore ya está listo (venga del CDN que venga)
@@ -1962,6 +2067,12 @@ window.onFirebaseListo = function(){
     preferencias = {};
     for (var i = 0; i < snap.docs.length; i++) preferencias[snap.docs[i].id] = snap.docs[i].data();
     pintarSesion();
+    // si tu sesión venía de antes (recargaste la página) y todavía no se
+    // habían aplicado tu sueldo/AFP/turno guardados, se aplican apenas llegan
+    if (sesion && !perfilAplicado && preferencias[sesion.clave]) {
+      aplicarPerfilCampos(preferencias[sesion.clave]);
+      perfilAplicado = true;
+    }
     pintar();
   }, function(e){ /* si esto falla, simplemente no se muestran montos ajenos */ });
 
