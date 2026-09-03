@@ -450,6 +450,10 @@ tr:hover .tag{transform:translateY(-1px)}
 .reloj-stat.alerta b{color:var(--rojo)}
 .reloj-stat.break b{color:#B8860B}
 .reloj-stat-ic{font-size:1rem;line-height:1}
+.reloj-log{margin-top:10px;padding-top:8px;border-top:1px dashed var(--linea);
+  display:flex;flex-direction:column;gap:3px}
+.reloj-log-item{font-family:'JetBrains Mono',monospace;font-size:.78rem;color:var(--gris)}
+.reloj-log-item b{color:var(--gris-os);font-family:'Barlow Condensed'}
 
 /* ============================================================
    SESIÓN — recuadro "quién eres" dentro del formulario
@@ -585,6 +589,7 @@ tr:hover .tag{transform:translateY(-1px)}
                 <span class="reloj-stat-txt">Llevas en break: <b id="relojBreakTiempo">00:00:00</b></span>
               </div>
             </div>
+            <div class="reloj-log" id="relojLog" style="display:none"></div>
           </div>
         </div>
         <span style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
@@ -593,6 +598,8 @@ tr:hover .tag{transform:translateY(-1px)}
           <button type="button" class="btn" id="btnReloj" style="width:auto;padding:11px 20px;white-space:nowrap">▶ Marcar hora de entrada</button>
         </span>
       </div>
+
+      <div class="aviso i" id="resumenTurno" style="display:none"></div>
 
       <div class="fila">
         <div class="campo"><label for="fecha">Fecha</label><input type="date" id="fecha"></div>
@@ -1262,6 +1269,60 @@ function tickReloj(){
   }
 }
 
+/* ---------- bitácora detallada: entrada, breaks y salida ---------- */
+function nombreEvento(tipo){
+  return {
+    entrada: '🟢 Entrada marcada',
+    break_inicio: '☕ Break iniciado',
+    break_fin: '▶️ Break terminado',
+    salida: '⏹ Salida marcada'
+  }[tipo] || tipo;
+}
+
+function agregarEventoReloj(tipo){
+  if (!relojEnCurso) return;
+  if (!relojEnCurso.eventos) relojEnCurso.eventos = [];
+  relojEnCurso.eventos.push({tipo: tipo, hora: horaAhora()});
+  try { localStorage.setItem(claveReloj(), JSON.stringify(relojEnCurso)); } catch(e){}
+  pintarRelojLog();
+}
+
+function pintarRelojLog(){
+  var caja = $('relojLog');
+  if (!relojEnCurso || !relojEnCurso.eventos || !relojEnCurso.eventos.length) {
+    caja.style.display = 'none'; caja.innerHTML = ''; return;
+  }
+  var h = '';
+  for (var i = 0; i < relojEnCurso.eventos.length; i++) {
+    var e = relojEnCurso.eventos[i];
+    h += '<div class="reloj-log-item">' + e.hora + ' — ' + nombreEvento(e.tipo) + '</div>';
+  }
+  caja.innerHTML = h;
+  caja.style.display = 'flex';
+}
+
+// arma un resumen detallado (todos los eventos + totales) para mostrar
+// justo después de marcar salida, antes de que se borre relojEnCurso
+function construirResumenTurno(){
+  if (!relojEnCurso) return '';
+  var eventos = relojEnCurso.eventos || [];
+  var lineas = [];
+  for (var i = 0; i < eventos.length; i++) lineas.push(eventos[i].hora + ' — ' + nombreEvento(eventos[i].tipo));
+  var trabajado = formatoHMS(msTrabajadosReloj());
+  var breakTotal = relojEnCurso.descansoAcumMs || 0;
+  return '<b>Así fue tu turno de hoy</b><br>' + lineas.join('<br>') +
+    '<br><br>Tiempo trabajado (sin contar breaks): <b>' + trabajado + '</b>' +
+    (breakTotal > 0 ? '<br>Tiempo total en break: <b>' + formatoHMS(breakTotal) + '</b>' : '') +
+    '<br><br>Revisa el cálculo de abajo y dale <b>«Guardar registro»</b> para dejarlo guardado.';
+}
+
+function mostrarResumenTurno(html){
+  var caja = $('resumenTurno');
+  if (!html) { caja.style.display = 'none'; caja.innerHTML = ''; return; }
+  caja.innerHTML = html;
+  caja.style.display = 'block';
+}
+
 // arma el mismo objeto "d" que usa el cálculo normal, pero con la hora
 // de salida = ahora mismo (o congelada si está en break), y pinta el panel
 function renderCalculoEnVivo(silencioso){
@@ -1320,6 +1381,7 @@ function pintarReloj(){
     cancelar.style.display = 'none';
     brk.style.display = 'none';
   }
+  pintarRelojLog();
 }
 
 $('btnReloj').onclick = function(){
@@ -1335,11 +1397,12 @@ $('btnReloj').onclick = function(){
     var hoy = fechaHoyLocal();
     relojEnCurso = {
       fecha: hoy, horaInicio: horaAhora(), ts: Date.now(), turno: $('turno').value,
-      descansoAcumMs: 0, descansoInicioTs: null, descansoInicioHora: null
+      descansoAcumMs: 0, descansoInicioTs: null, descansoInicioHora: null, eventos: []
     };
+    mostrarResumenTurno(null);   // limpia el resumen del turno anterior, si había
     $('fecha').value = hoy;
     $('ent').value = relojEnCurso.horaInicio;
-    try { localStorage.setItem(claveReloj(), JSON.stringify(relojEnCurso)); } catch(e){}
+    agregarEventoReloj('entrada');
     bloquearCamposReloj(true);
     pintarReloj();
     iniciarTickReloj();
@@ -1348,6 +1411,8 @@ $('btnReloj').onclick = function(){
   } else {
     // ---- marcar salida ----
     var horaFin = horaEfectivaReloj();
+    agregarEventoReloj('salida');
+    var resumen = construirResumenTurno();
     $('fecha').value = relojEnCurso.fecha;
     $('ent').value = relojEnCurso.horaInicio;
     $('turno').value = relojEnCurso.turno;
@@ -1357,6 +1422,7 @@ $('btnReloj').onclick = function(){
     relojEnCurso = null;
     pararRelojUI();
     pintarReloj();
+    mostrarResumenTurno(resumen);
     previa();
     guardarBorrador();   // por si se corta la luz o el wifi antes de tocar "Guardar registro"
     document.querySelector('.card.anim.boleto').scrollIntoView({behavior:'smooth', block:'nearest'});
@@ -1370,10 +1436,12 @@ $('btnBreak').onclick = function(){
     relojEnCurso.descansoAcumMs = (relojEnCurso.descansoAcumMs || 0) + (Date.now() - relojEnCurso.descansoInicioTs);
     relojEnCurso.descansoInicioTs = null;
     relojEnCurso.descansoInicioHora = null;
+    agregarEventoReloj('break_fin');
   } else {
     // ---- iniciar break ----
     relojEnCurso.descansoInicioTs = Date.now();
     relojEnCurso.descansoInicioHora = horaAhora();
+    agregarEventoReloj('break_inicio');
   }
   try { localStorage.setItem(claveReloj(), JSON.stringify(relojEnCurso)); } catch(e){}
   pintarReloj();
@@ -1386,6 +1454,7 @@ $('relojCancelar').onclick = function(){
   relojEnCurso = null;
   pararRelojUI();
   bloquearCamposReloj(false);
+  mostrarResumenTurno(null);
   pintarReloj();
   previa();
 };
@@ -1790,6 +1859,7 @@ $('guardar').onclick = function(){
 
   agregar(d).then(function(){
     borrarBorrador();
+    mostrarResumenTurno(null);
     document.querySelector('.kpis').scrollIntoView({behavior:'smooth', block:'center'});
   }).catch(function(e){
     guardarBorrador();
