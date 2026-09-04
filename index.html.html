@@ -413,6 +413,25 @@ tr:hover .tag{transform:translateY(-1px)}
   display:inline-block;font-family:'JetBrains Mono',monospace}
 
 /* ============================================================
+   BANNER DE TEMPORADA — visible para todos, no solo en admin
+   ============================================================ */
+.temporada-banner{
+  display:flex;align-items:center;gap:20px;flex-wrap:wrap;
+  background:var(--tinta);color:#fff;border-radius:6px;
+  padding:16px 20px;margin:0 0 22px;box-shadow:var(--s2);
+}
+.temporada-info{display:flex;align-items:center;gap:12px}
+.temporada-ic{font-size:1.7rem;line-height:1}
+.temporada-tit{font-weight:700;font-size:1rem}
+.temporada-fechas{font-family:'JetBrains Mono',monospace;font-size:.82rem;color:#C9C2B4;margin-top:2px}
+.temporada-medio{flex:1;min-width:180px;display:flex;flex-direction:column;gap:6px}
+.temporada-barra{height:10px;border-radius:5px;background:rgba(255,255,255,.18);overflow:hidden}
+.temporada-barra i{display:block;height:100%;width:0;border-radius:5px;
+  background:linear-gradient(90deg,var(--rojo),var(--rojo-cl));
+  transition:width .6s var(--ease)}
+.temporada-dia{font-family:'JetBrains Mono',monospace;font-size:.8rem;color:#C9C2B4;text-align:right}
+
+/* ============================================================
    PANEL ADMIN
    ============================================================ */
 .panel-admin{
@@ -512,6 +531,20 @@ tr:hover .tag{transform:translateY(-1px)}
     <b>No se pudo conectar con la base de datos.</b> Puedes seguir usando la calculadora,
     pero no vas a poder guardar, ver o borrar registros hasta que recargues la página con
     otra conexión a internet (o revises que tu navegador no esté bloqueando el sitio).
+  </div>
+
+  <div class="temporada-banner" id="temporadaBanner" style="display:none">
+    <div class="temporada-info">
+      <span class="temporada-ic">📅</span>
+      <div>
+        <div class="temporada-tit">Temporada de matrícula</div>
+        <div class="temporada-fechas" id="temporadaFechas"></div>
+      </div>
+    </div>
+    <div class="temporada-medio">
+      <div class="temporada-barra"><i id="temporadaBarraFill"></i></div>
+      <div class="temporada-dia" id="temporadaDiaTxt"></div>
+    </div>
   </div>
 
   <div class="dos">
@@ -1608,6 +1641,28 @@ function diffDias(a, b){   // a, b en formato 'YYYY-MM-DD'
   return Math.round((dbb - da) / 86400000);
 }
 
+// banner visible para todos (no solo en el panel admin) con las fechas
+// de la temporada y una barra de avance
+function pintarTemporadaBanner(){
+  var banner = $('temporadaBanner');
+  if (!temporada || !temporada.activa) { banner.style.display = 'none'; return; }
+
+  var hoy = fechaHoyLocal();
+  var totalDias = diffDias(temporada.inicio, temporada.fin) + 1;
+  var diaActual = diffDias(temporada.inicio, hoy) + 1;
+  var progreso = Math.max(0, Math.min(100, (diaActual / totalDias) * 100));
+
+  var estado;
+  if (hoy < temporada.inicio) { estado = 'Empieza el ' + fechaLarga(temporada.inicio); progreso = 0; }
+  else if (hoy > temporada.fin) { estado = 'Terminó el ' + fechaLarga(temporada.fin); progreso = 100; }
+  else { estado = 'Día ' + diaActual + ' de ' + totalDias; }
+
+  $('temporadaFechas').textContent = fechaLarga(temporada.inicio) + ' — ' + fechaLarga(temporada.fin);
+  $('temporadaDiaTxt').textContent = estado;
+  $('temporadaBarraFill').style.width = progreso + '%';
+  banner.style.display = 'flex';
+}
+
 /* ============================================================
    RECORDATORIO de temporada de matrícula — se muestra cada
    4 horas por asesor, mientras la temporada esté activa y vigente.
@@ -1653,6 +1708,7 @@ $('recCerrar').onclick = function(){ $('recordatorioOverlay').classList.remove('
 // revisa cada 5 minutos si ya toca mostrar el recordatorio de nuevo,
 // por si el asesor deja la pestaña abierta varias horas sin recargar
 setInterval(intentarRecordatorio, 5 * 60 * 1000);
+setInterval(pintarTemporadaBanner, 5 * 60 * 1000);   // por si el día cambia con la pestaña abierta
 
 $('guardarTemporada').onclick = function(){
   if (!FIREBASE_LISTO) return alert('Sin conexión con la base de datos.');
@@ -1709,6 +1765,8 @@ function calcular(d){
   }
 
   if (fin > 1320) r.avisos.push('Trabajo después de las 22:00: puede corresponder sobretasa nocturna, no incluida aquí.');
+  if (fin > 1440) r.avisos.push('🌙 Este turno cruzó la medianoche: la hora de salida que escribiste fue tomada como del día siguiente.');
+  r.cruzaMedianoche = fin > 1440;
 
   r.horas = r.h25 + r.h35 + r.hDesc;
   r.trab  = Math.max(0, (fin - ini - (descanso ? 0 : (d.refri ? 0 : j.brk))) / 60);
@@ -1791,7 +1849,9 @@ function renderCalculo(d, opts){
 
   h += '<div class="detalle-titulo">Así se calculó</div>';
 
-  h += li('', r.dia + (d.feriado ? ' <span class="tag dsc">Feriado</span>' : ''), r.jor.ini + ' – ' + (opts.live ? 'ahora' : r.jor.fin));
+  h += li('', r.dia + (d.feriado ? ' <span class="tag dsc">Feriado</span>' : '') +
+    (r.cruzaMedianoche ? ' <span class="tag dsc">🌙 Cruza medianoche</span>' : ''),
+    r.jor.ini + ' – ' + (opts.live ? 'ahora' : r.jor.fin));
   h += li('sub', 'Tiempo normal trabajado (sin el extra)', r.trab.toFixed(2) + ' h');
   if (r.antes)   h += li('sub', 'Llegaste antes de tu hora de entrada',   hhmm(r.antes) + ' h');
   if (r.despues) h += li('sub', 'Te quedaste después de tu hora de salida',  hhmm(r.despues) + ' h');
@@ -2151,6 +2211,7 @@ window.onFirebaseListo = function(){
     temporada = doc.exists ? doc.data() : null;
     temporadaListo = true;
     pintarTemporadaEstado();
+    pintarTemporadaBanner();
     intentarRecordatorio();
   }, function(e){ temporadaListo = true; });
 };
