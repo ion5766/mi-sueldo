@@ -4,6 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>SISE » Horas Extra</title>
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg%20xmlns%3D%27http%3A//www.w3.org/2000/svg%27%20viewBox%3D%270%200%2064%2064%27%3E%3Crect%20width%3D%2764%27%20height%3D%2764%27%20rx%3D%2715%27%20fill%3D%27%23FF0E49%27/%3E%3Ctext%20x%3D%2732%27%20y%3D%2747%27%20font-size%3D%2744%27%20font-weight%3D%27900%27%20font-family%3D%27Arial%2CHelvetica%2Csans-serif%27%20text-anchor%3D%27middle%27%20fill%3D%27%23fff%27%3E%24%3C/text%3E%3C/svg%3E">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -413,25 +414,6 @@ tr:hover .tag{transform:translateY(-1px)}
   display:inline-block;font-family:'JetBrains Mono',monospace}
 
 /* ============================================================
-   BANNER DE TEMPORADA — visible para todos, no solo en admin
-   ============================================================ */
-.temporada-banner{
-  display:flex;align-items:center;gap:20px;flex-wrap:wrap;
-  background:var(--tinta);color:#fff;border-radius:6px;
-  padding:16px 20px;margin:0 0 22px;box-shadow:var(--s2);
-}
-.temporada-info{display:flex;align-items:center;gap:12px}
-.temporada-ic{font-size:1.7rem;line-height:1}
-.temporada-tit{font-weight:700;font-size:1rem}
-.temporada-fechas{font-family:'JetBrains Mono',monospace;font-size:.82rem;color:#C9C2B4;margin-top:2px}
-.temporada-medio{flex:1;min-width:180px;display:flex;flex-direction:column;gap:6px}
-.temporada-barra{height:10px;border-radius:5px;background:rgba(255,255,255,.18);overflow:hidden}
-.temporada-barra i{display:block;height:100%;width:0;border-radius:5px;
-  background:linear-gradient(90deg,var(--rojo),var(--rojo-cl));
-  transition:width .6s var(--ease)}
-.temporada-dia{font-family:'JetBrains Mono',monospace;font-size:.8rem;color:#C9C2B4;text-align:right}
-
-/* ============================================================
    PANEL ADMIN
    ============================================================ */
 .panel-admin{
@@ -486,14 +468,14 @@ tr:hover .tag{transform:translateY(-1px)}
 <style id="duo-tema">
 /* ===== TEMA "DUO": colores vivos, botones 3D, animaciones ===== */
 :root{
-  --rojo:#58CC02; --rojo-os:#46A302; --rojo-cl:#89E219;
+  --rojo:#FF0E49; --rojo-os:#B4002F; --rojo-cl:#FF6B8E;
   --teal:#1CB0F6; --azul:#1899D6; --morado:#CE82FF; --ambar:#FFC800;
   --tinta:#3C3C3C; --papel:#fff; --crema:#fff; --papel-os:#F2F2F2;
   --linea:#E5E5E5; --linea-cl:#F0F0F0; --gris:#8A8A8A; --gris-os:#666;
-  --s-rojo:0 5px 0 #46A302;
+  --s-rojo:0 5px 0 #B4002F;
 }
 html body,html body *{font-family:'Nunito','Segoe UI',system-ui,sans-serif!important;letter-spacing:0;font-variant-numeric:tabular-nums}
-body{background:#fff;background-image:radial-gradient(circle,rgba(88,204,2,.10) 2px,transparent 2.5px);background-size:34px 34px;font-size:17px;font-weight:700}
+body{background:#fff;background-image:radial-gradient(circle,rgba(255,14,73,.07) 2px,transparent 2.5px);background-size:34px 34px;font-size:17px;font-weight:700}
 h1,h2,h3{font-weight:900}
 .boleto{clip-path:none!important}
 @keyframes duo-pop{0%{opacity:0;transform:scale(.85) translateY(14px)}70%{transform:scale(1.03)}100%{opacity:1;transform:none}}
@@ -506,11 +488,11 @@ h1,h2,h3{font-weight:900}
 @keyframes duo-fade{0%{opacity:0;transform:translateY(6px)}15%,85%{opacity:1;transform:none}100%{opacity:0}}
 
 /* header */
-header{background:linear-gradient(180deg,#61D800,#46A302)!important;border-radius:0 0 32px 32px;padding-bottom:22px!important;box-shadow:0 6px 0 #3B8A00}
+header{background:linear-gradient(180deg,#FF2A5E,#B4002F)!important;border-radius:0 0 32px 32px;padding-bottom:22px!important;box-shadow:0 6px 0 #B4002F}
 header::after{display:none!important}
 .marca{font-weight:900;text-shadow:0 3px 0 rgba(0,0,0,.18);font-size:2.6rem}
-.chev{color:#FFC800;opacity:1;animation:duo-wiggle 2.4s ease-in-out infinite}
-.sello{transform:none!important;animation:duo-pop .6s both!important;background:#fff;color:#46A302;border:0;border-radius:999px;padding:10px 22px;box-shadow:0 5px 0 #CDEFA8}
+.chev{color:#1C1918;opacity:1;animation:duo-wiggle 2.4s ease-in-out infinite}
+.sello{transform:none!important;animation:duo-pop .6s both!important;background:#fff;color:#B4002F;border:0;border-radius:999px;padding:10px 22px;box-shadow:0 5px 0 #FFB3C6}
 .sello::before{display:none}
 .sello b{font-size:1.1rem;letter-spacing:.02em}
 
@@ -534,10 +516,10 @@ input[readonly]{background:#EFEFEF;color:#777}
 .check input{width:auto;accent-color:#1CB0F6}
 
 /* botones 3D */
-.btn{background:#58CC02!important;color:#fff!important;border:0!important;border-radius:16px!important;box-shadow:0 5px 0 #46A302!important;font-weight:900!important;text-transform:uppercase;letter-spacing:.06em!important;transition:transform .1s,box-shadow .1s,filter .2s!important}
+.btn{background:#FF0E49!important;color:#fff!important;border:0!important;border-radius:16px!important;box-shadow:0 5px 0 #B4002F!important;font-weight:900!important;text-transform:uppercase;letter-spacing:.06em!important;transition:transform .1s,box-shadow .1s,filter .2s!important}
 .btn::after{display:none!important}
 .btn:hover{filter:brightness(1.07);transform:translateY(-1px)!important}
-.btn:active{transform:translateY(4px)!important;box-shadow:0 1px 0 #46A302!important}
+.btn:active{transform:translateY(4px)!important;box-shadow:0 1px 0 #B4002F!important}
 .btn.gris,.btn.mini{background:#fff!important;color:#777!important;border:2px solid #E5E5E5!important;box-shadow:0 4px 0 #E5E5E5!important}
 .btn.gris:active,.btn.mini:active{box-shadow:0 0 0 #E5E5E5!important}
 .btn.x{background:#fff!important;color:#FF4B4B!important;border:2px solid #E5E5E5!important;box-shadow:0 4px 0 #E5E5E5!important}
@@ -548,17 +530,14 @@ input[readonly]{background:#EFEFEF;color:#777}
 .aviso{border-radius:16px;border:2px solid #FFC800;background:#FFF4CC;color:#7A5B00}
 .aviso.i{border-color:#84D8FF;background:#DDF4FF;color:#0B5F8A}
 .sesion-box{border-radius:16px;border:2px solid #E5E5E5;background:#F7F7F7}
-.sesion-box.on{background:#D7FFB8;border-color:#89E219}
-.temporada-banner{background:linear-gradient(135deg,#CE82FF,#A560D6)!important;color:#fff!important;border-radius:22px!important;border:0!important;box-shadow:0 6px 0 #8A45BD!important;margin-bottom:22px}
-.temporada-barra{background:rgba(255,255,255,.35)!important;border-radius:99px}
-.temporada-barra i{background:#FFC800!important;border-radius:99px}
+.sesion-box.on{background:#FFE0E8;border-color:#FF6B8E}
 .panel-admin{border-radius:20px;border:2px dashed #CE82FF}
 
 /* resultado del día */
 .rs-item{border-radius:18px;border:2px solid #E5E5E5;box-shadow:0 4px 0 #E5E5E5;background:#fff}
-.rs-item.destacado{background:#58CC02!important;border-color:#46A302;box-shadow:0 4px 0 #46A302;color:#fff}
+.rs-item.destacado{background:#FF0E49!important;border-color:#B4002F;box-shadow:0 4px 0 #B4002F;color:#fff}
 .rs-item.destacado .rs-num,.rs-item.destacado .rs-label{color:#fff!important}
-.res>div.tot{background:#D7FFB8;border-radius:14px;color:#2E7D00}
+.res>div.tot{background:#FFE0E8;border-radius:14px;color:#B4002F}
 
 /* KPIs */
 .kpi{border:2px solid #E5E5E5!important;border-bottom-width:6px!important;border-radius:20px!important;background:#fff!important;box-shadow:none!important;clip-path:none!important;transition:transform .2s}
@@ -583,18 +562,18 @@ input[readonly]{background:#EFEFEF;color:#777}
 th{font-size:.72rem;font-weight:900;letter-spacing:.08em;color:#9A9A9A;background:none!important;border-bottom:2px solid #E5E5E5}
 td{border-bottom:2px solid #F0F0F0}
 tbody tr{transition:transform .15s,background .2s}
-tbody tr:hover td{background:#F0FAE6!important}
+tbody tr:hover td{background:#FFF1F4!important}
 tbody tr.lider td{background:#FFF4CC!important}
 .pos{border-radius:50%;background:#EDEDED!important;color:#777!important;font-weight:900}
 .pos.p1{background:#FFC800!important;color:#7A5B00!important;animation:duo-wiggle 2.4s infinite}
 .pos.p2{background:#CFD6DC!important;color:#4A5560!important}
 .pos.p3{background:#FF9600!important;color:#fff!important}
 .barra{height:14px!important;border-radius:99px!important;background:#E5E5E5!important;overflow:hidden}
-.barra i{border-radius:99px!important;background:#58CC02!important;box-shadow:inset 0 4px 0 rgba(255,255,255,.3)}
+.barra i{border-radius:99px!important;background:#FF0E49!important;box-shadow:inset 0 4px 0 rgba(255,255,255,.3)}
 .tag{border-radius:99px!important;font-weight:900}
 .tag.am{background:#FFF4CC!important;color:#9A6B00!important}
 .tag.pm{background:#DDF4FF!important;color:#0B5F8A!important}
-.rojo{color:#46A302!important}
+.rojo{color:#B4002F!important}
 
 /* login */
 .login-overlay{backdrop-filter:blur(4px);background:rgba(40,60,30,.45)}
@@ -614,10 +593,10 @@ tbody tr.lider td{background:#FFF4CC!important}
 .duo-toast .duo-em{font-size:2rem;animation:duo-wiggle 1s ease-in-out 3}
 .duo-toast b{display:block;font-size:1.1rem;font-weight:900;line-height:1.15}
 .duo-toast small{display:block;font-size:.92rem;font-weight:700;opacity:.9;margin-top:2px;line-height:1.2}
-.duo-toast.grande{padding:18px 22px;border-color:#46A302;border-bottom-width:7px}
+.duo-toast.grande{padding:18px 22px;border-color:#B4002F;border-bottom-width:7px}
 .duo-toast.grande .duo-em{font-size:3rem}
 .duo-toast.grande b{font-size:1.3rem}
-.duo-toast.sube.grande{background:#58CC02;color:#fff}
+.duo-toast.sube.grande{background:#FF0E49;color:#fff}
 .duo-toast.baja.grande{background:#1CB0F6;color:#fff;border-color:#1899D6}
 .duo-toast.podio{border-color:#FFC800;background:#FFF4CC}
 .duo-conf{position:fixed;top:-16px;width:10px;height:15px;border-radius:3px;z-index:9998;pointer-events:none;animation:duo-fall linear forwards}
@@ -716,6 +695,61 @@ tbody tr.total td{background:#26211F!important}
 .duo-toast.baja.grande{background:#1CB0F6;border-color:#1899D6;color:#fff}
 .duo-toast.podio{background:#3A3115;border-color:#FFC800;color:#FFE9A0}
 </style>
+<script>try{if(localStorage.getItem('sise_tema')==='claro')document.getElementById('duo-oscuro').disabled=true}catch(e){}</script>
+<style id="duo-extra">
+/* ===== BANNER DE TEMPORADA (wow) ===== */
+.temporada-banner{position:relative;overflow:hidden;margin:0 0 26px;padding:24px 28px 22px;border-radius:30px;color:#fff;
+  background:linear-gradient(115deg,#FF0E49 0%,#D4166F 38%,#8E2DE2 78%,#5B2BD6 100%);
+  box-shadow:0 8px 0 #7A0A33,0 24px 44px rgba(255,14,73,.25);animation:duo-pop .6s both}
+.temporada-banner::after{content:'';position:absolute;inset:0;pointer-events:none;background:linear-gradient(105deg,transparent 35%,rgba(255,255,255,.24) 50%,transparent 65%);transform:translateX(-120%);animation:tb-brillo 5.5s ease-in-out infinite}
+@keyframes tb-brillo{0%,55%{transform:translateX(-120%)}100%{transform:translateX(120%)}}
+@keyframes tb-rayas{to{background-position:56px 0}}
+.tb-deco i{position:absolute;border-radius:50%;background:rgba(255,255,255,.10);animation:duo-float 6s ease-in-out infinite}
+.tb-deco i:nth-child(1){width:190px;height:190px;right:-55px;top:-80px}
+.tb-deco i:nth-child(2){width:96px;height:96px;right:26%;bottom:-46px;animation-delay:-2s}
+.tb-deco i:nth-child(3){width:48px;height:48px;left:44%;top:12px;animation-delay:-4s}
+.tb-fila{position:relative;display:flex;align-items:center;gap:20px;flex-wrap:wrap}
+.tb-icono{flex:none;width:78px;height:78px;border-radius:24px;display:grid;place-items:center;font-size:2.5rem;background:rgba(255,255,255,.22);border:2px solid rgba(255,255,255,.5);box-shadow:0 5px 0 rgba(0,0,0,.2);animation:duo-wiggle 3.2s ease-in-out infinite}
+.tb-textos{flex:1;min-width:220px}
+.tb-sup{font-size:.78rem;font-weight:900;letter-spacing:.18em;text-shadow:0 1px 0 rgba(0,0,0,.25)}
+.tb-titulo{font-size:clamp(1.55rem,3.8vw,2.3rem);font-weight:900;line-height:1.1;margin:3px 0 10px;text-shadow:0 3px 0 rgba(0,0,0,.22)}
+.tb-fechas{display:flex;flex-wrap:wrap;align-items:center;gap:8px}
+.tb-fechas span{background:rgba(0,0,0,.30);padding:6px 14px;border-radius:99px;font-weight:800;font-size:.95rem}
+.tb-fechas .tb-flecha{background:none;padding:0;font-size:1.25rem}
+.tb-chip{flex:none;min-width:158px;text-align:center;padding:13px 20px;border-radius:22px;background:#fff;color:#1C1918;box-shadow:0 5px 0 rgba(0,0,0,.24)}
+.tb-chip b{display:block;font-size:1.28rem;font-weight:900;line-height:1.1}
+.tb-chip small{display:block;margin-top:4px;font-size:.84rem;font-weight:800;color:#6B6B6B}
+.tb-chip.en-curso b{color:#FF0E49}.tb-chip.fin b{color:#1E9E3A}.tb-chip.antes b{color:#8E2DE2}
+.tb-pista{position:relative;margin-top:22px}
+.tb-barra{position:relative;height:22px;border-radius:99px;background:rgba(0,0,0,.32);box-shadow:inset 0 3px 0 rgba(0,0,0,.2)}
+#temporadaBarraFill{position:absolute;left:0;top:0;bottom:0;min-width:22px;border-radius:99px;transition:width 1.3s cubic-bezier(.2,.9,.3,1);
+  background:repeating-linear-gradient(135deg,#FFD84D 0 14px,#FFC800 14px 28px);box-shadow:inset 0 5px 0 rgba(255,255,255,.42),0 0 16px rgba(255,200,0,.75);animation:tb-rayas 1.4s linear infinite}
+.tb-marca{position:absolute;top:50%;margin:-21px 0 0 -16px;font-size:1.8rem;line-height:1;transition:left 1.3s cubic-bezier(.2,.9,.3,1);filter:drop-shadow(0 3px 0 rgba(0,0,0,.28));animation:duo-float 1.8s ease-in-out infinite}
+.tb-etiquetas{display:flex;justify-content:space-between;margin-top:10px;font-size:.86rem;font-weight:900;text-shadow:0 1px 0 rgba(0,0,0,.3)}
+
+/* ===== POP-UPS PARA TODOS ===== */
+@keyframes ap-in{from{opacity:0}to{opacity:1}}
+.avisopop-ov{position:fixed;inset:0;z-index:10000;display:grid;place-items:center;padding:18px;background:rgba(10,8,8,.62);backdrop-filter:blur(5px);animation:ap-in .25s both}
+.avisopop{position:relative;width:min(100%,470px);max-height:90vh;overflow:auto;text-align:center;padding:30px 26px 24px;border-radius:30px;
+  background:var(--crema);color:var(--tinta);border:2px solid var(--linea);border-bottom-width:8px;box-shadow:0 24px 60px rgba(0,0,0,.45);animation:duo-pop .5s cubic-bezier(.34,1.4,.6,1) both}
+.avisopop .ap-em{display:inline-block;font-size:4.2rem;line-height:1;animation:duo-float 2s ease-in-out infinite}
+.avisopop .ap-tipo{display:inline-block;margin:12px 0 6px;padding:5px 14px;border-radius:99px;font-size:.78rem;font-weight:900;letter-spacing:.08em;text-transform:uppercase;color:#fff}
+.ap-t-mejora{background:#1CB0F6}.ap-t-aviso{background:#8E2DE2}.ap-t-importante{background:#FF9600}.ap-t-felicitacion{background:#FF0E49}
+.avisopop h3{margin:6px 0 10px;font-size:1.55rem;line-height:1.15;color:var(--tinta);text-transform:none;letter-spacing:0}
+.avisopop p{margin:0 0 16px;font-size:1.05rem;line-height:1.5;white-space:pre-line;color:var(--gris-os)}
+.avisopop .ap-pie{margin-bottom:14px;font-size:.8rem;font-weight:800;color:var(--gris)}
+textarea{width:100%;box-sizing:border-box;border:2px solid var(--linea);border-radius:14px;background:var(--papel);color:var(--tinta);padding:12px 14px;font-weight:700;font-size:1rem;resize:vertical}
+textarea:focus{outline:0;border-color:var(--rojo);box-shadow:0 0 0 4px rgba(255,14,73,.18)}
+.av-item{display:flex;align-items:center;gap:12px;padding:10px 12px;margin-top:8px;border:2px solid var(--linea);border-radius:14px;background:var(--crema)}
+.av-item b{display:block;line-height:1.2}.av-item small{color:var(--gris);font-weight:700}
+
+/* ===== BOTÓN DE TEMA ===== */
+header{position:relative}
+#btnTema{position:absolute;top:14px;right:16px;z-index:5;border:0;border-radius:99px;padding:9px 16px;font-weight:900;font-size:.8rem;cursor:pointer;background:#fff;color:#B4002F;box-shadow:0 4px 0 rgba(0,0,0,.25);transition:transform .1s,box-shadow .1s}
+#btnTema:hover{filter:brightness(.97)}
+#btnTema:active{transform:translateY(3px);box-shadow:0 1px 0 rgba(0,0,0,.25)}
+@media(max-width:560px){#btnTema{top:10px;right:10px;padding:7px 11px;font-size:.7rem}.tb-icono{width:60px;height:60px;font-size:2rem}.tb-chip{width:100%}}
+</style>
 </head>
 <body>
 
@@ -741,16 +775,19 @@ tbody tr.total td{background:#26211F!important}
   </div>
 
   <div class="temporada-banner" id="temporadaBanner" style="display:none">
-    <div class="temporada-info">
-      <span class="temporada-ic">📅</span>
-      <div>
-        <div class="temporada-tit">Temporada de matrícula</div>
-        <div class="temporada-fechas" id="temporadaFechas"></div>
+    <div class="tb-deco"><i></i><i></i><i></i></div>
+    <div class="tb-fila">
+      <div class="tb-icono">🎓</div>
+      <div class="tb-textos">
+        <div class="tb-sup">TEMPORADA DE MATRÍCULA</div>
+        <div class="tb-titulo" id="tbTitulo"></div>
+        <div class="tb-fechas"><span>📅 <b id="tbIni"></b></span><span class="tb-flecha">→</span><span>🏁 <b id="tbFin"></b></span></div>
       </div>
+      <div class="tb-chip" id="tbChip"></div>
     </div>
-    <div class="temporada-medio">
-      <div class="temporada-barra"><i id="temporadaBarraFill"></i></div>
-      <div class="temporada-dia" id="temporadaDiaTxt"></div>
+    <div class="tb-pista">
+      <div class="tb-barra"><i id="temporadaBarraFill"></i><span class="tb-marca" id="tbMarca">🚀</span></div>
+      <div class="tb-etiquetas"><span>Inicio</span><span id="tbPct"></span><span>Fin</span></div>
     </div>
   </div>
 
@@ -879,6 +916,28 @@ tbody tr.total td{background:#26211F!important}
           <button class="btn gris" id="quitarTemporada" style="width:auto;padding:10px 16px">Quitar temporada activa</button>
         </div>
         <div class="aviso i" id="temporadaEstado" style="margin-top:12px;display:none"></div>
+      </div>
+
+      <div class="panel-admin-bloque">
+        <b>📣 Avisos para todos (pop-ups)</b>
+        <p>Escribe un mensaje y todos los asesores lo verán como ventana emergente al entrar
+        (o al instante si ya tienen la web abierta). Cada asesor lo ve una sola vez.</p>
+        <div class="campo" style="margin:0 0 10px"><label>Tipo</label>
+          <select id="avTipo">
+            <option value="mejora">✨ Mejora de la web</option>
+            <option value="aviso">📢 Aviso</option>
+            <option value="importante">⚠️ Importante</option>
+            <option value="felicitacion">🎉 Felicitación</option>
+          </select></div>
+        <div class="campo" style="margin:0 0 10px"><label>Título</label>
+          <input type="text" id="avTitulo" maxlength="80" placeholder="Ej: ¡Nueva mejora en la web!"></div>
+        <div class="campo" style="margin:0 0 10px"><label>Mensaje</label>
+          <textarea id="avTexto" rows="4" maxlength="600" placeholder="Cuéntales qué cambió o qué deben saber…"></textarea></div>
+        <div class="fila" style="margin:0">
+          <button class="btn" id="avPublicar" style="width:auto;padding:10px 16px">📣 Publicar aviso</button>
+          <button class="btn gris" id="avVista" style="width:auto;padding:10px 16px">👁 Vista previa</button>
+        </div>
+        <div id="avLista"></div>
       </div>
 
       <button class="btn gris" id="salirAdmin" style="width:auto;padding:9px 17px;font-size:.75rem">Salir de modo admin</button>
@@ -1436,7 +1495,7 @@ $('btnAdmin').onclick = function(){
   $('btnAdmin').style.background = 'var(--teal)';
   $('btnAdmin').style.color = '#fff';
   $('panelAdmin').style.display = 'block';
-  $('adminMes').value = new Date().toISOString().slice(0,7);
+  $('adminMes').value = fechaHoyLocal().slice(0,7);
   pintarTemporadaEstado();
   pintar();  // para que se habiliten los botones de borrar de todos en las tablas
 };
@@ -1491,24 +1550,43 @@ function diffDias(a, b){   // a, b en formato 'YYYY-MM-DD'
 
 // banner visible para todos (no solo en el panel admin) con las fechas
 // de la temporada y una barra de avance
+function fechaBonita(iso){
+  var m = ['ene','feb','mar','abr','may','jun','jul','ago','set','oct','nov','dic'];
+  return (+iso.slice(8)) + ' ' + m[+iso.slice(5, 7) - 1] + ' ' + iso.slice(0, 4);
+}
 function pintarTemporadaBanner(){
   var banner = $('temporadaBanner');
   if (!temporada || !temporada.activa) { banner.style.display = 'none'; return; }
 
   var hoy = fechaHoyLocal();
-  var totalDias = diffDias(temporada.inicio, temporada.fin) + 1;
-  var diaActual = diffDias(temporada.inicio, hoy) + 1;
-  var progreso = Math.max(0, Math.min(100, (diaActual / totalDias) * 100));
+  var total = diffDias(temporada.inicio, temporada.fin) + 1;
+  var dia = diffDias(temporada.inicio, hoy) + 1;
+  var estado, titulo, chipB, chipS, prog, marca;
 
-  var estado;
-  if (hoy < temporada.inicio) { estado = 'Empieza el ' + fechaLarga(temporada.inicio); progreso = 0; }
-  else if (hoy > temporada.fin) { estado = 'Terminó el ' + fechaLarga(temporada.fin); progreso = 100; }
-  else { estado = 'Día ' + diaActual + ' de ' + totalDias; }
-
-  $('temporadaFechas').textContent = fechaLarga(temporada.inicio) + ' — ' + fechaLarga(temporada.fin);
-  $('temporadaDiaTxt').textContent = estado;
-  $('temporadaBarraFill').style.width = progreso + '%';
-  banner.style.display = 'flex';
+  if (hoy < temporada.inicio) {
+    var f = diffDias(hoy, temporada.inicio);
+    estado = 'antes'; marca = '🚩'; prog = 0;
+    titulo = f === 1 ? 'Empieza mañana' : 'Empieza en ' + f + ' días';
+    chipB = '⏳ Próximamente'; chipS = total + ' días de campaña';
+  } else if (hoy > temporada.fin) {
+    estado = 'fin'; marca = '🏆'; prog = 100;
+    titulo = '¡Temporada finalizada!';
+    chipB = '✅ Cerrada'; chipS = 'terminó el ' + fechaBonita(temporada.fin);
+  } else {
+    var rest = total - dia;
+    estado = 'en-curso'; marca = '🚀'; prog = Math.max(2, Math.min(100, dia / total * 100));
+    titulo = 'Día ' + dia + ' de ' + total;
+    chipB = '🔥 En curso'; chipS = rest === 0 ? '¡Hoy es el último día!' : 'faltan ' + rest + ' día' + (rest === 1 ? '' : 's');
+  }
+  $('tbTitulo').textContent = titulo;
+  $('tbIni').textContent = fechaBonita(temporada.inicio);
+  $('tbFin').textContent = fechaBonita(temporada.fin);
+  $('tbChip').className = 'tb-chip ' + estado;
+  $('tbChip').innerHTML = '<b>' + chipB + '</b><small>' + chipS + '</small>';
+  $('temporadaBarraFill').style.width = prog + '%';
+  var mk = $('tbMarca'); mk.textContent = marca; mk.style.left = Math.min(97, Math.max(3, prog)) + '%';
+  $('tbPct').textContent = Math.round(prog) + '% completado';
+  banner.style.display = 'block';
 }
 
 /* ============================================================
@@ -1758,7 +1836,7 @@ function calcularRegistro(d){
     nombre:d.nombre, claveNombre:normalizar(d.nombre), turno:d.turno, fecha:d.fecha, dia:r.dia,
     jor:r.jor.ini + '–' + r.jor.fin, real:d.ent + '–' + d.sal,
     h25:r.h25, h35:r.h35, hDesc:r.hDesc, horas:r.horas,
-    sust:d.sust, feriado:d.feriado, ddesc:!!d.ddesc,
+    sust:d.sust, feriado:d.feriado, ddesc:!!d.ddesc, refri:!!d.refri,
     bruto:p.bruto, neto:p.bruto * (1 - TASAS[d.afp].t)
   };
 }
@@ -2060,26 +2138,30 @@ function cargarExcelJS(ok, fallo){
   })(0);
 }
 
-var XL = {rojo:'FFFF0E49', tinta:'FF1C1918', rosa:'FFFFF1F4', zebra:'FFF8F8F8', ambar:'FFFFF4CC', borde:'FFD9D9D9', blanco:'FFFFFFFF', gris:'FF6B6B6B'};
-var MESES = ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Setiembre','Octubre','Noviembre','Diciembre'];
-var FMT_HM = '[h]:mm;;"–"', FMT_SOLES = '"S/ "#,##0.00';
+var XL = {azul:'FF156082', banda:'FFC1E4F5', linea:'FF83CBEB', blanco:'FFFFFFFF', tinta:'FF0E2841'};
+var FUENTE = 'Aptos Narrow';
+var FMT_HMS = 'hh:mm:ss', FMT_HMS_TOT = '[h]:mm:ss', FMT_SOLES = '"S/ "#,##0.00';
 
-function xlBorde(){ var b = {style:'thin', color:{argb:XL.borde}}; return {top:b, left:b, bottom:b, right:b}; }
 function xlFecha(iso){ var p = iso.split('-'); return new Date(Date.UTC(+p[0], +p[1] - 1, +p[2])); }
-function fechaCorta(iso){ return iso.slice(8) + '/' + iso.slice(5,7) + '/' + iso.slice(0,4); }
-function tipoDia(r){
-  return r.feriado ? 'Feriado trabajado' : r.ddesc ? 'Día de descanso trabajado'
-       : r.dia === 'Domingo' ? 'Domingo rotativo' : 'Día normal';
-}
-// banda de color a todo el ancho (títulos y encabezados de sección)
-function xlBanda(ws, fila, texto, ncols, o){
-  ws.mergeCells(fila, 1, fila, ncols);
-  var c = ws.getCell(fila, 1);
-  c.value = texto;
-  c.fill = {type:'pattern', pattern:'solid', fgColor:{argb:o.fondo}};
-  c.font = {name:'Calibri', bold:!!o.bold, italic:!!o.italic, size:o.size || 11, color:{argb:o.color}};
-  c.alignment = {vertical:'middle', horizontal:o.centro ? 'center' : 'left', wrapText:!!o.wrap, indent:o.centro ? 0 : 1};
-  ws.getRow(fila).height = o.alto || 22;
+function xlRelleno(argb){ return {type:'pattern', pattern:'solid', fgColor:{argb:argb}}; }
+function xlBorde(){ var b = {style:'thin', color:{argb:XL.linea}}; return {top:b, bottom:b, left:b, right:b}; }
+
+// texto de la columna «Observaciones»: explica qué tuvo de especial ese día
+function observaciones(r){
+  var o = [], par = r.real.split('–'), jor = r.jor.split('–');
+  if (r.feriado) o.push('Trabajé en feriado');
+  if (r.ddesc) o.push('Trabajé en mi día de descanso');
+  if (r.feriado || r.ddesc)
+    o.push(r.sust ? 'Con descanso sustitutorio (sin recargo del 100%)' : 'Se paga al 100% (sin descanso sustitutorio)');
+  if (r.refri) o.push('Trabajé durante mi refrigerio (break)');
+  if (r.dia === 'Domingo' && !r.feriado && !r.ddesc) o.push('Domingo rotativo (descanso el sábado)');
+  if (par[1] <= par[0]) o.push('Cruzó la medianoche');
+  else {
+    if (par[0] < jor[0]) o.push('Entré antes de mi horario');
+    if (par[1] > jor[1]) o.push('Salí después de mi horario');
+  }
+  if (r.horas > 4) o.push('Jornada larga (' + hm(r.horas) + ' h extra)');
+  return o.join(' · ');
 }
 
 function descargarExcel(clave, btn){
@@ -2096,169 +2178,70 @@ function descargarExcel(clave, btn){
 }
 
 function construirExcel(regs, clave){
-  var nombre = regs[0].nombre, veo = puedeVerMonto(clave), n = regs.length;
-  var propio = !!(sesion && sesion.clave === clave), perfil = preferencias[clave] || {};
-  var hoy = fechaHoyLocal();
+  var nombre = regs[0].nombre, veo = puedeVerMonto(clave), n = regs.length, hoy = fechaHoyLocal();
   var wb = new ExcelJS.Workbook();
   wb.creator = 'SISE · Horas Extra'; wb.created = new Date();
+  var ws = wb.addWorksheet('Horas extra', {views:[{state:'frozen', ySplit:1}]});
 
-  /* ---------- totales y resumen por mes ---------- */
-  var T = {h:0, h25:0, h35:0, hD:0, bruto:0, neto:0}, meses = {}, ord = [];
-  regs.forEach(function(r){
-    T.h += r.horas; T.h25 += r.h25; T.h35 += r.h35; T.hD += r.hDesc; T.bruto += r.bruto; T.neto += r.neto;
-    var k = r.fecha.slice(0, 7), m = meses[k];
-    if (!m) { m = meses[k] = {k:k, dias:0, h:0, neto:0}; ord.push(m); }
-    m.dias++; m.h += r.horas; m.neto += r.neto;
-  });
-  var turno = regs[n - 1].turno === 'am' ? 'Mañana' : 'Tarde';
+  var cols = [['Fecha', 11], ['Nombres', 34], ['Horario asignado', 19], ['Entrada y salida real', 21],
+              ['Cantidad de horas extra', 17], ['Observaciones', 64]];
+  if (veo) cols.push(['Pago neto estimado', 17]);
+  ws.columns = cols.map(function(c){ return {width:c[1]}; });
+  ws.pageSetup = {orientation:'landscape', fitToPage:true, fitToWidth:1, fitToHeight:0, printTitlesRow:'1:1'};
 
-  /* =============== HOJA 1 · RESUMEN =============== */
-  var rs = wb.addWorksheet('Resumen', {views:[{showGridLines:false}]});
-  rs.columns = [{width:40}, {width:18}, {width:20}, {width:22}];
-  rs.pageSetup = {orientation:'portrait', fitToPage:true, fitToWidth:1, fitToHeight:0};
-  xlBanda(rs, 1, 'SISE · Reporte de horas extra', 4, {fondo:XL.rojo, color:XL.blanco, bold:true, size:18, alto:36});
-  xlBanda(rs, 2, nombre, 4, {fondo:XL.rosa, color:XL.tinta, bold:true, size:15, alto:28});
-  xlBanda(rs, 3, 'Turno ' + turno + '  ·  Del ' + fechaCorta(regs[0].fecha) + ' al ' + fechaCorta(regs[n - 1].fecha) +
-          '  ·  Generado el ' + fechaCorta(hoy), 4, {fondo:XL.blanco, color:XL.gris, italic:true, size:10});
-
-  var fila = 5;
-  function seccion(t){ xlBanda(rs, fila, t, 4, {fondo:XL.tinta, color:XL.blanco, bold:true, size:11, alto:22}); fila++; }
-  function dato(et, val, fmt, fuerte){
-    var a = rs.getCell(fila, 1), b = rs.getCell(fila, 2);
-    a.value = et; b.value = val;
-    if (fmt) b.numFmt = fmt;
-    a.font = {name:'Calibri', size:11, bold:true, color:{argb:XL.tinta}};
-    b.font = {name:'Calibri', size:11, bold:true, color:{argb:fuerte ? XL.rojo : XL.tinta}};
-    a.alignment = {vertical:'middle', indent:1}; b.alignment = {vertical:'middle', horizontal:'right'};
-    a.border = b.border = xlBorde();
-    if (fuerte) a.fill = b.fill = {type:'pattern', pattern:'solid', fgColor:{argb:XL.rosa}};
-    rs.getRow(fila).height = 20; fila++;
-  }
-  seccion('Resumen general');
-  dato('Días registrados', n);
-  dato('Tiempo adicional total (horas:minutos)', T.h / 24, FMT_HM, true);
-  dato('   · Con recargo del 25% (primeras 2 h extra)', T.h25 / 24, FMT_HM);
-  dato('   · Con recargo del 35% (desde la 3.ª hora)', T.h35 / 24, FMT_HM);
-  dato('   · En día de descanso o feriado (100%)', T.hD / 24, FMT_HM);
-  if (veo) {
-    dato('Total bruto', T.bruto, FMT_SOLES);
-    dato('Total neto estimado (después de AFP/ONP)', T.neto, FMT_SOLES, true);
-  }
-  if (propio && perfil.sueldo) {
-    dato('Sueldo bruto mensual', +perfil.sueldo, FMT_SOLES);
-    dato('Valor de tu hora normal (sueldo ÷ 30 ÷ 8)', perfil.sueldo / 30 / 8, FMT_SOLES);
-    if (TASAS[perfil.afp]) dato('Sistema pensionario', TASAS[perfil.afp].n + ' (' + (TASAS[perfil.afp].t * 100).toFixed(2) + '%)');
-  }
-  if (!veo) {
-    xlBanda(rs, fila, 'Este asesor mantiene su monto en privado: el reporte solo incluye horas.', 4,
-            {fondo:XL.ambar, color:'FF7A5B00', size:10, wrap:true, alto:22});
-    fila++;
-  }
-
-  fila++;
-  seccion('Resumen por mes');
-  var enc = ['Mes', 'Días', 'Tiempo adicional'].concat(veo ? ['Neto estimado'] : []);
-  enc.forEach(function(t, i){
-    var c = rs.getCell(fila, i + 1);
-    c.value = t; c.font = {name:'Calibri', bold:true, color:{argb:XL.tinta}};
-    c.fill = {type:'pattern', pattern:'solid', fgColor:{argb:XL.rosa}};
-    c.alignment = {horizontal:i ? 'center' : 'left', indent:i ? 0 : 1}; c.border = xlBorde();
-  });
-  fila++;
-  ord.forEach(function(m, i){
-    var vals = [MESES[+m.k.slice(5) - 1] + ' ' + m.k.slice(0, 4), m.dias, m.h / 24].concat(veo ? [m.neto] : []);
-    vals.forEach(function(v, c){
-      var cel = rs.getCell(fila, c + 1);
-      cel.value = v; cel.border = xlBorde();
-      cel.alignment = {horizontal:c ? 'center' : 'left', indent:c ? 0 : 1};
-      if (c === 2) cel.numFmt = FMT_HM;
-      if (c === 3) cel.numFmt = FMT_SOLES;
-      if (i % 2) cel.fill = {type:'pattern', pattern:'solid', fgColor:{argb:XL.zebra}};
-    });
-    fila++;
-  });
-
-  fila++;
-  seccion('Cómo se calcula');
-  [
-    'Tiempo adicional = lo que trabajaste antes de tu hora de entrada, después de tu hora de salida y, si lo marcaste, tu refrigerio.',
-    'Las primeras 2 horas extra de cada día se pagan con recargo del 25%; desde la tercera hora, con 35%.',
-    'Si trabajas en tu día de descanso o en un feriado sin descanso sustitutorio, todo ese tiempo se paga con recargo del 100% (doble).',
-    'Con descanso sustitutorio no hay recargo del 100%: solo cuenta como extra lo que esté fuera de tu horario.',
-    'Los domingos son rotativos: quien trabaja un domingo descansa el sábado de esa semana. Sábado y domingo no tienen refrigerio.',
-    'Los montos netos son una estimación (descuentan AFP u ONP) y no reemplazan el cálculo oficial de Gestión Humana.'
-  ].forEach(function(t){
-    xlBanda(rs, fila, '•  ' + t, 4, {fondo:XL.blanco, color:XL.tinta, size:10, wrap:true, alto:32});
-    fila++;
-  });
-
-  /* =============== HOJA 2 · DETALLE =============== */
-  var cols = [['Fecha',12], ['Día',12], ['Tipo de día',25], ['Horario oficial',16], ['Entrada real',11], ['Salida real',11],
-              ['Tiempo adicional',13], ['Al 25%',10], ['Al 35%',10], ['Día de descanso (100%)',14],
-              ['Descanso sustitutorio',21], ['Acumulado',12]];
-  if (veo) cols.push(['Bruto',13], ['Neto estimado',15]);
-  var nc = cols.length, PRIMERA = 5, ULTIMA = PRIMERA + n - 1;
-
-  var ds = wb.addWorksheet('Detalle', {views:[{state:'frozen', ySplit:4, showGridLines:false}]});
-  ds.columns = cols.map(function(c){ return {width:c[1]}; });
-  ds.pageSetup = {orientation:'landscape', fitToPage:true, fitToWidth:1, fitToHeight:0};
-  xlBanda(ds, 1, 'SISE · Detalle de horas extra — ' + nombre, nc, {fondo:XL.rojo, color:XL.blanco, bold:true, size:15, alto:32});
-  xlBanda(ds, 2, 'Cada fila es un día registrado. Los tiempos están en horas:minutos; un guion significa que no hubo tiempo en esa columna.',
-          nc, {fondo:XL.blanco, color:XL.gris, italic:true, size:10});
+  // encabezado azul (como tu planilla)
+  var enc = ws.getRow(1); enc.height = 38;
   cols.forEach(function(c, i){
-    var cel = ds.getCell(4, i + 1);
+    var izq = (i === 1 || i === 5), cel = enc.getCell(i + 1);
     cel.value = c[0];
-    cel.fill = {type:'pattern', pattern:'solid', fgColor:{argb:XL.tinta}};
-    cel.font = {name:'Calibri', bold:true, color:{argb:XL.blanco}};
-    cel.alignment = {vertical:'middle', horizontal:'center', wrapText:true}; cel.border = xlBorde();
-  });
-  ds.getRow(4).height = 34;
-
-  var acum = 0;
-  regs.forEach(function(r, i){
-    var f = PRIMERA + i, par = r.real.split('–'), especial = !!(r.feriado || r.ddesc);
-    acum += r.horas;
-    var vals = [xlFecha(r.fecha), r.dia, tipoDia(r), r.jor.replace('–', ' – '), par[0], par[1],
-      r.horas / 24, r.h25 / 24, r.h35 / 24, r.hDesc / 24,
-      especial ? (r.sust ? 'Sí · sin recargo' : 'No · se paga al 100%') : '—',
-      {formula:'SUM($G$' + PRIMERA + ':G' + f + ')', result:acum / 24}];
-    if (veo) vals.push(r.bruto, r.neto);
-    var row = ds.getRow(f);
-    vals.forEach(function(v, c){
-      var cel = row.getCell(c + 1);
-      cel.value = v; cel.border = xlBorde();
-      cel.font = {name:'Calibri', size:11, bold:c === 6 || c === 11, color:{argb:XL.tinta}};
-      cel.alignment = {vertical:'middle', horizontal:c === 2 ? 'left' : 'center', indent:c === 2 ? 1 : 0};
-      if (c === 0) cel.numFmt = 'dd/mm/yyyy';
-      if ((c >= 6 && c <= 9) || c === 11) cel.numFmt = FMT_HM;
-      if (c >= 12) cel.numFmt = FMT_SOLES;
-      if (i % 2) cel.fill = {type:'pattern', pattern:'solid', fgColor:{argb:XL.zebra}};
-      if (c === 2 && especial) { cel.fill = {type:'pattern', pattern:'solid', fgColor:{argb:XL.ambar}}; cel.font.bold = true; }
-    });
-    row.height = 20;
-  });
-
-  var ft = ULTIMA + 1;
-  ds.mergeCells(ft, 1, ft, 6);
-  var tot = {7:T.h, 8:T.h25, 9:T.h35, 10:T.hD};
-  if (veo) { tot[13] = T.bruto; tot[14] = T.neto; }
-  for (var c = 1; c <= nc; c++) {
-    var cel = ds.getCell(ft, c);
-    cel.fill = {type:'pattern', pattern:'solid', fgColor:{argb:XL.tinta}};
-    cel.font = {name:'Calibri', bold:true, size:11, color:{argb:XL.blanco}};
-    cel.alignment = {vertical:'middle', horizontal:c === 1 ? 'left' : 'center', indent:c === 1 ? 1 : 0};
+    cel.fill = xlRelleno(XL.azul);
+    cel.font = {name:FUENTE, bold:true, size:12, color:{argb:XL.blanco}};
+    cel.alignment = {vertical:'middle', horizontal:izq ? 'left' : 'center', wrapText:true, indent:izq ? 1 : 0};
     cel.border = xlBorde();
-    if (c === 1) cel.value = 'TOTAL ACUMULADO  (' + n + ' día' + (n === 1 ? '' : 's') + ')';
-    if (tot[c] !== undefined) {
-      var L = String.fromCharCode(64 + c);
-      cel.value = {formula:'SUM(' + L + PRIMERA + ':' + L + ULTIMA + ')', result:c >= 13 ? tot[c] : tot[c] / 24};
-      cel.numFmt = c >= 13 ? FMT_SOLES : FMT_HM;
-    }
-  }
-  ds.getRow(ft).height = 24;
-  ds.autoFilter = {from:{row:4, column:1}, to:{row:ULTIMA, column:nc}};
+  });
 
-  /* ---------- descarga ---------- */
+  // una fila por día, con filas alternadas celeste / blanco
+  var total = 0, totalNeto = 0;
+  regs.forEach(function(r, i){
+    var f = i + 2, row = ws.getRow(f), par = r.real.split('–');
+    total += r.horas; totalNeto += r.neto;
+    var vals = [xlFecha(r.fecha), r.nombre.toUpperCase(), r.jor.replace('–', ' – '),
+                par[0] + ' – ' + par[1], r.horas / 24, observaciones(r)];
+    if (veo) vals.push(r.neto);
+    vals.forEach(function(v, c){
+      var cel = row.getCell(c + 1), izq = (c === 1 || c === 5);
+      cel.value = v;
+      cel.border = xlBorde();
+      cel.font = {name:FUENTE, size:11, color:{argb:XL.tinta}};
+      cel.alignment = {vertical:'middle', horizontal:izq ? 'left' : 'center', wrapText:c === 5, indent:izq ? 1 : 0};
+      if (c === 0) cel.numFmt = 'd-mmm';
+      if (c === 4) cel.numFmt = FMT_HMS;
+      if (c === 6) cel.numFmt = FMT_SOLES;
+      if (i % 2 === 0) cel.fill = xlRelleno(XL.banda);
+    });
+  });
+
+  // total acumulado
+  var ft = n + 2;
+  ws.mergeCells(ft, 1, ft, 4);
+  for (var c = 1; c <= cols.length; c++) {
+    var cel = ws.getCell(ft, c);
+    cel.fill = xlRelleno(XL.azul);
+    cel.font = {name:FUENTE, bold:true, size:12, color:{argb:XL.blanco}};
+    cel.alignment = {vertical:'middle', horizontal:c === 1 || c === 6 ? 'left' : 'center', indent:c === 1 || c === 6 ? 1 : 0};
+    cel.border = xlBorde();
+  }
+  ws.getCell(ft, 1).value = 'TOTAL ACUMULADO';
+  ws.getCell(ft, 5).value = {formula:'SUM(E2:E' + (n + 1) + ')', result:total / 24};
+  ws.getCell(ft, 5).numFmt = FMT_HMS_TOT;
+  ws.getCell(ft, 6).value = n + ' día' + (n === 1 ? '' : 's') + ' registrado' + (n === 1 ? '' : 's');
+  if (veo) {
+    ws.getCell(ft, 7).value = {formula:'SUM(G2:G' + (n + 1) + ')', result:totalNeto};
+    ws.getCell(ft, 7).numFmt = FMT_SOLES;
+  }
+  ws.getRow(ft).height = 26;
+  ws.autoFilter = {from:{row:1, column:1}, to:{row:n + 1, column:cols.length}};
+
   var arch = 'Horas_extra_' + nombre.replace(/[^\wÁÉÍÓÚÜáéíóúüÑñ]+/g, '_') + '_' + hoy + '.xlsx';
   return wb.xlsx.writeBuffer().then(function(buf){
     var blob = new Blob([buf], {type:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'});
@@ -2504,6 +2487,119 @@ agregar = function(d){
   });
 };
 ponerBanner();
+})();
+</script>
+<script id="duo-extra-js">
+/* ===== MODO BLANCO / OSCURO + AVISOS (POP-UPS) PARA TODOS ===== */
+(function(){
+  /* ---------- tema ---------- */
+  var tema = 'oscuro';
+  try { if (localStorage.getItem('sise_tema') === 'claro') tema = 'claro'; } catch(e){}
+  var bt = document.createElement('button');
+  bt.id = 'btnTema'; bt.type = 'button';
+  document.querySelector('header').appendChild(bt);
+  function aplicarTema(){
+    var s = document.getElementById('duo-oscuro');
+    if (s) { s.disabled = (tema === 'claro'); if (s.sheet) s.sheet.disabled = (tema === 'claro'); }
+    document.documentElement.setAttribute('data-tema', tema);
+    bt.textContent = tema === 'claro' ? '🌙 Modo oscuro' : '☀️ Modo blanco';
+  }
+  bt.onclick = function(){
+    tema = tema === 'claro' ? 'oscuro' : 'claro';
+    try { localStorage.setItem('sise_tema', tema); } catch(e){}
+    aplicarTema();
+  };
+  aplicarTema();
+
+  /* ---------- avisos ---------- */
+  var TIPOS = {mejora:['✨', 'Mejora de la web'], aviso:['📢', 'Aviso'], importante:['⚠️', 'Importante'], felicitacion:['🎉', 'Felicitación']};
+  var MES3 = ['ene','feb','mar','abr','may','jun','jul','ago','set','oct','nov','dic'];
+  var avisos = [], visto = [], mostrando = false, iniciado = false;
+  try { visto = JSON.parse(localStorage.getItem('sise_avisos_vistos') || '[]'); } catch(e){}
+
+  function marcarVisto(id){
+    if (visto.indexOf(id) < 0) visto.push(id);
+    try { localStorage.setItem('sise_avisos_vistos', JSON.stringify(visto.slice(-150))); } catch(e){}
+  }
+  function fechaAviso(ts){ var d = new Date(ts); return d.getDate() + ' ' + MES3[d.getMonth()] + ' ' + d.getFullYear(); }
+  function datosTipo(t){ return TIPOS[t] || TIPOS.aviso; }
+
+  function mostrar(a, opc){
+    opc = opc || {};
+    var tp = datosTipo(a.tipo), ov = document.createElement('div');
+    ov.className = 'avisopop-ov';
+    ov.innerHTML = '<div class="avisopop" role="dialog" aria-modal="true">' +
+      '<div class="ap-em">' + tp[0] + '</div><br>' +
+      '<span class="ap-tipo ap-t-' + esc(a.tipo || 'aviso') + '">' + tp[1] + '</span>' +
+      '<h3>' + esc(a.titulo) + '</h3>' +
+      '<p>' + esc(a.texto) + '</p>' +
+      '<div class="ap-pie">' + (opc.preview ? 'Vista previa — así lo verán los asesores' : fechaAviso(a.ts) + (opc.resto ? ' · ' + opc.resto : '')) + '</div>' +
+      '<button type="button" class="btn">' + (opc.preview ? 'Cerrar vista previa' : '¡Entendido!') + '</button></div>';
+    document.body.appendChild(ov);
+    ov.querySelector('.btn').onclick = function(){
+      ov.remove();
+      if (!opc.preview) { marcarVisto(a.id); mostrando = false; setTimeout(siguiente, 250); }
+    };
+    if (!opc.preview) mostrando = true;
+  }
+
+  function siguiente(){
+    if (mostrando) return;
+    var pend = avisos.filter(function(a){ return a.activo !== false && visto.indexOf(a.id) < 0; })
+                     .sort(function(a, b){ return a.ts - b.ts; });
+    if (!pend.length) return;
+    mostrar(pend[0], {resto: pend.length > 1 ? 'te faltan ' + (pend.length - 1) + ' más' : ''});
+  }
+
+  function pintarLista(){
+    var box = $('avLista'); if (!box) return;
+    if (!avisos.length) { box.innerHTML = '<p style="margin:12px 0 0;font-size:.85rem;opacity:.8">Todavía no publicaste avisos.</p>'; return; }
+    box.innerHTML = '<p style="margin:14px 0 0"><b>Avisos publicados</b></p>' + avisos.map(function(a){
+      var tp = datosTipo(a.tipo);
+      return '<div class="av-item"><span style="font-size:1.6rem">' + tp[0] + '</span>' +
+        '<div style="flex:1;min-width:0"><b>' + esc(a.titulo) + '</b><small>' + tp[1] + ' · ' + fechaAviso(a.ts) + '</small></div>' +
+        '<button type="button" class="btn x mini" data-delav="' + esc(a.id) + '">Quitar</button></div>';
+    }).join('');
+  }
+
+  function iniciar(){
+    if (iniciado || !FIREBASE_LISTO) return;
+    iniciado = true;
+    db.collection('avisos').orderBy('ts', 'desc').limit(30).onSnapshot(function(snap){
+      avisos = snap.docs.map(function(d){ var x = d.data(); x.id = d.id; return x; });
+      pintarLista();
+      setTimeout(siguiente, 700);
+    }, function(e){ console.warn('avisos', e); });
+  }
+  var previo = window.onFirebaseListo;
+  window.onFirebaseListo = function(){ if (previo) previo(); iniciar(); };
+  iniciar();
+
+  /* ---------- panel admin ---------- */
+  $('avPublicar').onclick = function(){
+    if (!FIREBASE_LISTO) return alert('Sin conexión con la base de datos.');
+    var t = $('avTitulo').value.trim(), x = $('avTexto').value.trim(), tipo = $('avTipo').value;
+    if (!t || !x) return alert('Escribe un título y un mensaje.');
+    var b = $('avPublicar'), ref = db.collection('avisos').doc();
+    b.disabled = true;
+    marcarVisto(ref.id);   // quien lo publica no necesita verlo como pop-up
+    ref.set({titulo:t, texto:x, tipo:tipo, ts:Date.now(), activo:true,
+             creado:firebase.firestore.FieldValue.serverTimestamp()})
+      .then(function(){ b.disabled = false; $('avTitulo').value = ''; $('avTexto').value = ''; alert('Aviso publicado. Los asesores lo verán al entrar.'); })
+      .catch(function(e){ b.disabled = false; alert('No se pudo publicar: ' + e.message); });
+  };
+  $('avVista').onclick = function(){
+    var t = $('avTitulo').value.trim(), x = $('avTexto').value.trim();
+    if (!t || !x) return alert('Escribe un título y un mensaje para ver la vista previa.');
+    mostrar({titulo:t, texto:x, tipo:$('avTipo').value, ts:Date.now()}, {preview:true});
+  };
+  document.addEventListener('click', function(e){
+    var b = e.target.closest ? e.target.closest('[data-delav]') : null;
+    if (!b) return;
+    if (!confirm('¿Quitar este aviso? Dejará de mostrarse a los asesores que aún no lo vieron.')) return;
+    db.collection('avisos').doc(b.getAttribute('data-delav')).delete()
+      .catch(function(err){ alert('No se pudo quitar: ' + err.message); });
+  });
 })();
 </script>
 </body>
