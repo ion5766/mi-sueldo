@@ -2146,22 +2146,43 @@ function xlFecha(iso){ var p = iso.split('-'); return new Date(Date.UTC(+p[0], +
 function xlRelleno(argb){ return {type:'pattern', pattern:'solid', fgColor:{argb:argb}}; }
 function xlBorde(){ var b = {style:'thin', color:{argb:XL.linea}}; return {top:b, bottom:b, left:b, right:b}; }
 
-// texto de la columna «Observaciones»: explica qué tuvo de especial ese día
+// minutos → "1 h 27 min"
+function fmtMin(m){
+  m = Math.round(m);
+  if (m < 60) return m + ' min';
+  return Math.floor(m / 60) + ' h' + (m % 60 ? ' ' + (m % 60) + ' min' : '');
+}
+function aMinHM(t){ var p = t.split(':'); return (+p[0]) * 60 + (+p[1]); }
+
+// texto de la columna «Observaciones»: una idea por línea, con horas y minutos,
+// pensado para que lo lea un supervisor sin tener que hacer cuentas
 function observaciones(r){
   var o = [], par = r.real.split('–'), jor = r.jor.split('–');
-  if (r.feriado) o.push('Trabajé en feriado');
-  if (r.ddesc) o.push('Trabajé en mi día de descanso');
-  if (r.feriado || r.ddesc)
-    o.push(r.sust ? 'Con descanso sustitutorio (sin recargo del 100%)' : 'Se paga al 100% (sin descanso sustitutorio)');
-  if (r.refri) o.push('Trabajé durante mi refrigerio (break)');
-  if (r.dia === 'Domingo' && !r.feriado && !r.ddesc) o.push('Domingo rotativo (descanso el sábado)');
-  if (par[1] <= par[0]) o.push('Cruzó la medianoche');
-  else {
-    if (par[0] < jor[0]) o.push('Entré antes de mi horario');
-    if (par[1] > jor[1]) o.push('Salí después de mi horario');
+  var e = aMinHM(par[0]), sa = aMinHM(par[1]), ji = aMinHM(jor[0]), jf = aMinHM(jor[1]);
+  var cruza = sa <= e;
+  if (cruza) sa += 1440;
+  var esDescanso = !!(r.feriado || r.ddesc), compensado = esDescanso && r.sust;
+
+  if (r.feriado) o.push('Feriado trabajado' + (r.sust ? ' (con descanso sustitutorio)' : ' (sin descanso sustitutorio)'));
+  if (r.ddesc)   o.push('Día de descanso trabajado' + (r.sust ? ' (con descanso sustitutorio)' : ' (sin descanso sustitutorio)'));
+  if (r.dia === 'Domingo' && !esDescanso) o.push('Domingo rotativo (descansa el sábado de esa semana)');
+
+  if (esDescanso && !compensado) {
+    o.push('Todo el tiempo trabajado cuenta como sobretiempo: de ' + par[0] + ' a ' + par[1] + ' (' + fmtMin(sa - e) + ')');
+  } else {
+    if (e < ji) o.push('Ingreso anticipado: ' + par[0] + ' (' + fmtMin(ji - e) + ' antes de las ' + jor[0] + ')');
+    if (sa > jf) o.push('Salida tardía: ' + par[1] + ' (' + fmtMin(sa - jf) + ' después de las ' + jor[1] + ')');
   }
-  if (r.horas > 4) o.push('Jornada larga (' + hm(r.horas) + ' h extra)');
-  return o.join(' · ');
+  if (r.refri) o.push('Trabajó durante su refrigerio (break)');
+  if (cruza) o.push('La salida fue pasada la medianoche');
+  if (r.horas > 4) o.push('Jornada larga: ' + fmtMin(r.horas * 60) + ' de sobretiempo en el día');
+  return o.length ? o.map(function(t){ return '• ' + t; }).join('\n') : 'Sin novedades';
+}
+// alto de fila según las líneas de texto (Excel no siempre lo ajusta solo)
+function alturaFila(texto){
+  var n = 0;
+  texto.split('\n').forEach(function(l){ n += Math.max(1, Math.ceil(l.length / 66)); });
+  return Math.max(22, n * 16 + 8);
 }
 
 function descargarExcel(clave, btn){
@@ -2178,14 +2199,13 @@ function descargarExcel(clave, btn){
 }
 
 function construirExcel(regs, clave){
-  var nombre = regs[0].nombre, veo = puedeVerMonto(clave), n = regs.length, hoy = fechaHoyLocal();
+  var nombre = regs[0].nombre, n = regs.length, hoy = fechaHoyLocal();
   var wb = new ExcelJS.Workbook();
   wb.creator = 'SISE · Horas Extra'; wb.created = new Date();
   var ws = wb.addWorksheet('Horas extra', {views:[{state:'frozen', ySplit:1}]});
 
   var cols = [['Fecha', 11], ['Nombres', 34], ['Horario asignado', 19], ['Entrada y salida real', 21],
-              ['Cantidad de horas extra', 17], ['Observaciones', 64]];
-  if (veo) cols.push(['Pago neto estimado', 17]);
+              ['Cantidad de horas extra', 17], ['Observaciones', 70]];
   ws.columns = cols.map(function(c){ return {width:c[1]}; });
   ws.pageSetup = {orientation:'landscape', fitToPage:true, fitToWidth:1, fitToHeight:0, printTitlesRow:'1:1'};
 
@@ -2201,13 +2221,13 @@ function construirExcel(regs, clave){
   });
 
   // una fila por día, con filas alternadas celeste / blanco
-  var total = 0, totalNeto = 0;
+  var total = 0;
   regs.forEach(function(r, i){
-    var f = i + 2, row = ws.getRow(f), par = r.real.split('–');
-    total += r.horas; totalNeto += r.neto;
+    var f = i + 2, row = ws.getRow(f), par = r.real.split('–'), obs = observaciones(r);
+    total += r.horas;
+    row.height = alturaFila(obs);
     var vals = [xlFecha(r.fecha), r.nombre.toUpperCase(), r.jor.replace('–', ' – '),
-                par[0] + ' – ' + par[1], r.horas / 24, observaciones(r)];
-    if (veo) vals.push(r.neto);
+                par[0] + ' – ' + par[1], r.horas / 24, obs];
     vals.forEach(function(v, c){
       var cel = row.getCell(c + 1), izq = (c === 1 || c === 5);
       cel.value = v;
@@ -2216,7 +2236,6 @@ function construirExcel(regs, clave){
       cel.alignment = {vertical:'middle', horizontal:izq ? 'left' : 'center', wrapText:c === 5, indent:izq ? 1 : 0};
       if (c === 0) cel.numFmt = 'd-mmm';
       if (c === 4) cel.numFmt = FMT_HMS;
-      if (c === 6) cel.numFmt = FMT_SOLES;
       if (i % 2 === 0) cel.fill = xlRelleno(XL.banda);
     });
   });
@@ -2235,10 +2254,6 @@ function construirExcel(regs, clave){
   ws.getCell(ft, 5).value = {formula:'SUM(E2:E' + (n + 1) + ')', result:total / 24};
   ws.getCell(ft, 5).numFmt = FMT_HMS_TOT;
   ws.getCell(ft, 6).value = n + ' día' + (n === 1 ? '' : 's') + ' registrado' + (n === 1 ? '' : 's');
-  if (veo) {
-    ws.getCell(ft, 7).value = {formula:'SUM(G2:G' + (n + 1) + ')', result:totalNeto};
-    ws.getCell(ft, 7).numFmt = FMT_SOLES;
-  }
   ws.getRow(ft).height = 26;
   ws.autoFilter = {from:{row:1, column:1}, to:{row:n + 1, column:cols.length}};
 
@@ -2569,7 +2584,12 @@ ponerBanner();
       avisos = snap.docs.map(function(d){ var x = d.data(); x.id = d.id; return x; });
       pintarLista();
       setTimeout(siguiente, 700);
-    }, function(e){ console.warn('avisos', e); });
+    }, function(e){
+      console.warn('avisos', e);
+      var bx = $('avLista');
+      if (bx && e.code === 'permission-denied')
+        bx.innerHTML = '<div class="aviso w" style="margin-top:12px">Falta la regla de <b>avisos</b> en Firestore (Reglas). Mientras no exista, los pop-ups no se pueden leer ni publicar.</div>';
+    });
   }
   var previo = window.onFirebaseListo;
   window.onFirebaseListo = function(){ if (previo) previo(); iniciar(); };
@@ -2586,7 +2606,12 @@ ponerBanner();
     ref.set({titulo:t, texto:x, tipo:tipo, ts:Date.now(), activo:true,
              creado:firebase.firestore.FieldValue.serverTimestamp()})
       .then(function(){ b.disabled = false; $('avTitulo').value = ''; $('avTexto').value = ''; alert('Aviso publicado. Los asesores lo verán al entrar.'); })
-      .catch(function(e){ b.disabled = false; alert('No se pudo publicar: ' + e.message); });
+      .catch(function(e){
+        b.disabled = false;
+        alert(e.code === 'permission-denied'
+          ? 'Firestore todavía no permite la colección «avisos». Agrega su regla en Firebase → Firestore Database → Reglas y vuelve a publicar.'
+          : 'No se pudo publicar: ' + e.message);
+      });
   };
   $('avVista').onclick = function(){
     var t = $('avTitulo').value.trim(), x = $('avTexto').value.trim();
