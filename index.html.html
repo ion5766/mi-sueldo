@@ -742,6 +742,7 @@ textarea{width:100%;box-sizing:border-box;border:2px solid var(--linea);border-r
 textarea:focus{outline:0;border-color:var(--rojo);box-shadow:0 0 0 4px rgba(255,14,73,.18)}
 .av-item{display:flex;align-items:center;gap:12px;padding:10px 12px;margin-top:8px;border:2px solid var(--linea);border-radius:14px;background:var(--crema)}
 .av-item b{display:block;line-height:1.2}.av-item small{color:var(--gris);font-weight:700}
+.av-cont{margin-top:4px;text-align:right;font-size:.75rem;font-weight:800;color:var(--gris)}
 
 /* ===== BOTONES DEL HEADER (noticias + tema) ===== */
 header{position:relative}
@@ -953,9 +954,9 @@ header{position:relative}
             <option value="felicitacion">🎉 Felicitación</option>
           </select></div>
         <div class="campo" style="margin:0 0 10px"><label>Título</label>
-          <input type="text" id="avTitulo" maxlength="80" placeholder="Ej: ¡Nueva mejora en la web!"></div>
+          <input type="text" id="avTitulo" maxlength="120" placeholder="Ej: ¡Nueva mejora en la web!"></div>
         <div class="campo" style="margin:0 0 10px"><label>Mensaje</label>
-          <textarea id="avTexto" rows="4" maxlength="600" placeholder="Cuéntales qué cambió o qué deben saber…"></textarea></div>
+          <textarea id="avTexto" rows="7" maxlength="3000" placeholder="Cuéntales qué cambió o qué deben saber…"></textarea><div class="av-cont" id="avCont">0 / 3000</div></div>
         <div class="fila" style="margin:0">
           <button class="btn" id="avPublicar" style="width:auto;padding:10px 16px">📣 Publicar noticia</button>
           <button class="btn gris" id="avVista" style="width:auto;padding:10px 16px">👁 Vista previa</button>
@@ -2380,15 +2381,174 @@ if ('IntersectionObserver' in window) {
 (function(){
 var LS = 'duo_rank_v1';
 var F = {
-  sube:   ['¡Eso es! Cada hora cuenta 🔥','Vas en cohete, no frenes 🚀','¡Qué ritmo! El ranking te queda chico 💪','Subiste porque te lo ganaste ⭐','¡Imparable! Sigue sumando ⚡'],
-  baja:   ['Es solo un bache: hoy empieza tu revancha 💪','Los campeones también se tropiezan. ¡A remontar! 🔥','Te pasaron, pero tú todavía puedes más 🚀','Respira, enfócate y vuelve por tu puesto 🎯'],
-  otro:   ['¡La competencia se calienta! 🔥','Alguien se está esforzando, ¿y tú? 👀','El equipo está que arde 🚀'],
-  otroBaja:['La carrera sigue abierta, ¡hay tiempo! ⏱️','Un buen turno y todo vuelve a cambiar 💫'],
-  guardar:['¡Otro día al marcador! 🎯','Constancia pura, así se gana 🏆','Tu esfuerzo suma. ¡Orgullo! 🌟','¡Registro listo! Descansa un poquito 😎'],
-  top1:   ['¡Imparable! El número 1 no se rinde 🔥','Nadie te alcanza hoy ⚡','Leyenda de las horas extra 🏆','La corona te queda perfecta 👑'],
-  top2:   ['¡Pisándole los talones al 1! 👀','Un empujón más y llegas a la cima 🚀','Plata brillante, oro cerca 🥈'],
-  top3:   ['¡Con podio en el bolsillo! 🥉','Estás en la élite, ¡sigue subiendo! 💪','Bronce con garra, ¡a por la plata! 🔥'],
-  banner: ['Hoy es un gran día para sumar horas 🔥','Pequeños pasos, grandes resultados 🚀','Tu esfuerzo de hoy es tu ranking de mañana 🏆','¡Tú puedes con este turno! 💪','Constancia vence talento. ¡Dale! ⭐','Cada hora extra te acerca a la cima 👑','Respira, sonríe y sigue avanzando 🌈','El podio tiene un lugar con tu nombre 🥇']
+  /* --- tú subes --- */
+  miSube: [
+    'Subiste y tu billetera lo nota 💸',
+    'Piensa en todo lo que vas a poder comprar con estas horas 🛍️',
+    'Dejaste atrás a {rival}… y ni te despeinaste 💅',
+    '{rival} sintió tu respiración en la nuca, y ya la dejaste atrás 😏',
+    'Ese puesto te queda mejor que la ropa nueva 😎',
+    'Cada hora extra es un antojo que ya no tienes que pensar dos veces 🍕',
+    'Ese puesto huele a quincena gorda 💰',
+    'Tu yo del futuro ya está armando la lista de compras 🛒',
+    'Qué rico se siente subir. Imagínate lo que se siente cobrar 😌',
+    'Subiste. ¿Y si vamos por uno más? Nadie te lo prohíbe 😈',
+    'Más horas, más billete, más sonrisa 😁',
+    'Con ese ritmo te alcanza hasta para el gustito del mes 🎁',
+    'Hoy toca presumir un poquito, te lo ganaste 😎',
+    'Se te nota el hambre de ganar, ¡y qué bien te queda! 🔥',
+    'El ranking cambia, tu ambición también. ¡Dale! 🚀',
+    'Le ganaste a {rival}. Hoy el café lo invita otra persona ☕'
+  ],
+  /* --- tú bajas --- */
+  miBaja: [
+    'Bajaste, pero tranqui: una buena jornada y recuperas todo 💪',
+    '{rival} te pasó y ya anda celebrando… ¿vas a dejar que pase? 😏',
+    '¿Te vas a quedar ahí? Piensa en todo lo que podrías comprar con esas horas 🛍️',
+    'Ese puesto no es tuyo para siempre, pero tampoco lo regales 😤',
+    'Se aceptan apuestas: ¿cuánto tardas en recuperarlo? ⏱️',
+    '{rival} te quitó el puesto… y tú tienes todo para quitárselo de vuelta 🎯',
+    'Una mala racha no define a nadie. Una buena semana sí 🚀',
+    'Tu billetera te pide revancha 💸',
+    'Bajar es solo agarrar impulso 🏹',
+    '¿Dónde quedó ese hambre de ranking? ¡Que vuelva! 🍽️',
+    'Respira, toma tu cafecito y vuelve con todo ☕',
+    'El sueldo no se gana solo, ¿o sí? 😅',
+    'Ya sabes lo que toca: demostrarle a {rival} quién manda 😈',
+    'Hoy te ganaron el puesto, mañana les ganas la historia 🔥'
+  ],
+  /* --- tú llegas al #1 --- */
+  miTop1: [
+    '¡NÚMERO 1! Hoy hasta el café te sabe a victoria ☕',
+    'Qué rico se siente mirar a todos desde arriba 😎',
+    'Líder del ranking: ahora toca defender la corona 🛡️',
+    'Con esa corona, ¿qué te vas a comprar primero? 🛍️',
+    'El resto viene detrás de ti… y lo saben 😏',
+    'Hoy mandas tú. Mañana también, si sigues así 💪',
+    'Esfuerzo que se nota y billetera que lo agradece 💰',
+    'Mucho cuidado, que todos van a querer quitarte esa corona 👀'
+  ],
+  /* --- tú llegas al podio (2.º o 3.º) --- */
+  miPodio: [
+    '¡Al podio! Solo falta un empujoncito para el oro 🥇',
+    'Ya estás en el podio. ¿Y si vamos por la corona? 👀',
+    'Podio asegurado, ahora a perseguir al líder 🏃',
+    'Qué gusto verte ahí arriba, ¡pero no te acomodes! 😎',
+    '{rival} cayó un puesto y tú subes: así es el juego 😏',
+    'Podio en el bolsillo, ¿y si la próxima semana va el oro? 💰',
+    'Ahí arriba se ve bonito. Imagina cómo se ve la quincena 🛒'
+  ],
+  /* --- otro sube (lo vemos todos) --- */
+  otroSube: [
+    '{nom} sube al puesto {pos}… ¿alguien más se anima? 😏',
+    '{nom} se puso las pilas y dejó atrás a {rival} 🔥',
+    '{rival}, ¿viste eso? {nom} anda con hambre 👀',
+    '{nom} subió: el sueldo de fin de mes ya le sonríe 💸',
+    'Alguien está pensando en todo lo que va a comprar… y es {nom} 🛍️',
+    '¡Atención! {nom} está acelerando. ¿Te dejas? 🚀',
+    '{nom} no viene a participar, viene a ganar 🏆',
+    'Mucha calma, {rival}… {nom} ya te pisa los talones 😈',
+    'Se calienta la competencia: {nom} no se rinde 🔥',
+    '{nom} subió y el ranking tembló 📈',
+    '{nom} está trabajando duro y se nota. ¿Y los demás? 😏',
+    'A {nom} le brillan los ojos viendo la quincena 💰'
+  ],
+  /* --- otro baja (lo vemos todos) --- */
+  otroBaja: [
+    '{nom} bajó al puesto {pos}… ¡ahora es su momento de contraatacar! 😤',
+    '{rival} le ganó el puesto a {nom}. ¿Habrá revancha? 🍿',
+    '{nom}, el ranking te llama: ¡a recuperar lo tuyo! 🎯',
+    'Ay, {nom}… ¿vas a dejar que {rival} presuma? 😏',
+    'Un resbalón no es una caída, {nom}. ¡Arriba! 💪',
+    '{nom} bajó, pero una buena tarde cambia todo ⏱️',
+    'Se abre la pelea por el puesto de {nom} 🥊',
+    '{nom}, piensa en lo que podrías comprar con esas horas que te faltan 🛒',
+    '{nom} se descuidó un ratito y {rival} aprovechó 😈',
+    'Todavía hay tiempo, {nom}: la revancha se juega hoy 🔥'
+  ],
+  /* --- otro llega al #1 --- */
+  otroLider: [
+    'Nuevo líder: {nom}. ¿Quién se atreve a quitarle la corona? 👑',
+    '{nom} llegó al #1. Los demás, a ponerse las pilas 😏',
+    'Cambio de trono: {nom} manda ahora 🏆',
+    '{nom} en la cima y {rival} mirando desde abajo 👀',
+    '¡Qué jugada, {nom}! Ahora a defender esa corona 🛡️',
+    'Alguien va a tener que esforzarse mucho para bajar a {nom} 😅',
+    '{nom} en el #1: ya se puede ir pensando en qué gastar 💰'
+  ],
+  /* --- otro entra al podio --- */
+  otroPodio: [
+    '{nom} entró al podio (puesto {pos}). ¡Cuidado con ese ritmo! 🔥',
+    '{nom} ya tiene lugar en el podio, ¿y tú? 😏',
+    'El podio tiene nuevo invitado: {nom} 🥳',
+    '{nom} se coló al podio sin pedir permiso 😎',
+    'Con {nom} en el podio, la cosa se pone interesante 🍿',
+    '{nom} subió al podio dejando atrás a {rival} 👀'
+  ],
+  /* --- tarjetas del podio --- */
+  top1: [
+    '¡Imparable! El número 1 no se rinde 🔥',
+    'Nadie te alcanza hoy ⚡',
+    'Leyenda de las horas extra 🏆',
+    'La corona le queda perfecta 👑',
+    'Desde arriba hasta el sueldo se ve mejor 💰',
+    'Ahora todos quieren esa corona… ¡a defenderla! 🛡️',
+    'Con ese ritmo, ¿qué te vas a comprar primero? 🛍️'
+  ],
+  top2: [
+    '¡Pisándole los talones al 1! 👀',
+    'Un empujón más y llegas a la cima 🚀',
+    'Plata brillante, oro cerca 🥈',
+    'Muy cerca de la corona… ¿te animas? 😏',
+    'El oro está a un buen turno de distancia 💸',
+    'Segundo puesto, hambre de primero 🔥'
+  ],
+  top3: [
+    '¡Con podio en el bolsillo! 🥉',
+    'Estás en la élite, ¡sigue subiendo! 💪',
+    'Bronce con garra, ¡a por la plata! 🔥',
+    'Un poquito más y el podio se te queda chico 😎',
+    'Ahí arriba se ve bien, pero se ve mejor más arriba 😏',
+    'Con este ritmo, la quincena sonríe 💰'
+  ],
+  /* --- frase que rota arriba en la web --- */
+  banner: [
+    'Hoy es un gran día para sumar horas 🔥',
+    'Pequeños pasos, grandes resultados 🚀',
+    'Tu esfuerzo de hoy es tu ranking de mañana 🏆',
+    '¡Tú puedes con este turno! 💪',
+    'Constancia vence talento. ¡Dale! ⭐',
+    'Cada hora extra te acerca a la cima 👑',
+    'Respira, sonríe y sigue avanzando 🌈',
+    'El podio tiene un lugar con tu nombre 🥇',
+    'Piensa en todo lo que vas a poder comprar con tus horas extra 🛍️',
+    'Cada hora extra es un antojo que sí te puedes dar 🍕',
+    'El ranking no se sube solo… pero tú sí puedes 😏',
+    'Alguien allá arriba está sudando. ¿Lo alcanzas? 👀',
+    'Tu billetera te manda saludos y pide más horas 💸',
+    'Si no te animas tú, se anima otro. ¡Dale! 🔥',
+    'Un día más, un paso más cerca del gustito del mes 🎁',
+    'Hoy puedes ser el nombre que todos quieran superar 😎',
+    'Las horas extra de hoy son las vacaciones de mañana 🏖️',
+    'Pica el hambre de ganar… ¿a qué esperas? 🍽️',
+    'No es suerte, es constancia (y un poquito de ambición) 💪',
+    'Que el café sea fuerte y el ranking también ☕',
+    '¿Te ganaron el puesto? Ya sabes qué hacer 🥊',
+    'Quien persevera, cobra. Así de simple 💰',
+    'Piensa en esa compra que tanto quieres… y trabaja por ella 🛒',
+    'Los que suben hoy son los que presumen mañana 😏'
+  ],
+  /* --- al guardar un registro --- */
+  guardar: [
+    '¡Otro día al marcador! 🎯',
+    'Constancia pura, así se gana 🏆',
+    'Tu esfuerzo suma. ¡Orgullo! 🌟',
+    '¡Registro listo! Descansa un poquito 😎',
+    '¡Otra compra más para tu lista! 🛒',
+    'Ese billete ya viene en camino 💸',
+    'Tu yo del futuro te lo agradece 🙌',
+    'Así se hace: horas hoy, gustitos mañana 🎁'
+  ]
 };
 var MED = ['','🥇','🥈','🥉'];
 var dia = Math.floor(Date.now() / 864e5);
@@ -2450,12 +2610,16 @@ function revisar(){
   try { localStorage.setItem(LS, JSON.stringify(ahora)); } catch(e){}
   if (!prev || !Object.keys(prev).length) return;   // primera visita: sin avisos
 
+  var prevAt = {}, k;
+  for (k in prev) prevAt[prev[k].p] = {c: k, n: prev[k].n};
   var ev = [];
   for (i = 0; i < lista.length; i++) {
-    var c = lista[i].clave, p = prev[c], n = i + 1, yo = !!(sesion && c === sesion.clave);
-    if (!p) ev.push({tipo: 'nuevo', n: n, antes: 99, nom: lista[i].nombre, yo: yo});
-    else if (n < p.p) ev.push({tipo: 'sube', n: n, antes: p.p, nom: lista[i].nombre, yo: yo});
-    else if (n > p.p) ev.push({tipo: 'baja', n: n, antes: p.p, nom: lista[i].nombre, yo: yo});
+    var c = lista[i].clave, p = prev[c], n = i + 1, yo = !!(sesion && c === sesion.clave), rv = null;
+    if (!p || n < p.p) { var pa = prevAt[n]; if (pa && pa.c !== c) rv = pa.n; }                  // a quién le quitó el puesto
+    else if (n > p.p) { var ah = lista[p.p - 1]; if (ah && ah.clave !== c) rv = ah.nombre; }     // quién ocupa ahora su puesto anterior
+    if (!p) ev.push({tipo: 'nuevo', n: n, antes: 99, nom: lista[i].nombre, yo: yo, rival: rv});
+    else if (n < p.p) ev.push({tipo: 'sube', n: n, antes: p.p, nom: lista[i].nombre, yo: yo, rival: rv});
+    else if (n > p.p) ev.push({tipo: 'baja', n: n, antes: p.p, nom: lista[i].nombre, yo: yo, rival: rv});
   }
   ev.sort(function(a, b){
     return (b.yo - a.yo) || ((a.n <= 3 ? 0 : 1) - (b.n <= 3 ? 0 : 1)) || (a.n - b.n);
@@ -2463,22 +2627,30 @@ function revisar(){
   ev.slice(0, 4).forEach(anunciar);
 }
 
+// elige una frase al azar; si no sabemos a quién superó/quién lo superó, descarta las que nombran al rival
+function frase(pool, e){
+  var rival = e.rival ? esc(e.rival) : '';
+  var ok = pool.filter(function(t){ return rival || t.indexOf('{rival}') < 0; });
+  var t = ok[Math.floor(Math.random() * ok.length)];
+  return t.replace(/\{nom\}/g, esc(e.nom)).replace(/\{rival\}/g, rival).replace(/\{pos\}/g, e.n);
+}
+
 function anunciar(e){
-  var s = hash(e.nom) + dia + e.n, nom = esc(e.nom), top = e.n <= 3;
+  var nom = esc(e.nom), top = e.n <= 3;
   if (e.yo) {
     if (e.tipo === 'baja')
-      return toast({em: '💪', titulo: 'Bajaste al puesto ' + e.n, texto: pick(F.baja, s), tipo: 'baja', grande: true});
+      return toast({em: '💪', titulo: 'Bajaste al puesto ' + e.n, texto: frase(F.miBaja, e), tipo: 'baja', grande: true});
     return toast({em: e.n === 1 ? '👑' : (top ? MED[e.n] : '🚀'),
-      titulo: e.n === 1 ? '¡ERES EL Nº 1!' : (e.tipo === 'nuevo' ? '¡Entraste al ranking en el puesto ' : '¡Subiste al puesto ') + e.n + (e.n === 1 ? '' : '!'),
-      texto: pick(e.n === 1 ? F.top1 : (top ? F['top' + e.n] : F.sube), s), tipo: 'sube', grande: true, confeti: true});
+      titulo: e.n === 1 ? '¡ERES EL Nº 1!' : (e.tipo === 'nuevo' ? '¡Entraste al ranking en el puesto ' : '¡Subiste al puesto ') + e.n + '!',
+      texto: frase(e.n === 1 ? F.miTop1 : (top ? F.miPodio : F.miSube), e), tipo: 'sube', grande: true, confeti: true});
   }
   if (e.tipo === 'baja')
-    return toast({em: '👀', titulo: nom + ' bajó al puesto ' + e.n, texto: pick(F.otroBaja, s)});
+    return toast({em: '👀', titulo: nom + ' bajó al puesto ' + e.n, texto: frase(F.otroBaja, e)});
   if (e.n === 1)
-    return toast({em: '👑', titulo: nom + ' es el nuevo líder', texto: pick(F.top1, s), tipo: 'podio', confeti: true});
+    return toast({em: '👑', titulo: nom + ' es el nuevo líder', texto: frase(F.otroLider, e), tipo: 'podio', confeti: true});
   if (top && e.antes > 3)
-    return toast({em: MED[e.n], titulo: nom + ' entró al podio (puesto ' + e.n + ')', texto: pick(F['top' + e.n], s), tipo: 'podio', confeti: true});
-  toast({em: top ? MED[e.n] : '🔥', titulo: nom + ' subió al puesto ' + e.n, texto: pick(F.otro, s)});
+    return toast({em: MED[e.n], titulo: nom + ' entró al podio (puesto ' + e.n + ')', texto: frase(F.otroPodio, e), tipo: 'podio', confeti: true});
+  toast({em: top ? MED[e.n] : '🔥', titulo: nom + ' subió al puesto ' + e.n, texto: frase(F.otroSube, e)});
 }
 
 /* ----- frase en cada tarjeta del podio ----- */
@@ -2642,6 +2814,8 @@ ponerBanner();
   iniciar();
 
   /* ---------- panel admin ---------- */
+  function cuenta(){ var l = $('avTexto').value.length; $('avCont').textContent = l + ' / 3000'; }
+  $('avTexto').addEventListener('input', cuenta);
   $('avPublicar').onclick = function(){
     if (!FIREBASE_LISTO) return alert('Sin conexión con la base de datos.');
     var t = $('avTitulo').value.trim(), x = $('avTexto').value.trim(), tipo = $('avTipo').value;
@@ -2651,7 +2825,7 @@ ponerBanner();
     marcarVisto(ref.id);   // quien la publica no necesita verla como "nueva"
     ref.set({titulo:t, texto:x, tipo:tipo, ts:Date.now(), activo:true,
              creado:firebase.firestore.FieldValue.serverTimestamp()})
-      .then(function(){ b.disabled = false; $('avTitulo').value = ''; $('avTexto').value = ''; alert('Noticia publicada. Los asesores la verán en 📰 Noticias.'); })
+      .then(function(){ b.disabled = false; $('avTitulo').value = ''; $('avTexto').value = ''; cuenta(); alert('Noticia publicada. Los asesores la verán en 📰 Noticias.'); })
       .catch(function(e){
         b.disabled = false;
         alert(e.code === 'permission-denied'
