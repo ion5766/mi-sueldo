@@ -743,12 +743,36 @@ textarea:focus{outline:0;border-color:var(--rojo);box-shadow:0 0 0 4px rgba(255,
 .av-item{display:flex;align-items:center;gap:12px;padding:10px 12px;margin-top:8px;border:2px solid var(--linea);border-radius:14px;background:var(--crema)}
 .av-item b{display:block;line-height:1.2}.av-item small{color:var(--gris);font-weight:700}
 
-/* ===== BOTÓN DE TEMA ===== */
+/* ===== BOTONES DEL HEADER (noticias + tema) ===== */
 header{position:relative}
-#btnTema{position:absolute;top:14px;right:16px;z-index:5;border:0;border-radius:99px;padding:9px 16px;font-weight:900;font-size:.8rem;cursor:pointer;background:#fff;color:#B4002F;box-shadow:0 4px 0 rgba(0,0,0,.25);transition:transform .1s,box-shadow .1s}
-#btnTema:hover{filter:brightness(.97)}
-#btnTema:active{transform:translateY(3px);box-shadow:0 1px 0 rgba(0,0,0,.25)}
-@media(max-width:560px){#btnTema{top:10px;right:10px;padding:7px 11px;font-size:.7rem}.tb-icono{width:60px;height:60px;font-size:2rem}.tb-chip{width:100%}}
+.hdr-acciones{position:absolute;top:14px;right:16px;z-index:5;display:flex;gap:8px}
+#btnTema,#btnNoticias{border:0;border-radius:99px;padding:9px 16px;font-weight:900;font-size:.8rem;cursor:pointer;background:#fff;color:#B4002F;box-shadow:0 4px 0 rgba(0,0,0,.25);transition:transform .1s,box-shadow .1s;white-space:nowrap}
+#btnTema:hover,#btnNoticias:hover{filter:brightness(.97)}
+#btnTema:active,#btnNoticias:active{transform:translateY(3px);box-shadow:0 1px 0 rgba(0,0,0,.25)}
+@keyframes nb-pulso{0%,100%{transform:scale(1)}50%{transform:scale(1.2)}}
+.nb{display:inline-block;min-width:20px;margin-left:7px;padding:1px 6px;border-radius:99px;background:#FF0E49;color:#fff;font-size:.72rem;line-height:18px;text-align:center;animation:nb-pulso 1.6s ease-in-out infinite}
+
+/* ===== PANEL DE NOTICIAS ===== */
+@keyframes not-in{from{transform:translateX(100%)}to{transform:none}}
+.noticias-ov{position:fixed;inset:0;z-index:10000;background:rgba(10,8,8,.55);backdrop-filter:blur(4px);animation:ap-in .2s both}
+.noticias{position:absolute;top:0;right:0;bottom:0;width:min(100%,480px);overflow:auto;padding-bottom:28px;background:var(--papel);color:var(--tinta);border-left:2px solid var(--linea);box-shadow:-20px 0 50px rgba(0,0,0,.4);animation:not-in .35s cubic-bezier(.2,.9,.3,1) both}
+.not-head{position:sticky;top:0;z-index:2;display:flex;align-items:center;gap:12px;padding:18px 20px;color:#fff;background:linear-gradient(115deg,#FF0E49,#D4166F);box-shadow:0 5px 0 #B4002F}
+.not-head h2{margin:0;font-size:1.45rem;line-height:1.1;color:#fff;text-transform:none;letter-spacing:0}
+.not-head small{display:block;margin-top:2px;font-size:.82rem;font-weight:700;opacity:.92}
+.not-x{flex:none;width:38px;height:38px;border:0;border-radius:50%;background:#fff;color:#B4002F;font-weight:900;font-size:1.05rem;cursor:pointer;box-shadow:0 3px 0 rgba(0,0,0,.25)}
+.not-lista{display:flex;flex-direction:column;gap:14px;padding:22px 18px 0}
+.not-item{display:flex;gap:14px;padding:16px;border-radius:22px;background:var(--crema);border:2px solid var(--linea);border-bottom-width:6px;animation:duo-pop .45s both}
+.not-item.nuevo{border-color:#FF0E49}
+.not-em{flex:none;display:grid;place-items:center;width:52px;height:52px;border-radius:16px;font-size:1.8rem;background:var(--papel-os)}
+.not-cuerpo{flex:1;min-width:0}
+.not-meta{display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin-bottom:7px;font-size:.76rem;font-weight:800;color:var(--gris)}
+.not-chip{padding:3px 10px;border-radius:99px;color:#fff;font-size:.7rem;font-weight:900;letter-spacing:.06em;text-transform:uppercase}
+.not-nuevo{padding:3px 9px;border-radius:99px;background:#FFC800;color:#5C4300;font-size:.7rem;font-weight:900;animation:nb-pulso 1.6s ease-in-out infinite}
+.not-item h3{margin:0 0 6px;font-size:1.12rem;line-height:1.2;color:var(--tinta);text-transform:none;letter-spacing:0}
+.not-item p{margin:0;font-size:.97rem;line-height:1.5;white-space:pre-line;color:var(--gris-os)}
+.not-vacio{padding:60px 20px;text-align:center;font-weight:800;color:var(--gris)}
+.not-vacio span{display:block;margin-bottom:8px;font-size:3.4rem}
+@media(max-width:560px){.hdr-acciones{top:10px;right:10px;gap:6px}#btnTema,#btnNoticias{padding:7px 11px;font-size:.7rem}.tb-icono{width:60px;height:60px;font-size:2rem}.tb-chip{width:100%}}
 </style>
 </head>
 <body>
@@ -919,9 +943,8 @@ header{position:relative}
       </div>
 
       <div class="panel-admin-bloque">
-        <b>📣 Avisos para todos (pop-ups)</b>
-        <p>Escribe un mensaje y todos los asesores lo verán como ventana emergente al entrar
-        (o al instante si ya tienen la web abierta). Cada asesor lo ve una sola vez.</p>
+        <b>📰 Noticias para todos</b>
+        <p>Escribe una noticia y aparecerá en la sección <b>📰 Noticias</b> de todos los asesores, con una insignia de «nuevo» hasta que la abran. No sale como ventana al entrar a la web.</p>
         <div class="campo" style="margin:0 0 10px"><label>Tipo</label>
           <select id="avTipo">
             <option value="mejora">✨ Mejora de la web</option>
@@ -934,7 +957,7 @@ header{position:relative}
         <div class="campo" style="margin:0 0 10px"><label>Mensaje</label>
           <textarea id="avTexto" rows="4" maxlength="600" placeholder="Cuéntales qué cambió o qué deben saber…"></textarea></div>
         <div class="fila" style="margin:0">
-          <button class="btn" id="avPublicar" style="width:auto;padding:10px 16px">📣 Publicar aviso</button>
+          <button class="btn" id="avPublicar" style="width:auto;padding:10px 16px">📣 Publicar noticia</button>
           <button class="btn gris" id="avVista" style="width:auto;padding:10px 16px">👁 Vista previa</button>
         </div>
         <div id="avLista"></div>
@@ -2505,14 +2528,18 @@ ponerBanner();
 })();
 </script>
 <script id="duo-extra-js">
-/* ===== MODO BLANCO / OSCURO + AVISOS (POP-UPS) PARA TODOS ===== */
+/* ===== MODO BLANCO / OSCURO + NOTICIAS PARA TODOS ===== */
 (function(){
+  /* ---------- botones del header ---------- */
+  var acc = document.createElement('div'); acc.className = 'hdr-acciones';
+  var bn = document.createElement('button'); bn.id = 'btnNoticias'; bn.type = 'button';
+  var bt = document.createElement('button'); bt.id = 'btnTema'; bt.type = 'button';
+  acc.appendChild(bn); acc.appendChild(bt);
+  document.querySelector('header').appendChild(acc);
+
   /* ---------- tema ---------- */
   var tema = 'oscuro';
   try { if (localStorage.getItem('sise_tema') === 'claro') tema = 'claro'; } catch(e){}
-  var bt = document.createElement('button');
-  bt.id = 'btnTema'; bt.type = 'button';
-  document.querySelector('header').appendChild(bt);
   function aplicarTema(){
     var s = document.getElementById('duo-oscuro');
     if (s) { s.disabled = (tema === 'claro'); if (s.sheet) s.sheet.disabled = (tema === 'claro'); }
@@ -2526,10 +2553,10 @@ ponerBanner();
   };
   aplicarTema();
 
-  /* ---------- avisos ---------- */
+  /* ---------- noticias ---------- */
   var TIPOS = {mejora:['✨', 'Mejora de la web'], aviso:['📢', 'Aviso'], importante:['⚠️', 'Importante'], felicitacion:['🎉', 'Felicitación']};
   var MES3 = ['ene','feb','mar','abr','may','jun','jul','ago','set','oct','nov','dic'];
-  var avisos = [], visto = [], mostrando = false, iniciado = false;
+  var avisos = [], visto = [], iniciado = false, abierto = null, nuevosAhora = {};
   try { visto = JSON.parse(localStorage.getItem('sise_avisos_vistos') || '[]'); } catch(e){}
 
   function marcarVisto(id){
@@ -2537,40 +2564,60 @@ ponerBanner();
     try { localStorage.setItem('sise_avisos_vistos', JSON.stringify(visto.slice(-150))); } catch(e){}
   }
   function fechaAviso(ts){ var d = new Date(ts); return d.getDate() + ' ' + MES3[d.getMonth()] + ' ' + d.getFullYear(); }
-  function datosTipo(t){ return TIPOS[t] || TIPOS.aviso; }
+  function claveTipo(t){ return TIPOS[t] ? t : 'aviso'; }
+  function activos(){ return avisos.filter(function(a){ return a.activo !== false; }); }
+  function pendientes(){ return activos().filter(function(a){ return visto.indexOf(a.id) < 0; }).length; }
 
-  function mostrar(a, opc){
-    opc = opc || {};
-    var tp = datosTipo(a.tipo), ov = document.createElement('div');
-    ov.className = 'avisopop-ov';
-    ov.innerHTML = '<div class="avisopop" role="dialog" aria-modal="true">' +
-      '<div class="ap-em">' + tp[0] + '</div><br>' +
-      '<span class="ap-tipo ap-t-' + esc(a.tipo || 'aviso') + '">' + tp[1] + '</span>' +
-      '<h3>' + esc(a.titulo) + '</h3>' +
-      '<p>' + esc(a.texto) + '</p>' +
-      '<div class="ap-pie">' + (opc.preview ? 'Vista previa — así lo verán los asesores' : fechaAviso(a.ts) + (opc.resto ? ' · ' + opc.resto : '')) + '</div>' +
-      '<button type="button" class="btn">' + (opc.preview ? 'Cerrar vista previa' : '¡Entendido!') + '</button></div>';
+  function pintarBoton(){
+    var n = pendientes();
+    bn.innerHTML = '📰 Noticias' + (n ? '<span class="nb">' + n + '</span>' : '');
+  }
+  function tarjeta(a, nuevo){
+    var k = claveTipo(a.tipo), tp = TIPOS[k];
+    return '<div class="not-item' + (nuevo ? ' nuevo' : '') + '"><div class="not-em">' + tp[0] + '</div><div class="not-cuerpo">' +
+      '<div class="not-meta"><span class="not-chip ap-t-' + k + '">' + tp[1] + '</span>' +
+      (nuevo ? '<span class="not-nuevo">NUEVO</span>' : '') + '<span>' + fechaAviso(a.ts) + '</span></div>' +
+      '<h3>' + esc(a.titulo) + '</h3><p>' + esc(a.texto) + '</p></div></div>';
+  }
+  function pintarPanel(){
+    if (!abierto) return;
+    var act = activos();
+    act.forEach(function(a){ if (visto.indexOf(a.id) < 0) nuevosAhora[a.id] = true; });
+    abierto.querySelector('.not-lista').innerHTML = act.length
+      ? act.map(function(a){ return tarjeta(a, nuevosAhora[a.id]); }).join('')
+      : '<div class="not-vacio"><span>📭</span>Todavía no hay noticias.<br>¡Vuelve pronto!</div>';
+    act.forEach(function(a){ marcarVisto(a.id); });
+    pintarBoton();
+  }
+  function abrirNoticias(){
+    if (abierto) return;
+    nuevosAhora = {};
+    var ov = document.createElement('div');
+    ov.className = 'noticias-ov';
+    ov.innerHTML = '<aside class="noticias" role="dialog" aria-label="Noticias"><div class="not-head">' +
+      '<div style="flex:1"><h2>📰 Noticias</h2><small>Novedades y mejoras de la web</small></div>' +
+      '<button type="button" class="not-x" aria-label="Cerrar">✕</button></div><div class="not-lista"></div></aside>';
     document.body.appendChild(ov);
-    ov.querySelector('.btn').onclick = function(){
-      ov.remove();
-      if (!opc.preview) { marcarVisto(a.id); mostrando = false; setTimeout(siguiente, 250); }
-    };
-    if (!opc.preview) mostrando = true;
+    abierto = ov;
+    function cerrar(){
+      ov.remove(); abierto = null; nuevosAhora = {};
+      document.removeEventListener('keydown', tecla);
+    }
+    function tecla(e){ if (e.key === 'Escape') cerrar(); }
+    document.addEventListener('keydown', tecla);
+    ov.addEventListener('click', function(e){ if (e.target === ov) cerrar(); });
+    ov.querySelector('.not-x').onclick = cerrar;
+    pintarPanel();
   }
+  bn.onclick = abrirNoticias;
+  pintarBoton();
 
-  function siguiente(){
-    if (mostrando) return;
-    var pend = avisos.filter(function(a){ return a.activo !== false && visto.indexOf(a.id) < 0; })
-                     .sort(function(a, b){ return a.ts - b.ts; });
-    if (!pend.length) return;
-    mostrar(pend[0], {resto: pend.length > 1 ? 'te faltan ' + (pend.length - 1) + ' más' : ''});
-  }
-
+  // lista del panel admin
   function pintarLista(){
     var box = $('avLista'); if (!box) return;
-    if (!avisos.length) { box.innerHTML = '<p style="margin:12px 0 0;font-size:.85rem;opacity:.8">Todavía no publicaste avisos.</p>'; return; }
-    box.innerHTML = '<p style="margin:14px 0 0"><b>Avisos publicados</b></p>' + avisos.map(function(a){
-      var tp = datosTipo(a.tipo);
+    if (!avisos.length) { box.innerHTML = '<p style="margin:12px 0 0;font-size:.85rem;opacity:.8">Todavía no publicaste noticias.</p>'; return; }
+    box.innerHTML = '<p style="margin:14px 0 0"><b>Noticias publicadas</b></p>' + avisos.map(function(a){
+      var tp = TIPOS[claveTipo(a.tipo)];
       return '<div class="av-item"><span style="font-size:1.6rem">' + tp[0] + '</span>' +
         '<div style="flex:1;min-width:0"><b>' + esc(a.titulo) + '</b><small>' + tp[1] + ' · ' + fechaAviso(a.ts) + '</small></div>' +
         '<button type="button" class="btn x mini" data-delav="' + esc(a.id) + '">Quitar</button></div>';
@@ -2582,13 +2629,12 @@ ponerBanner();
     iniciado = true;
     db.collection('avisos').orderBy('ts', 'desc').limit(30).onSnapshot(function(snap){
       avisos = snap.docs.map(function(d){ var x = d.data(); x.id = d.id; return x; });
-      pintarLista();
-      setTimeout(siguiente, 700);
+      pintarLista(); pintarBoton(); pintarPanel();
     }, function(e){
       console.warn('avisos', e);
       var bx = $('avLista');
       if (bx && e.code === 'permission-denied')
-        bx.innerHTML = '<div class="aviso w" style="margin-top:12px">Falta la regla de <b>avisos</b> en Firestore (Reglas). Mientras no exista, los pop-ups no se pueden leer ni publicar.</div>';
+        bx.innerHTML = '<div class="aviso w" style="margin-top:12px">Falta la regla de <b>avisos</b> en Firestore (Reglas). Mientras no exista, las noticias no se pueden leer ni publicar.</div>';
     });
   }
   var previo = window.onFirebaseListo;
@@ -2602,10 +2648,10 @@ ponerBanner();
     if (!t || !x) return alert('Escribe un título y un mensaje.');
     var b = $('avPublicar'), ref = db.collection('avisos').doc();
     b.disabled = true;
-    marcarVisto(ref.id);   // quien lo publica no necesita verlo como pop-up
+    marcarVisto(ref.id);   // quien la publica no necesita verla como "nueva"
     ref.set({titulo:t, texto:x, tipo:tipo, ts:Date.now(), activo:true,
              creado:firebase.firestore.FieldValue.serverTimestamp()})
-      .then(function(){ b.disabled = false; $('avTitulo').value = ''; $('avTexto').value = ''; alert('Aviso publicado. Los asesores lo verán al entrar.'); })
+      .then(function(){ b.disabled = false; $('avTitulo').value = ''; $('avTexto').value = ''; alert('Noticia publicada. Los asesores la verán en 📰 Noticias.'); })
       .catch(function(e){
         b.disabled = false;
         alert(e.code === 'permission-denied'
@@ -2616,12 +2662,18 @@ ponerBanner();
   $('avVista').onclick = function(){
     var t = $('avTitulo').value.trim(), x = $('avTexto').value.trim();
     if (!t || !x) return alert('Escribe un título y un mensaje para ver la vista previa.');
-    mostrar({titulo:t, texto:x, tipo:$('avTipo').value, ts:Date.now()}, {preview:true});
+    var ov = document.createElement('div');
+    ov.className = 'avisopop-ov';
+    ov.innerHTML = '<div class="avisopop" style="text-align:left"><div class="ap-pie" style="text-align:center">Vista previa — así se verá en 📰 Noticias</div>' +
+      tarjeta({titulo:t, texto:x, tipo:$('avTipo').value, ts:Date.now()}, true) +
+      '<div style="height:16px"></div><button type="button" class="btn">Cerrar vista previa</button></div>';
+    document.body.appendChild(ov);
+    ov.querySelector('.btn').onclick = function(){ ov.remove(); };
   };
   document.addEventListener('click', function(e){
     var b = e.target.closest ? e.target.closest('[data-delav]') : null;
     if (!b) return;
-    if (!confirm('¿Quitar este aviso? Dejará de mostrarse a los asesores que aún no lo vieron.')) return;
+    if (!confirm('¿Quitar esta noticia? Dejará de mostrarse en la sección Noticias de todos.')) return;
     db.collection('avisos').doc(b.getAttribute('data-delav')).delete()
       .catch(function(err){ alert('No se pudo quitar: ' + err.message); });
   });
