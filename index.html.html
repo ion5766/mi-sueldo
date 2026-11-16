@@ -837,6 +837,50 @@ tbody tr:hover .pos{transform:scale(1.18) rotate(-8deg)}
 .rs-item.destacado{animation:duo-pop .5s both,sello-brillo 3.2s ease-in-out 1s infinite}
 @media(prefers-reduced-motion:reduce){.fondo-vida,.moneda-lluvia,.moneda-pop{display:none!important}}
 </style>
+<style id="duo-mas">
+/* ===== SONIDO, RACHAS, META E HISTORIAL ===== */
+#btnSonido{border:0;border-radius:99px;padding:9px 14px;font-weight:900;font-size:.8rem;cursor:pointer;background:#fff;color:#B4002F;box-shadow:0 4px 0 rgba(0,0,0,.25);transition:transform .1s,box-shadow .1s;white-space:nowrap}
+#btnSonido:active{transform:translateY(3px);box-shadow:0 1px 0 rgba(0,0,0,.25)}
+@media(max-width:560px){#btnSonido{padding:7px 10px;font-size:.7rem}#btnSonido .t{display:none}}
+.duo-chip.racha{background:#FF9600;color:#fff;box-shadow:0 4px 0 #CC7000;animation:nb-pulso 2s ease-in-out infinite}
+.duo-chip.racha.apagada{background:var(--papel-os);color:var(--gris);box-shadow:0 4px 0 var(--linea);animation:none}
+.racha-chip{display:inline-block;margin-left:6px;padding:1px 8px;border-radius:99px;background:#FF9600;color:#fff;font-size:.72rem;font-weight:900;vertical-align:middle}
+
+/* meta del mes */
+.meta-card{display:flex;align-items:center;gap:16px;flex-wrap:wrap;margin:0 0 22px;padding:16px 20px;border-radius:24px;background:var(--crema);border:2px solid var(--linea);border-bottom-width:6px;animation:duo-pop .55s both}
+.meta-card.lograda{border-color:#FFC800;background:linear-gradient(135deg,rgba(255,200,0,.14),var(--crema))}
+.meta-ico{flex:none;display:grid;place-items:center;width:58px;height:58px;border-radius:18px;font-size:1.9rem;background:linear-gradient(135deg,#FF0E49,#8E2DE2);box-shadow:0 4px 0 rgba(0,0,0,.22);animation:duo-float 2.4s ease-in-out infinite}
+.meta-cuerpo{flex:1;min-width:230px}
+.meta-tit{font-size:.78rem;font-weight:900;letter-spacing:.12em;text-transform:uppercase;color:var(--gris)}
+.meta-num{margin:2px 0 8px;font-size:1.15rem;font-weight:900;color:var(--tinta)}
+.meta-pct{margin-left:8px;padding:2px 10px;border-radius:99px;background:#FFC800;color:#5C4300;font-size:.85rem}
+.meta-barra{height:16px;border-radius:99px;background:var(--linea);overflow:hidden}
+.meta-barra i{display:block;position:relative;overflow:hidden;height:100%;min-width:16px;border-radius:99px;background:linear-gradient(90deg,#FF0E49,#FF9600,#FFC800);box-shadow:inset 0 4px 0 rgba(255,255,255,.35);transition:width 1s}
+.meta-barra i::after{content:'';position:absolute;inset:0;background:linear-gradient(90deg,transparent,rgba(255,255,255,.5),transparent);transform:translateX(-100%);animation:barra-brillo 2.6s ease-in-out infinite}
+.meta-frase{margin-top:8px;font-size:.95rem;font-weight:800;color:var(--gris-os)}
+
+/* historial de temporadas */
+.noticias.ancho{width:min(100%,760px)}
+.hist-item{display:flex;gap:14px;padding:16px;border-radius:22px;cursor:pointer;background:var(--crema);border:2px solid var(--linea);border-bottom-width:6px;transition:transform .2s,border-color .2s;animation:duo-pop .45s both}
+.hist-item:hover{transform:translateY(-3px);border-color:#FF0E49}
+.hist-ico{flex:none;display:grid;place-items:center;width:52px;height:52px;border-radius:16px;font-size:1.8rem;background:var(--papel-os)}
+.hist-cuerpo{flex:1;min-width:0}
+.hist-cuerpo b{display:block;font-size:1.1rem;line-height:1.2;color:var(--tinta)}
+.hist-cuerpo small{display:block;margin-top:2px;font-weight:700;color:var(--gris)}
+.hist-chips{display:flex;flex-wrap:wrap;gap:6px;margin-top:9px}
+.hist-chips span{padding:3px 10px;border-radius:99px;background:var(--papel-os);font-size:.78rem;font-weight:800;color:var(--tinta)}
+.hist-podio{margin-top:9px;font-size:.88rem;font-weight:800;color:var(--gris-os)}
+.hist-volver{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+.hist-volver h3{margin:0;font-size:1.25rem;color:var(--tinta);text-transform:none;letter-spacing:0}
+.hist-tabla-w{overflow-x:auto;border:2px solid var(--linea);border-radius:18px;background:var(--crema)}
+.hist-tabla{width:100%;border-collapse:collapse;font-size:.92rem}
+.hist-tabla th{padding:10px;text-align:left;font-size:.72rem;letter-spacing:.06em;text-transform:uppercase;color:var(--gris)}
+.hist-tabla td{padding:9px 10px;border-top:1px solid var(--linea-cl);color:var(--tinta);font-weight:700}
+.hist-tabla .num{text-align:right;white-space:nowrap}
+.hist-tabla tfoot td{font-weight:900;background:var(--papel-os)}
+.hist-vacio{padding:50px 20px;text-align:center;font-weight:800;color:var(--gris)}
+.hist-vacio span{display:block;margin-bottom:8px;font-size:3.4rem}
+</style>
 </head>
 <body>
 
@@ -1003,6 +1047,18 @@ tbody tr:hover .pos{transform:scale(1.18) rotate(-8deg)}
           <button class="btn gris" id="quitarTemporada" style="width:auto;padding:10px 16px">Quitar temporada activa</button>
         </div>
         <div class="aviso i" id="temporadaEstado" style="margin-top:12px;display:none"></div>
+      </div>
+
+      <div class="panel-admin-bloque" id="bloqueHistorial">
+        <b>📚 Historial de temporadas</b>
+        <p>Guarda una copia de la temporada actual (todos los registros de todos los asesores) para poder consultarla cuando quieras, por ejemplo en febrero. Después te preguntaré si quieres borrar los registros para empezar la siguiente temporada de cero.</p>
+        <div class="campo" style="margin:0 0 10px"><label>Nombre de la temporada</label>
+          <input type="text" id="histNombre" maxlength="60" placeholder="Ej: Matrícula oct–nov 2026"></div>
+        <div class="fila" style="margin:0">
+          <button class="btn" id="histArchivar" style="width:auto;padding:10px 16px">📦 Archivar temporada actual</button>
+        </div>
+        <div id="histAviso"></div>
+        <div id="histAdminLista"></div>
       </div>
 
       <div class="panel-admin-bloque">
@@ -1943,14 +1999,26 @@ $('guardar').onclick = function(){
       'guardado en este dispositivo. Apenas vuelva el internet, entra de nuevo y dale "Guardar registro".');
   }
 
-  agregar(d).then(function(){
+  // evita duplicados: un solo registro por asesor y por día
+  var dups = registros.filter(function(r){ return r.claveNombre === sesion.clave && r.fecha === d.fecha; });
+  if (dups.length) {
+    var u = dups[0];
+    if (!confirm('Ya tienes un registro del ' + fechaLarga(d.fecha) + ' (' + u.real.replace('–', ' a ') + ', ' + hm(u.horas) + ' h extra).\n\n' +
+                 '¿Quieres REEMPLAZARLO por este nuevo?\n\nAceptar = reemplazar · Cancelar = dejar el que ya tenías')) return;
+  }
+  var btnG = $('guardar');
+  btnG.disabled = true;   // evita doble clic
+  var antes = dups.length
+    ? (function(){ var l = db.batch(); dups.forEach(function(r){ l.delete(coleccion.doc(r.id)); }); return l.commit(); })()
+    : Promise.resolve();
+  antes.then(function(){ return agregar(d); }).then(function(){
     borrarBorrador();
     document.querySelector('.kpis').scrollIntoView({behavior:'smooth', block:'center'});
   }).catch(function(e){
     guardarBorrador();
     alert('No se pudo guardar por un problema de conexión. Tu registro quedó guardado en este ' +
       'dispositivo, vuelve a intentar "Guardar registro" en un momento. Detalle: ' + e.message);
-  });
+  }).then(function(){ btnG.disabled = false; });
 };
 
 /* Contraseña maestra para "Limpiar todo" — evita borrados accidentales o de terceros */
@@ -2271,8 +2339,8 @@ function alturaFila(texto){
   return Math.max(22, n * 16 + 8);
 }
 
-function descargarExcel(clave, btn){
-  var regs = registros.filter(function(r){ return r.claveNombre === clave; })
+function descargarExcel(clave, btn, fuente, etiqueta){
+  var regs = (fuente || registros).filter(function(r){ return r.claveNombre === clave; })
     .sort(function(a, b){ return a.fecha < b.fecha ? -1 : a.fecha > b.fecha ? 1 : 0; });
   if (!regs.length) return alert('Este asesor todavía no tiene registros.');
   var txt = btn ? btn.textContent : '';
@@ -2280,11 +2348,11 @@ function descargarExcel(clave, btn){
   function listo(){ if (btn) { btn.disabled = false; btn.textContent = txt; } }
   function error(e){ listo(); alert('No se pudo crear el Excel: ' + (e && e.message ? e.message : e)); }
   cargarExcelJS(function(){
-    try { construirExcel(regs, clave).then(listo, error); } catch(e) { error(e); }
+    try { construirExcel(regs, clave, etiqueta).then(listo, error); } catch(e) { error(e); }
   }, function(){ error('no se pudo cargar el generador. Revisa tu internet e inténtalo de nuevo.'); });
 }
 
-function construirExcel(regs, clave){
+function construirExcel(regs, clave, etiqueta){
   var nombre = regs[0].nombre, n = regs.length, hoy = fechaHoyLocal();
   var wb = new ExcelJS.Workbook();
   wb.creator = 'SISE · Horas Extra'; wb.created = new Date();
@@ -2343,7 +2411,7 @@ function construirExcel(regs, clave){
   ws.getRow(ft).height = 26;
   ws.autoFilter = {from:{row:1, column:1}, to:{row:n + 1, column:cols.length}};
 
-  var arch = 'Horas_extra_' + nombre.replace(/[^\wÁÉÍÓÚÜáéíóúüÑñ]+/g, '_') + '_' + hoy + '.xlsx';
+  var arch = 'Horas_extra_' + nombre.replace(/[^\wÁÉÍÓÚÜáéíóúüÑñ]+/g, '_') + '_' + (etiqueta ? etiqueta.replace(/[^\wÁÉÍÓÚÜáéíóúüÑñ]+/g, '_') : hoy) + '.xlsx';
   return wb.xlsx.writeBuffer().then(function(buf){
     var blob = new Blob([buf], {type:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'});
     var url = URL.createObjectURL(blob), a = document.createElement('a');
@@ -2942,6 +3010,7 @@ ponerBanner();
 
   /* lluvia de monedas (al guardar un registro con horas extra) */
   function lluvia(cant){
+    if (window.SISE_SND) SISE_SND.moneda();
     for (var k = 0; k < cant; k++) (function(){
       var m = document.createElement('div');
       m.className = 'moneda-lluvia';
@@ -2952,6 +3021,7 @@ ponerBanner();
       setTimeout(function(){ m.remove(); }, 4800);
     })();
   }
+  window.SISE_FX = {lluvia: lluvia};
   var _ag = agregar;
   agregar = function(d){
     var r = calcular(d), conHoras = !!(r && r.horas > 0);
@@ -2962,6 +3032,7 @@ ponerBanner();
   document.addEventListener('click', function(e){
     var b = e.target.closest ? e.target.closest('.btn,#btnTema,#btnNoticias') : null;
     if (!b) return;
+    if (window.SISE_SND) SISE_SND.clic();
     var x = e.clientX, y = e.clientY;
     if (!x && !y) { var rc = b.getBoundingClientRect(); x = rc.left + rc.width / 2; y = rc.top + rc.height / 2; }
     for (var k = 0; k < 7; k++) (function(){
@@ -2972,6 +3043,419 @@ ponerBanner();
       setTimeout(function(){ p.remove(); }, 850);
     })();
   });
+})();
+</script>
+<script id="duo-mas-js">
+/* ===== SONIDOS · RACHAS · META DEL MES · HISTORIAL DE TEMPORADAS ===== */
+(function(){
+  var MESN = ['enero','febrero','marzo','abril','mayo','junio','julio','agosto','setiembre','octubre','noviembre','diciembre'];
+  var MES3 = ['ene','feb','mar','abr','may','jun','jul','ago','set','oct','nov','dic'];
+  function pick(a){ return a[Math.floor(Math.random() * a.length)]; }
+  function fr(pool, v){
+    var t = pick(pool); v = v || {};
+    return t.replace(/\{(\w+)\}/g, function(_, k){ return v[k] !== undefined ? v[k] : ''; });
+  }
+
+  /* ================= SONIDOS (opcionales, apagados por defecto) ================= */
+  var sonidoOn = false, ac = null;
+  try { sonidoOn = localStorage.getItem('sise_sonido') === '1'; } catch(e){}
+  function ctx(){
+    if (!ac) { var C = window.AudioContext || window.webkitAudioContext; if (!C) return null; ac = new C(); }
+    if (ac.state === 'suspended') ac.resume();
+    return ac;
+  }
+  function nota(f, t0, dur, tipo, vol){
+    var c = ctx(); if (!c) return;
+    var o = c.createOscillator(), g = c.createGain(), t = c.currentTime + t0;
+    o.type = tipo || 'sine'; o.frequency.value = f;
+    g.gain.setValueAtTime(0.0001, t);
+    g.gain.exponentialRampToValueAtTime(vol || .12, t + .01);
+    g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+    o.connect(g); g.connect(c.destination); o.start(t); o.stop(t + dur + .03);
+  }
+  var S = window.SISE_SND = {
+    moneda:    function(){ if (!sonidoOn) return; nota(988, 0, .09, 'square', .06); nota(1319, .08, .45, 'square', .06); },
+    clic:      function(){ if (!sonidoOn) return; nota(660, 0, .06, 'triangle', .07); },
+    fanfarria: function(){ if (!sonidoOn) return; [523, 659, 784, 1047].forEach(function(f, i){ nota(f, i * .11, .28, 'triangle', .13); }); nota(1047, .5, .6, 'sine', .1); },
+    logro:     function(){ if (!sonidoOn) return; [659, 784, 988, 1175, 1319].forEach(function(f, i){ nota(f, i * .09, .3, 'triangle', .12); }); },
+    triste:    function(){ if (!sonidoOn) return; [392, 330, 262].forEach(function(f, i){ nota(f, i * .2, .4, 'triangle', .1); }); }
+  };
+  var acc = document.querySelector('.hdr-acciones');
+  var bs = document.createElement('button');
+  bs.id = 'btnSonido'; bs.type = 'button';
+  if (acc) acc.insertBefore(bs, document.getElementById('btnTema'));
+  function pintarSonido(){
+    bs.innerHTML = (sonidoOn ? '🔊' : '🔇') + '<span class="t"> Sonido</span>';
+    bs.title = sonidoOn ? 'Sonidos activados (toca para apagarlos)' : 'Sonidos apagados (toca para activarlos)';
+  }
+  bs.onclick = function(){
+    sonidoOn = !sonidoOn;
+    try { localStorage.setItem('sise_sonido', sonidoOn ? '1' : '0'); } catch(e){}
+    pintarSonido();
+    if (sonidoOn) { ctx(); S.moneda(); }
+  };
+  pintarSonido();
+
+  // sonido en los carteles de cambio de puesto (los crea el módulo de frases)
+  var contT = document.querySelector('.duo-toasts');
+  if (contT && window.MutationObserver) {
+    new MutationObserver(function(ms){
+      ms.forEach(function(m){
+        [].forEach.call(m.addedNodes, function(n){
+          var c = typeof n.className === 'string' ? n.className : '';
+          if (!c || c.indexOf('propio') > -1) return;
+          if (c.indexOf('baja') > -1) S.triste();
+          else if (c.indexOf('grande') > -1 || c.indexOf('podio') > -1) S.fanfarria();
+        });
+      });
+    }).observe(contT, {childList: true});
+  }
+
+  function mostrarToast(o){
+    var cont = document.querySelector('.duo-toasts'); if (!cont) return;
+    var t = document.createElement('div');
+    t.className = 'duo-toast propio ' + (o.tipo || '') + (o.grande ? ' grande' : '');
+    t.innerHTML = '<span class="duo-em">' + o.em + '</span><div><b>' + o.titulo + '</b><small>' + o.texto + '</small></div>';
+    cont.appendChild(t);
+    setTimeout(function(){ t.classList.add('sale'); setTimeout(function(){ t.remove(); }, 420); }, o.grande ? 5200 : 3800);
+  }
+
+  /* ================= RACHAS ================= */
+  var RACHA = {
+    hito: ['¡{n} días seguidos! Tu billetera ya lo siente 💸',
+           '{n} días sin fallar: eso es hambre de ganar 🔥',
+           'Racha de {n}: con esa constancia, ¿qué te vas a comprar? 🛍️',
+           '¡{n} días en llamas! No la rompas, que da pena 😏',
+           '{n} días seguidos… los demás sudan solo de mirarte 👀',
+           'Racha de {n} días: así se juntan los gustitos del mes 🎁'],
+    nueva: ['¡Racha encendida! Un día más y se pone interesante 🔥',
+            'Dos días seguidos: ya huele a constancia 😏',
+            'La racha empezó. ¿Cuántos días aguantas? 💪'],
+    rota:  ['Tu racha de {n} días se rompió, pero hoy empieza otra. ¡A romper tu récord! 🚀',
+            'Se acabó la racha de {n}… ¿vas a dejar que quede ahí? 😈',
+            'Una racha rota es solo el comienzo de una más larga 💪']
+  };
+  var HITOS = {3:1, 5:1, 7:1, 10:1, 14:1, 20:1, 30:1};
+  function ymd(d){ return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0'); }
+  // día anterior que cuenta para la racha: un domingo sin registro no la corta,
+  // y si trabajaste el domingo (rotativo) su sábado de descanso tampoco
+  function ayer(iso, f){
+    var p = iso.split('-'), d = new Date(+p[0], +p[1] - 1, +p[2] - 1), hoyD = d.getDay();
+    if (hoyD === 0 && !f[ymd(d)]) d.setDate(d.getDate() - 1);
+    else if (hoyD === 6 && new Date(+p[0], +p[1] - 1, +p[2]).getDay() === 0 && !f[ymd(d)]) d.setDate(d.getDate() - 1);
+    return ymd(d);
+  }
+  function racha(clave, extra){
+    var f = {};
+    registros.forEach(function(r){ if (r.claveNombre === clave) f[r.fecha] = 1; });
+    if (extra) f[extra] = 1;
+    var ls = Object.keys(f).sort();
+    if (!ls.length) return {actual:0, mejor:0, viva:false, ultima:0};
+    var mejor = 0, fin = 0, i, c, cur;
+    for (i = 0; i < ls.length; i++) {
+      c = 1; cur = ls[i];
+      while (f[ayer(cur, f)]) { cur = ayer(cur, f); c++; }
+      if (c > mejor) mejor = c;
+      if (i === ls.length - 1) fin = c;
+    }
+    var hoy = fechaHoyLocal(), ult = ls[ls.length - 1];
+    var viva = ult >= hoy || ult === ayer(hoy, f);
+    return {actual: viva ? fin : 0, mejor: mejor, viva: viva, ultima: fin};
+  }
+  function anunciarRacha(a, d){
+    var n = d.actual;
+    if (n > a.actual) {
+      if (HITOS[n]) {
+        mostrarToast({em:'🔥', titulo:'¡Racha de ' + n + ' días!', texto: fr(RACHA.hito, {n:n}), tipo:'sube', grande:true});
+        S.logro(); if (window.SISE_FX) SISE_FX.lluvia(18);
+      } else if (n === 2) {
+        mostrarToast({em:'🔥', titulo:'¡Racha encendida!', texto: fr(RACHA.nueva), tipo:'sube'});
+      }
+    } else if (!a.viva && a.ultima >= 3 && n === 1) {
+      mostrarToast({em:'💪', titulo:'Tu racha de ' + a.ultima + ' días se rompió', texto: fr(RACHA.rota, {n:a.ultima}), tipo:'baja'});
+    }
+  }
+  function chipRacha(){
+    var b = document.querySelector('.duo-banner'); if (!b) return;
+    var c = b.querySelector('.duo-chip.racha');
+    if (!c) { c = document.createElement('span'); c.className = 'duo-chip racha'; b.appendChild(c); }
+    var r = sesion ? racha(sesion.clave) : null;
+    if (!r || !r.mejor) { c.style.display = 'none'; return; }
+    c.style.display = '';
+    c.className = 'duo-chip racha' + (r.viva ? '' : ' apagada');
+    c.textContent = r.viva ? '🔥 Racha: ' + r.actual + ' día' + (r.actual === 1 ? '' : 's') : '💤 Sin racha · mejor ' + r.mejor;
+    c.title = 'Tu mejor racha: ' + r.mejor + ' días seguidos';
+  }
+  function rachasRanking(){
+    [].forEach.call(document.querySelectorAll('#tbRank .btn-xl'), function(b){
+      var tr = b.closest ? b.closest('tr') : null, td = tr && tr.children[1]; if (!td) return;
+      var r = racha(b.getAttribute('data-c'));
+      if (r.viva && r.actual >= 3) {
+        var s = document.createElement('span');
+        s.className = 'racha-chip'; s.textContent = '🔥' + r.actual;
+        s.title = r.actual + ' días seguidos registrando';
+        td.appendChild(s);
+      }
+    });
+  }
+
+  /* ================= META DEL MES ================= */
+  var META = {
+    p0:   ['Apenas empiezas: cada hora extra te acerca a esa compra que quieres 🛒', 'La meta está ahí… y tú tienes el hambre para alcanzarla 🍽️', 'Los grandes gustitos empiezan con una primera hora extra 🎁'],
+    p25:  ['Ya vas por buen camino, ¡no aflojes! 💪', 'Un cuarto de camino: la billetera ya te sonríe 😏', 'Falta {falta} para tu meta. Piensa en lo que vas a comprar 🛍️'],
+    p50:  ['Más de la mitad: ya hueles la meta 🔥', 'Faltan {falta} y esa compra es tuya 🛍️', 'Mitad del camino recorrida, ¡y se nota! 😎'],
+    p75:  ['¡Casi, casi! Solo faltan {falta} para lograrlo 🚀', 'Estás a nada de tu gustito del mes 💸', 'Ya casi la tienes. ¿Quién dijo que era difícil? 😏'],
+    p100: ['¡META CUMPLIDA! Hoy te toca darte un gustito 🎉', 'Meta lograda… ¿y si ponemos una más grande? 😈', '¡Lo lograste! Ahora sí, ve por esa compra que tanto querías 🛍️']
+  };
+  function progresoMeta(){
+    if (!sesion) return null;
+    var pf = preferencias[sesion.clave] || {}, tipo = pf.metaTipo, val = +pf.metaValor;
+    if (!tipo || !(val > 0)) return {sin: true};
+    var mes = fechaHoyLocal().slice(0, 7), acc = 0;
+    registros.forEach(function(r){
+      if (r.claveNombre === sesion.clave && r.fecha.slice(0, 7) === mes) acc += tipo === 'soles' ? r.neto : r.horas;
+    });
+    return {tipo: tipo, val: val, acc: acc, pct: Math.min(100, acc / val * 100), falta: Math.max(0, val - acc)};
+  }
+  function fmtMeta(tipo, v){ return tipo === 'soles' ? 'S/ ' + v.toFixed(2) : hm(v) + ' h'; }
+  function pintarMeta(){
+    var banner = document.querySelector('.duo-banner'); if (!banner) return;
+    var card = document.getElementById('metaCard');
+    if (!card) {
+      card = document.createElement('div'); card.id = 'metaCard'; card.className = 'meta-card';
+      banner.parentNode.insertBefore(card, banner.nextSibling);
+      card.addEventListener('click', function(e){ if (e.target.closest && e.target.closest('[data-meta]')) abrirMeta(); });
+    }
+    if (!sesion) { card.style.display = 'none'; return; }
+    card.style.display = '';
+    var m = progresoMeta(), mes = MESN[new Date().getMonth()];
+    if (m.sin) {
+      card.className = 'meta-card';
+      card.innerHTML = '<div class="meta-ico">🎯</div><div class="meta-cuerpo"><div class="meta-tit">Mi meta de ' + mes + '</div>' +
+        '<div class="meta-frase">Ponte una meta del mes y mira cómo la vas alcanzando. ¿Cuánto quieres juntar? 🛍️</div></div>' +
+        '<button type="button" class="btn mini" data-meta="1">🎯 Poner mi meta</button>';
+      return;
+    }
+    var pct = Math.round(m.pct), pool = pct >= 100 ? META.p100 : pct >= 75 ? META.p75 : pct >= 50 ? META.p50 : pct >= 25 ? META.p25 : META.p0;
+    if (card.getAttribute('data-p') !== String(pct) || !card.firstChild || card.getAttribute('data-f') === null) {
+      card.setAttribute('data-p', pct); card.setAttribute('data-f', '1');
+      card.className = 'meta-card' + (pct >= 100 ? ' lograda' : '');
+      card.innerHTML = '<div class="meta-ico">' + (pct >= 100 ? '🏆' : '🎯') + '</div><div class="meta-cuerpo">' +
+        '<div class="meta-tit">Mi meta de ' + mes + '</div>' +
+        '<div class="meta-num">' + fmtMeta(m.tipo, m.acc) + ' <span style="opacity:.6;font-weight:800">de ' + fmtMeta(m.tipo, m.val) + '</span><span class="meta-pct">' + pct + '%</span></div>' +
+        '<div class="meta-barra"><i style="width:' + Math.max(2, pct) + '%"></i></div>' +
+        '<div class="meta-frase">' + fr(pool, {falta: fmtMeta(m.tipo, m.falta)}) + '</div></div>' +
+        '<button type="button" class="btn mini" data-meta="1">✏️ Cambiar</button>';
+    }
+    // celebración (una sola vez por mes) cuando llegas al 100%
+    var clv = 'sise_meta_ok_' + sesion.clave + '_' + fechaHoyLocal().slice(0, 7), ya = null;
+    try { ya = localStorage.getItem(clv); } catch(e){}
+    if (pct >= 100 && regsListos && !ya) {
+      try { localStorage.setItem(clv, '1'); } catch(e){}
+      mostrarToast({em:'🏆', titulo:'¡Meta del mes cumplida!', texto: fr(META.p100), tipo:'sube', grande:true});
+      S.logro(); if (window.SISE_FX) SISE_FX.lluvia(30);
+    }
+  }
+  function abrirMeta(){
+    if (!sesion) return;
+    var pf = preferencias[sesion.clave] || {}, mes = MESN[new Date().getMonth()];
+    var ov = document.createElement('div'); ov.className = 'avisopop-ov';
+    ov.innerHTML = '<div class="avisopop" style="text-align:left"><div style="text-align:center"><div class="ap-em">🎯</div></div>' +
+      '<h3 style="text-align:center">Mi meta de ' + mes + '</h3>' +
+      '<p style="text-align:center">Elige cuánto quieres juntar este mes. Se mide con tus registros del mes.</p>' +
+      '<div class="campo" style="margin-bottom:12px"><label>Tipo de meta</label><select class="mTipo"><option value="soles">Soles netos (S/)</option><option value="horas">Horas extra</option></select></div>' +
+      '<div class="campo" style="margin-bottom:16px"><label class="mEt">Monto a juntar (S/)</label><input type="number" class="mValor" min="1" step="any" placeholder="Ej: 400"></div>' +
+      '<div style="display:flex;gap:10px;flex-wrap:wrap"><button type="button" class="btn mGuardar" style="flex:1">Guardar meta</button><button type="button" class="btn gris mCancel" style="flex:1">Cancelar</button></div>' +
+      (pf.metaValor ? '<p style="text-align:center;margin:14px 0 0"><button type="button" class="btn x mini mQuitar">Quitar mi meta</button></p>' : '') + '</div>';
+    document.body.appendChild(ov);
+    var sel = ov.querySelector('.mTipo'), inp = ov.querySelector('.mValor');
+    if (pf.metaTipo) sel.value = pf.metaTipo;
+    if (pf.metaValor) inp.value = pf.metaValor;
+    function etiqueta(){
+      ov.querySelector('.mEt').textContent = sel.value === 'soles' ? 'Monto a juntar (S/)' : 'Horas extra a juntar';
+      inp.placeholder = sel.value === 'soles' ? 'Ej: 400' : 'Ej: 40';
+    }
+    sel.onchange = etiqueta; etiqueta();
+    function cerrar(){ ov.remove(); }
+    function guardar(datos){
+      if (!FIREBASE_LISTO) return alert('Sin conexión con la base de datos.');
+      var base = {nombre: sesion.nombre};
+      for (var k in datos) base[k] = datos[k];
+      usuariosCol.doc(sesion.clave).set(base, {merge: true}).then(function(){
+        cerrar(); var card = document.getElementById('metaCard'); if (card) card.removeAttribute('data-f'); pintarMeta();
+      }).catch(function(e){ alert('No se pudo guardar la meta: ' + e.message); });
+    }
+    ov.querySelector('.mCancel').onclick = cerrar;
+    ov.querySelector('.mGuardar').onclick = function(){
+      var v = parseFloat(inp.value);
+      if (!(v > 0)) return alert('Escribe un número mayor que cero.');
+      guardar({metaTipo: sel.value, metaValor: v});
+    };
+    var q = ov.querySelector('.mQuitar');
+    if (q) q.onclick = function(){
+      var del = firebase.firestore.FieldValue.delete();
+      guardar({metaTipo: del, metaValor: del});
+    };
+  }
+
+  /* ================= HISTORIAL DE TEMPORADAS ================= */
+  var hist = [], histIni = false, histOv = null, histVista = null;
+  function resumenTemp(h){
+    var por = {}, ord = [], tot = 0;
+    (h.regs || []).forEach(function(r){
+      var m = por[r.claveNombre];
+      if (!m) { m = por[r.claveNombre] = {clave: r.claveNombre, nombre: r.nombre, turno: r.turno, dias: 0, horas: 0, neto: 0}; ord.push(m); }
+      m.dias++; m.horas += r.horas; m.neto += r.neto; m.turno = r.turno; tot += r.horas;
+    });
+    ord.sort(function(a, b){ return b.horas - a.horas; });
+    return {lista: ord, total: tot};
+  }
+  function rangoTxt(ini, fin){
+    var a = +ini.slice(5, 7) - 1, b = +fin.slice(5, 7) - 1;
+    return MES3[a] + (b !== a ? '–' + MES3[b] : '') + ' ' + fin.slice(0, 4);
+  }
+  function maxFechaActual(){ var m = ''; registros.forEach(function(r){ if (r.fecha > m) m = r.fecha; }); return m; }
+  function hayNoArchivado(){
+    if (!registros.length) return false;
+    var mf = maxFechaActual();
+    return !hist.some(function(h){ return (h.maxFecha || '') >= mf; });
+  }
+  function medalla(i){ return ['🥇', '🥈', '🥉'][i] || (i + 1); }
+
+  function cuerpoHist(){
+    if (histVista) {
+      var h = hist.filter(function(x){ return x.id === histVista; })[0];
+      if (!h) { histVista = null; return cuerpoHist(); }
+      var rs = resumenTemp(h);
+      var filas = rs.lista.map(function(m, i){
+        return '<tr><td>' + medalla(i) + '</td><td>' + esc(m.nombre) + '</td><td class="num">' + m.dias + '</td><td class="num">' + hm(m.horas) + ' h</td>' +
+          '<td class="num">' + (puedeVerMonto(m.clave) ? soles(m.neto) : '🔒') + '</td>' +
+          '<td><button type="button" class="btn mini hist-xl" data-h="' + esc(h.id) + '" data-c="' + esc(m.clave) + '">⬇ Excel</button></td></tr>';
+      }).join('');
+      return '<div class="hist-volver"><button type="button" class="btn mini" id="histVolver">← Volver</button><h3>' + esc(h.nombre) + '</h3></div>' +
+        '<div class="hist-chips" style="margin:12px 0 16px"><span>📅 ' + fechaBonita(h.inicio) + ' → ' + fechaBonita(h.fin) + '</span><span>👥 ' + rs.lista.length + ' asesores</span><span>⏱️ ' + hm(rs.total) + ' h en total</span><span>🗂️ ' + (h.regs || []).length + ' registros</span></div>' +
+        '<div class="hist-tabla-w"><table class="hist-tabla"><thead><tr><th>#</th><th>Asesor</th><th class="num">Días</th><th class="num">Horas</th><th class="num">Neto</th><th></th></tr></thead><tbody>' + filas + '</tbody></table></div>';
+    }
+    if (!hist.length) return '<div class="hist-vacio"><span>📭</span>Todavía no hay temporadas archivadas.<br>Cuando termine una matrícula, el admin la guarda aquí.</div>';
+    return hist.map(function(h){
+      var rs = resumenTemp(h), top = rs.lista.slice(0, 3).map(function(m, i){ return medalla(i) + ' ' + esc(m.nombre); }).join(' · ');
+      return '<div class="hist-item" data-h="' + esc(h.id) + '"><div class="hist-ico">📚</div><div class="hist-cuerpo"><b>' + esc(h.nombre) + '</b>' +
+        '<small>' + fechaBonita(h.inicio) + ' → ' + fechaBonita(h.fin) + '</small>' +
+        '<div class="hist-chips"><span>👥 ' + rs.lista.length + ' asesores</span><span>⏱️ ' + hm(rs.total) + ' h</span><span>🗂️ ' + (h.regs || []).length + ' registros</span></div>' +
+        (top ? '<div class="hist-podio">' + top + '</div>' : '') + '</div></div>';
+    }).join('');
+  }
+  function pintarHistPanel(){ if (histOv) histOv.querySelector('.not-lista').innerHTML = cuerpoHist(); }
+  function abrirHistorial(){
+    if (histOv) return;
+    histVista = null;
+    var ov = document.createElement('div'); ov.className = 'noticias-ov';
+    ov.innerHTML = '<aside class="noticias ancho" role="dialog" aria-label="Historial de temporadas"><div class="not-head">' +
+      '<div style="flex:1"><h2>📚 Historial de temporadas</h2><small>Consulta matrículas anteriores</small></div>' +
+      '<button type="button" class="not-x" aria-label="Cerrar">✕</button></div><div class="not-lista"></div></aside>';
+    document.body.appendChild(ov); histOv = ov;
+    function cerrar(){ ov.remove(); histOv = null; document.removeEventListener('keydown', tecla); }
+    function tecla(e){ if (e.key === 'Escape') cerrar(); }
+    document.addEventListener('keydown', tecla);
+    ov.addEventListener('click', function(e){
+      var t = e.target; if (!t.closest) return;
+      if (t === ov) return cerrar();
+      var xl = t.closest('.hist-xl');
+      if (xl) {
+        var h = hist.filter(function(x){ return x.id === xl.getAttribute('data-h'); })[0];
+        if (h) descargarExcel(xl.getAttribute('data-c'), xl, h.regs, h.nombre);
+        return;
+      }
+      if (t.closest('#histVolver')) { histVista = null; return pintarHistPanel(); }
+      var it = t.closest('.hist-item');
+      if (it) { histVista = it.getAttribute('data-h'); pintarHistPanel(); ov.querySelector('.noticias').scrollTop = 0; }
+    });
+    ov.querySelector('.not-x').onclick = cerrar;
+    pintarHistPanel();
+  }
+  // botón "📚 Historial" junto a "Modo admin"
+  var ba = $('btnAdmin');
+  if (ba) {
+    var bh = document.createElement('button');
+    bh.id = 'btnHistorial'; bh.type = 'button'; bh.className = 'btn gris'; bh.style.cssText = ba.style.cssText; bh.textContent = '📚 Historial';
+    ba.parentNode.insertBefore(bh, ba); bh.onclick = abrirHistorial;
+  }
+
+  function pintarHistAdmin(){
+    var av = $('histAviso'), ls = $('histAdminLista'); if (!av || !ls) return;
+    av.innerHTML = hayNoArchivado()
+      ? '<div class="aviso w" style="margin-top:12px">⚠️ Hay <b>' + registros.length + ' registros</b> (hasta el ' + fechaBonita(maxFechaActual()) + ') que todavía no están archivados. Archívalos antes de borrar o de empezar una nueva temporada.</div>'
+      : '';
+    ls.innerHTML = hist.length ? '<p style="margin:14px 0 0"><b>Temporadas archivadas</b></p>' + hist.map(function(h){
+      return '<div class="av-item"><span style="font-size:1.6rem">📚</span><div style="flex:1;min-width:0"><b>' + esc(h.nombre) + '</b>' +
+        '<small>' + fechaBonita(h.inicio) + ' → ' + fechaBonita(h.fin) + ' · ' + (h.nRegistros || 0) + ' registros</small></div>' +
+        '<button type="button" class="btn x mini" data-delhist="' + esc(h.id) + '">Quitar</button></div>';
+    }).join('') : '';
+  }
+  function iniciarHist(){
+    if (histIni || !FIREBASE_LISTO) return;
+    histIni = true;
+    db.collection('config').where('tipo', '==', 'historial').onSnapshot(function(snap){
+      hist = snap.docs.map(function(d){ var x = d.data(); x.id = d.id; return x; }).sort(function(a, b){ return b.ts - a.ts; });
+      pintarHistAdmin(); pintarHistPanel();
+    }, function(e){ console.warn('historial', e); });
+  }
+  var previo = window.onFirebaseListo;
+  window.onFirebaseListo = function(){ if (previo) previo(); iniciarHist(); };
+  iniciarHist();
+
+  function borrarTodos(){
+    var ids = registros.map(function(r){ return r.id; }), p = Promise.resolve();
+    for (var i = 0; i < ids.length; i += 400) (function(sl){
+      p = p.then(function(){ var l = db.batch(); sl.forEach(function(id){ l.delete(coleccion.doc(id)); }); return l.commit(); });
+    })(ids.slice(i, i + 400));
+    return p.then(function(){ alert('Listo: los registros fueron borrados. La copia sigue en 📚 Historial.'); })
+            .catch(function(e){ alert('No se pudo borrar: ' + e.message); });
+  }
+  $('histArchivar').onclick = function(){
+    if (!FIREBASE_LISTO) return alert('Sin conexión con la base de datos.');
+    if (!registros.length) return alert('No hay registros para archivar.');
+    var fs = registros.map(function(r){ return r.fecha; }).sort(), ini = fs[0], fin = fs[fs.length - 1];
+    var nombre = $('histNombre').value.trim() || ('Matrícula ' + rangoTxt(ini, fin)), as = {}, n = 0;
+    registros.forEach(function(r){ if (!as[r.claveNombre]) { as[r.claveNombre] = 1; n++; } });
+    if (!confirm('Se guardará una copia de ' + registros.length + ' registros de ' + n + ' asesores (del ' + fechaLarga(ini) + ' al ' + fechaLarga(fin) + ') con el nombre «' + nombre + '».')) return;
+    var copia = registros.map(function(r){ var x = {}; for (var k in r) if (k !== 'id') x[k] = r[k]; return x; });
+    if (JSON.stringify(copia).length > 900000) return alert('Son demasiados registros para guardarlos en una sola copia. Avísame y lo dividimos.');
+    var b = $('histArchivar'); b.disabled = true;
+    db.collection('config').doc('hist_' + Date.now()).set({tipo: 'historial', nombre: nombre, inicio: ini, fin: fin, maxFecha: fin, ts: Date.now(), nRegistros: copia.length, regs: copia})
+      .then(function(){
+        b.disabled = false; $('histNombre').value = '';
+        if (confirm('✅ Temporada archivada en 📚 Historial.\n\n¿Quieres BORRAR ahora los ' + registros.length + ' registros actuales para empezar la siguiente temporada de cero?\n\n(La copia guardada no se borra.)')) borrarTodos();
+      })
+      .catch(function(e){ b.disabled = false; alert('No se pudo archivar: ' + e.message); });
+  };
+  document.addEventListener('click', function(e){
+    var b = e.target.closest ? e.target.closest('[data-delhist]') : null; if (!b) return;
+    if (!confirm('¿Quitar esta temporada del historial? Esta acción no se puede deshacer.')) return;
+    db.collection('config').doc(b.getAttribute('data-delhist')).delete().catch(function(err){ alert('No se pudo quitar: ' + err.message); });
+  });
+  // protege: avisa si se va a borrar o a cambiar de temporada sin haber archivado
+  ['adminLimpiarMes', 'guardarTemporada'].forEach(function(id){
+    var el = $(id), orig = el.onclick;
+    el.onclick = function(){
+      if (hayNoArchivado() && !confirm('⚠️ Hay ' + registros.length + ' registros de la temporada actual que NO están archivados.\n\nSi continúas y luego borras datos, se perderían para siempre.\n\nAceptar = continuar sin archivar · Cancelar = volver y archivar primero')) return;
+      return orig.apply(this, arguments);
+    };
+  });
+
+  /* ================= enganches sobre el código existente ================= */
+  function refrescar(){ try { chipRacha(); rachasRanking(); pintarMeta(); pintarHistAdmin(); } catch(e){ console.error('duo-mas', e); } }
+  var _pt = pintar;
+  pintar = function(){ _pt.apply(this, arguments); refrescar(); };
+  var _ps = pintarSesion;
+  pintarSesion = function(){ _ps.apply(this, arguments); try { chipRacha(); pintarMeta(); } catch(e){} };
+  var _ag = agregar;
+  agregar = function(d){
+    var cl = sesion && sesion.clave, antes = cl ? racha(cl) : null, desp = cl ? racha(cl, d.fecha) : null;
+    return _ag(d).then(function(x){ try { if (antes && desp) anunciarRacha(antes, desp); } catch(e){} return x; });
+  };
+  window.__duoMas = {racha: racha, progresoMeta: progresoMeta, resumenTemp: resumenTemp, hayNoArchivado: hayNoArchivado};
+  refrescar();
 })();
 </script>
 </body>
