@@ -746,7 +746,9 @@ textarea:focus{outline:0;border-color:var(--rojo);box-shadow:0 0 0 4px rgba(255,
 
 /* ===== BOTONES DEL HEADER (noticias + tema) ===== */
 header{position:relative}
-.hdr-acciones{position:absolute;top:14px;right:16px;z-index:5;display:flex;gap:8px}
+header{display:flex;flex-direction:column}
+.head-in{width:100%;box-sizing:border-box;padding-top:10px}
+.hdr-acciones{order:-1;position:relative;z-index:5;display:flex;flex-wrap:wrap;justify-content:flex-end;gap:8px;width:100%;max-width:1080px;box-sizing:border-box;margin:0 auto;padding:14px 22px 0}
 #btnTema,#btnNoticias{border:0;border-radius:99px;padding:9px 16px;font-weight:900;font-size:.8rem;cursor:pointer;background:#fff;color:#B4002F;box-shadow:0 4px 0 rgba(0,0,0,.25);transition:transform .1s,box-shadow .1s;white-space:nowrap}
 #btnTema:hover,#btnNoticias:hover{filter:brightness(.97)}
 #btnTema:active,#btnNoticias:active{transform:translateY(3px);box-shadow:0 1px 0 rgba(0,0,0,.25)}
@@ -773,7 +775,7 @@ header{position:relative}
 .not-item p{margin:0;font-size:.97rem;line-height:1.5;white-space:pre-line;color:var(--gris-os)}
 .not-vacio{padding:60px 20px;text-align:center;font-weight:800;color:var(--gris)}
 .not-vacio span{display:block;margin-bottom:8px;font-size:3.4rem}
-@media(max-width:560px){.hdr-acciones{top:10px;right:10px;gap:6px}#btnTema,#btnNoticias{padding:7px 11px;font-size:.7rem}.tb-icono{width:60px;height:60px;font-size:2rem}.tb-chip{width:100%}}
+@media(max-width:560px){.hdr-acciones{padding:10px 12px 0;gap:6px}#btnTema,#btnNoticias{padding:7px 11px;font-size:.7rem}.tb-icono{width:60px;height:60px;font-size:2rem}.tb-chip{width:100%}}
 </style>
 <style id="duo-vida">
 /* ===== FONDO CON VIDA: brillos de color, monedas y chispas ===== */
@@ -927,6 +929,7 @@ tbody tr:hover .pos{transform:scale(1.18) rotate(-8deg)}
     <!-- ---------- FORMULARIO ---------- -->
     <div class="card anim boleto" style="animation-delay:.05s">
       <h3>Registrar un día</h3>
+      <div class="aviso i" id="editBanner" style="display:none;margin-bottom:14px">✏️ <b>Editando</b> tu registro del <b id="editFecha"></b>. Cambia lo que necesites y pulsa «Guardar cambios». <button type="button" class="btn mini" id="editCancelar" style="margin-left:6px">Cancelar edición</button></div>
 
       <div class="fila">
         <div class="campo">
@@ -1988,6 +1991,41 @@ function agregar(d){
   return coleccion.add(calcularRegistro(d));
 }
 
+/* ============================================================
+   EDITAR UN REGISTRO PROPIO: carga el día en el formulario y,
+   al guardar, reemplaza el registro anterior (se recalcula con
+   el sueldo y el sistema pensionario que tengas en pantalla).
+   ============================================================ */
+var editandoId = null, TXT_GUARDAR = $('guardar').textContent;
+function pintarEdicion(){
+  $('editBanner').style.display = editandoId ? '' : 'none';
+  $('guardar').textContent = editandoId ? '💾 Guardar cambios' : TXT_GUARDAR;
+}
+function entrarEdicion(id){
+  var r = registros.filter(function(x){ return x.id === id; })[0];
+  if (!r || !sesion || r.claveNombre !== sesion.clave) return;
+  var par = r.real.split('–');
+  $('turno').value = r.turno; $('fecha').value = r.fecha; $('ent').value = par[0]; $('sal').value = par[1];
+  $('refri').checked = !!r.refri; $('feriado').checked = !!r.feriado; $('ddesc').checked = !!r.ddesc; $('sust').checked = !!r.sust;
+  editandoId = id;
+  $('editFecha').textContent = fechaLarga(r.fecha);
+  pintarEdicion(); previa();
+  $('fecha').scrollIntoView({behavior:'smooth', block:'center'});
+}
+function salirEdicion(limpiar){
+  editandoId = null; pintarEdicion();
+  if (limpiar) {
+    $('ent').value = ''; $('sal').value = '';
+    $('refri').checked = $('feriado').checked = $('ddesc').checked = $('sust').checked = false;
+    previa();
+  }
+}
+$('editCancelar').onclick = function(){ salirEdicion(true); };
+document.addEventListener('click', function(e){
+  var b = e.target.closest ? e.target.closest('[data-edit]') : null;
+  if (b) entrarEdicion(b.getAttribute('data-edit'));
+});
+
 $('guardar').onclick = function(){
   if (!sesion) return abrirLogin(function(){ $('guardar').click(); });
   var d = leer();
@@ -2000,7 +2038,7 @@ $('guardar').onclick = function(){
   }
 
   // evita duplicados: un solo registro por asesor y por día
-  var dups = registros.filter(function(r){ return r.claveNombre === sesion.clave && r.fecha === d.fecha; });
+  var dups = registros.filter(function(r){ return r.claveNombre === sesion.clave && r.fecha === d.fecha && r.id !== editandoId; });
   if (dups.length) {
     var u = dups[0];
     if (!confirm('Ya tienes un registro del ' + fechaLarga(d.fecha) + ' (' + u.real.replace('–', ' a ') + ', ' + hm(u.horas) + ' h extra).\n\n' +
@@ -2008,10 +2046,16 @@ $('guardar').onclick = function(){
   }
   var btnG = $('guardar');
   btnG.disabled = true;   // evita doble clic
-  var antes = dups.length
-    ? (function(){ var l = db.batch(); dups.forEach(function(r){ l.delete(coleccion.doc(r.id)); }); return l.commit(); })()
+  var aBorrar = dups.slice();
+  if (editandoId) {   // al editar, el registro anterior (solo si es tuyo) se reemplaza por el nuevo
+    var viejo = registros.filter(function(x){ return x.id === editandoId; })[0];
+    if (viejo && viejo.claveNombre === sesion.clave) aBorrar.push(viejo);
+  }
+  var antes = aBorrar.length
+    ? (function(){ var l = db.batch(); aBorrar.forEach(function(r){ l.delete(coleccion.doc(r.id)); }); return l.commit(); })()
     : Promise.resolve();
   antes.then(function(){ return agregar(d); }).then(function(){
+    if (editandoId) salirEdicion(false);
     borrarBorrador();
     document.querySelector('.kpis').scrollIntoView({behavior:'smooth', block:'center'});
   }).catch(function(e){
@@ -2097,7 +2141,7 @@ function pintar(){
       '<td class="num">' + (r.h35 ? r.h35.toFixed(2) : '—') + '</td>' +
       '<td class="num">' + (r.hDesc ? r.hDesc.toFixed(2) + (r.sust ? ' *' : '') : '—') + '</td>' +
       '<td class="num money' + (veo ? ' rojo' : '') + '">' + (veo ? soles(r.neto) : '<span style="color:var(--linea);font-size:.8rem">🔒 privado</span>') + '</td>' +
-      '<td>' + ((esTuyo || modoAdmin)
+      '<td style="white-space:nowrap">' + (esTuyo ? '<button type="button" class="btn mini" data-edit="' + r.id + '" title="Editar este registro">✏️</button> ' : '') + ((esTuyo || modoAdmin)
         ? '<button class="btn mini" onclick="borrar(\'' + r.id + '\')" title="Eliminar">✕</button>'
         : '<span class="btn mini" style="opacity:.28;cursor:default" title="Solo el autor puede borrar su registro">✕</span>') +
       '</td></tr>';
