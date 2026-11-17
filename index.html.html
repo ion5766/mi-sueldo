@@ -882,6 +882,20 @@ tbody tr:hover .pos{transform:scale(1.18) rotate(-8deg)}
 .hist-tabla tfoot td{font-weight:900;background:var(--papel-os)}
 .hist-vacio{padding:50px 20px;text-align:center;font-weight:800;color:var(--gris)}
 .hist-vacio span{display:block;margin-bottom:8px;font-size:3.4rem}
+.meta-stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;width:100%}
+.meta-stat{padding:10px 12px;border-radius:16px;background:var(--papel-os);border:2px solid var(--linea)}
+.meta-stat small{display:block;font-size:.68rem;font-weight:900;letter-spacing:.08em;text-transform:uppercase;color:var(--gris)}
+.meta-stat b{display:block;margin-top:2px;font-size:1.1rem;line-height:1.2;color:var(--tinta)}
+.meta-stat em{display:block;margin-top:2px;font-style:normal;font-size:.76rem;font-weight:700;color:var(--gris)}
+.meta-stat.clave{border-color:transparent;background:linear-gradient(135deg,#FF0E49,#8E2DE2)}
+.meta-stat.clave small,.meta-stat.clave b,.meta-stat.clave em{color:#fff}
+.meta-opc{display:flex;flex-wrap:wrap;align-items:center;gap:8px;width:100%;font-size:.9rem;color:var(--tinta)}
+.meta-opc b{font-weight:900}
+.meta-opc span{padding:5px 12px;border-radius:99px;font-weight:800;border:2px solid var(--linea);background:var(--papel-os)}
+.meta-opc span.ok{border-color:#1E9E3A;background:rgba(30,158,58,.14)}
+.meta-opc span.no{border-color:var(--linea);color:var(--gris)}
+.meta-opc small{flex-basis:100%;font-weight:700;color:var(--gris)}
+.meta-consejo{width:100%;padding:12px 14px;border-radius:14px;background:rgba(255,200,0,.12);border:2px solid #FFC800;font-size:.95rem;font-weight:800;line-height:1.4;color:var(--tinta)}
 </style>
 </head>
 <body>
@@ -3243,25 +3257,85 @@ ponerBanner();
     });
   }
 
-  /* ================= META DEL MES ================= */
+  /* ================= META DE LA TEMPORADA DE MATRÍCULA (en soles netos) ================= */
   var META = {
     p0:   ['Apenas empiezas: cada hora extra te acerca a esa compra que quieres 🛒', 'La meta está ahí… y tú tienes el hambre para alcanzarla 🍽️', 'Los grandes gustitos empiezan con una primera hora extra 🎁'],
-    p25:  ['Ya vas por buen camino, ¡no aflojes! 💪', 'Un cuarto de camino: la billetera ya te sonríe 😏', 'Falta {falta} para tu meta. Piensa en lo que vas a comprar 🛍️'],
+    p25:  ['Ya vas por buen camino, ¡no aflojes! 💪', 'Un cuarto de camino: la billetera ya te sonríe 😏', 'Piensa en lo que vas a comprar cuando sumes {falta} más 🛍️'],
     p50:  ['Más de la mitad: ya hueles la meta 🔥', 'Faltan {falta} y esa compra es tuya 🛍️', 'Mitad del camino recorrida, ¡y se nota! 😎'],
-    p75:  ['¡Casi, casi! Solo faltan {falta} para lograrlo 🚀', 'Estás a nada de tu gustito del mes 💸', 'Ya casi la tienes. ¿Quién dijo que era difícil? 😏'],
+    p75:  ['¡Casi, casi! Solo faltan {falta} para lograrlo 🚀', 'Estás a nada de tu gustito de la temporada 💸', 'Ya casi la tienes. ¿Quién dijo que era difícil? 😏'],
     p100: ['¡META CUMPLIDA! Hoy te toca darte un gustito 🎉', 'Meta lograda… ¿y si ponemos una más grande? 😈', '¡Lo lograste! Ahora sí, ve por esa compra que tanto querías 🛍️']
   };
-  function progresoMeta(){
-    if (!sesion) return null;
-    var pf = preferencias[sesion.clave] || {}, tipo = pf.metaTipo, val = +pf.metaValor;
-    if (!tipo || !(val > 0)) return {sin: true};
-    var mes = fechaHoyLocal().slice(0, 7), acc = 0;
-    registros.forEach(function(r){
-      if (r.claveNombre === sesion.clave && r.fecha.slice(0, 7) === mes) acc += tipo === 'soles' ? r.neto : r.horas;
-    });
-    return {tipo: tipo, val: val, acc: acc, pct: Math.min(100, acc / val * 100), falta: Math.max(0, val - acc)};
+  function tempActiva(){
+    return (typeof temporada !== 'undefined' && temporada && temporada.activa && temporada.inicio && temporada.fin) ? temporada : null;
   }
-  function fmtMeta(tipo, v){ return tipo === 'soles' ? 'S/ ' + v.toFixed(2) : hm(v) + ' h'; }
+  function idTemp(t){ return t.inicio + '|' + t.fin; }
+  function parseISO(iso){ var p = iso.split('-'); return new Date(+p[0], +p[1] - 1, +p[2]); }
+  function misRegsTemp(t){
+    return registros.filter(function(r){ return r.claveNombre === sesion.clave && r.fecha >= t.inicio && r.fecha <= t.fin; });
+  }
+  // días hábiles (lunes a sábado) que quedan; si hoy ya registraste, se cuenta desde mañana
+  function diasHabilesRestantes(t, mios){
+    var hoy = fechaHoyLocal(), reg = {};
+    mios.forEach(function(r){ reg[r.fecha] = 1; });
+    var d = parseISO(hoy < t.inicio ? t.inicio : hoy), fin = parseISO(t.fin), n = 0;
+    if (hoy >= t.inicio && reg[hoy]) d.setDate(d.getDate() + 1);
+    while (d <= fin) { if (d.getDay() !== 0) n++; d.setDate(d.getDate() + 1); }
+    return n;
+  }
+  // cuánto te deja (neto) cada hora extra: las 2 primeras del día +25%, desde la 3.ª +35%, menos AFP/ONP
+  function tarifas(mios){
+    var pf = preferencias[sesion.clave] || {}, sueldo = +pf.sueldo || +$('sueldo').value || 0, afp = pf.afp || $('afp').value;
+    var tasa = TASAS[afp] ? TASAS[afp].t : 0.13;
+    if (sueldo > 0) { var vh = sueldo / 30 / 8; return {n25: vh * 1.25 * (1 - tasa), n35: vh * 1.35 * (1 - tasa)}; }
+    var h = 0, n = 0;
+    mios.forEach(function(r){ h += r.horas; n += r.neto; });
+    return (h > 0 && n > 0) ? {n25: n / h, n35: n / h} : null;   // sin sueldo: usa tu promedio real
+  }
+  function netoDia(h, tf){ return h <= 2 ? h * tf.n25 : 2 * tf.n25 + (h - 2) * tf.n35; }
+  function horasParaNeto(x, tf){ return x <= 2 * tf.n25 ? x / tf.n25 : 2 + (x - 2 * tf.n25) / tf.n35; }
+
+  function baseTemp(t){
+    var mios = misRegsTemp(t), horas = 0, neto = 0, dias = {}, nd = 0;
+    mios.forEach(function(r){ horas += r.horas; neto += r.neto; if (!dias[r.fecha]) { dias[r.fecha] = 1; nd++; } });
+    var dr = diasHabilesRestantes(t, mios);
+    return {horas: horas, neto: neto, nd: nd, prom: nd ? horas / nd : 0, dr: dr, tf: tarifas(mios),
+            proySoles: nd ? neto + (neto / nd) * dr : neto};
+  }
+  function calcMeta(t, val){
+    var b = baseTemp(t), falta = Math.max(0, val - b.neto), tf = b.tf;
+    var porDia = (tf && b.dr > 0 && falta > 0) ? horasParaNeto(falta / b.dr, tf) : null;
+    var opciones = (tf && falta > 0) ? [1, 2, 3, 4].map(function(h){
+      var dias = Math.ceil(falta / netoDia(h, tf));
+      return {h: h, dias: dias, ok: dias <= b.dr};
+    }) : [];
+    return {val: val, acc: b.neto, pct: Math.min(100, b.neto / val * 100), falta: falta, tf: tf, dr: b.dr,
+            porDia: porDia, horasTotal: porDia !== null ? porDia * b.dr : null, opciones: opciones,
+            prom: b.prom, proy: b.proySoles, proyPct: b.proySoles / val * 100, terminada: fechaHoyLocal() > t.fin};
+  }
+  function soles2(v){ return 'S/ ' + v.toFixed(2); }
+  // 1,5 h -> "1 h 30 min" · 0,75 h -> "45 min" · 18 h -> "18 h"
+  function durTxt(h){
+    var m = Math.round(h * 60);
+    if (m <= 0) return '0 min';
+    if (m < 60) return m + ' min';
+    return Math.floor(m / 60) + ' h' + (m % 60 ? ' ' + (m % 60) + ' min' : '');
+  }
+  function consejo(m){
+    if (m.terminada) return m.pct >= 100 ? '🏁 Temporada terminada: ¡alcanzaste tu meta!'
+      : '🏁 Temporada terminada: llegaste al ' + Math.round(m.pct) + '% de tu meta. Para la próxima matrícula ya sabes cuánto apuntar.';
+    if (m.falta <= 0) return '🎉 ¡Ya alcanzaste tu meta! Todo lo que sumes ahora es ganancia extra.';
+    if (!m.tf) return 'Escribe tu sueldo en el formulario para que pueda calcular cuántas horas extra necesitas por día.';
+    if (m.dr === 0) return 'Ya no quedan días hábiles en la temporada.';
+    var t = 'Para sumar los ' + soles2(m.falta) + ' que te faltan necesitas ≈ ' + durTxt(m.horasTotal) + ' de horas extra: unas ' + durTxt(m.porDia) +
+            ' por día durante los ' + m.dr + ' días hábiles que quedan.';
+    if (m.porDia > 4) t += ' ⚠️ Es un ritmo muy exigente (más de 4 h extra al día): quizá convenga ajustar la meta.';
+    else if (m.prom > 0) t += m.prom >= m.porDia ? ' ¡Vas por buen camino: a tu ritmo actual lo logras! 💪'
+      : ' Tu ritmo actual no alcanza: te faltan ≈ ' + Math.ceil((m.porDia - m.prom) * 60) + ' min más por día 🚀';
+    return t;
+  }
+  function tile(et, valor, sub, clave){
+    return '<div class="meta-stat' + (clave ? ' clave' : '') + '"><small>' + et + '</small><b>' + valor + '</b>' + (sub ? '<em>' + sub + '</em>' : '') + '</div>';
+  }
   function pintarMeta(){
     var banner = document.querySelector('.duo-banner'); if (!banner) return;
     var card = document.getElementById('metaCard');
@@ -3272,73 +3346,89 @@ ponerBanner();
     }
     if (!sesion) { card.style.display = 'none'; return; }
     card.style.display = '';
-    var m = progresoMeta(), mes = MESN[new Date().getMonth()];
-    if (m.sin) {
-      card.className = 'meta-card';
-      card.innerHTML = '<div class="meta-ico">🎯</div><div class="meta-cuerpo"><div class="meta-tit">Mi meta de ' + mes + '</div>' +
-        '<div class="meta-frase">Ponte una meta del mes y mira cómo la vas alcanzando. ¿Cuánto quieres juntar? 🛍️</div></div>' +
-        '<button type="button" class="btn mini" data-meta="1">🎯 Poner mi meta</button>';
-      return;
+    var t = tempActiva(), html, cls = 'meta-card';
+    if (!t) {
+      html = '<div class="meta-ico">🎯</div><div class="meta-cuerpo"><div class="meta-tit">Mi meta de la temporada</div>' +
+        '<div class="meta-frase">Cuando haya una temporada de matrícula activa podrás poner aquí tu meta en soles, y la web te dirá cuántas horas extra y cuántos días necesitas para alcanzarla 🛍️</div></div>';
+    } else {
+      var pf = preferencias[sesion.clave] || {}, titulo = 'Mi meta de la temporada · ' + fechaBonita(t.inicio) + ' → ' + fechaBonita(t.fin);
+      if (!(pf.metaTemp === idTemp(t) && +pf.metaValor > 0)) {
+        var b = baseTemp(t);
+        html = '<div class="meta-ico">🎯</div><div class="meta-cuerpo"><div class="meta-tit">' + titulo + '</div>' +
+          '<div class="meta-frase">Ponte una meta en soles para esta temporada y te diré cuántas horas extra y cuántos días necesitas. ' +
+          (b.nd ? 'Hasta ahora llevas ' + soles2(b.neto) + ' netos.' : 'Aún no tienes registros en esta temporada.') + ' 🛍️</div></div>' +
+          '<button type="button" class="btn mini" data-meta="1">🎯 Poner mi meta</button>';
+      } else {
+        var m = calcMeta(t, +pf.metaValor), pct = Math.round(m.pct);
+        var pool = pct >= 100 ? META.p100 : pct >= 75 ? META.p75 : pct >= 50 ? META.p50 : pct >= 25 ? META.p25 : META.p0;
+        var frase = pool[(Math.floor(Date.now() / 864e5) + pool.length * 7) % pool.length].replace('{falta}', soles2(m.falta));
+        cls += pct >= 100 ? ' lograda' : '';
+        var puedeOpc = m.opciones.length && !m.terminada && m.dr > 0;
+        html = '<div class="meta-ico">' + (pct >= 100 ? '🏆' : '🎯') + '</div><div class="meta-cuerpo"><div class="meta-tit">' + titulo + '</div>' +
+          '<div class="meta-num">' + soles2(m.acc) + ' <span style="opacity:.6;font-weight:800">de ' + soles2(m.val) + ' netos</span><span class="meta-pct">' + pct + '%</span></div>' +
+          '<div class="meta-barra"><i style="width:' + Math.max(2, pct) + '%"></i></div><div class="meta-frase">' + frase + '</div></div>' +
+          '<button type="button" class="btn mini" data-meta="1">✏️ Cambiar</button>' +
+          '<div class="meta-stats">' +
+            tile('Te falta', soles2(m.falta), m.horasTotal !== null && !m.terminada ? '≈ ' + durTxt(m.horasTotal) + ' de horas extra en total' : '') +
+            tile('Días hábiles que quedan', m.terminada ? '0' : String(m.dr), m.terminada ? 'la temporada terminó' : 'lun–sáb, hasta el ' + fechaBonita(t.fin)) +
+            tile('Para llegar necesitas', m.falta <= 0 ? '¡Cumplida!' : (m.porDia === null ? '—' : '≈ ' + durTxt(m.porDia) + ' por día'), m.falta <= 0 ? '' : 'de horas extra, todos los días hábiles', true) +
+            (m.tf ? tile('Cada hora extra te deja', soles2(m.tf.n25), '1.ª y 2.ª hora del día · desde la 3.ª: ' + soles2(m.tf.n35) + ' (netos)') : '') +
+            tile('Tu ritmo actual', m.prom ? durTxt(m.prom) + ' por día' : '—', m.prom ? 'en los días que registraste' : 'aún sin registros') +
+            tile('Si sigues así', m.prom ? soles2(m.proy) : '—', m.prom ? Math.round(m.proyPct) + '% de tu meta al cierre' : '') +
+          '</div>' +
+          (puedeOpc ? '<div class="meta-opc"><b>Opciones para llegar:</b>' + m.opciones.map(function(o){
+            return '<span class="' + (o.ok ? 'ok' : 'no') + '">' + o.h + ' h por día → ' + o.dias + ' día' + (o.dias === 1 ? '' : 's') + (o.ok ? ' ✅' : ' ❌') + '</span>';
+          }).join('') + '<small>✅ alcanza dentro de los ' + m.dr + ' días hábiles que quedan · ❌ no alcanza</small></div>' : '') +
+          '<div class="meta-consejo">' + consejo(m) + '</div>';
+        // celebración (una sola vez por temporada) cuando llegas al 100%
+        var clv = 'sise_meta_ok_' + sesion.clave + '_' + idTemp(t), ya = null;
+        try { ya = localStorage.getItem(clv); } catch(e){}
+        if (pct >= 100 && regsListos && !ya) {
+          try { localStorage.setItem(clv, '1'); } catch(e){}
+          mostrarToast({em:'🏆', titulo:'¡Meta de la temporada cumplida!', texto: fr(META.p100), tipo:'sube', grande:true});
+          S.logro(); if (window.SISE_FX) SISE_FX.lluvia(30);
+        }
+      }
     }
-    var pct = Math.round(m.pct), pool = pct >= 100 ? META.p100 : pct >= 75 ? META.p75 : pct >= 50 ? META.p50 : pct >= 25 ? META.p25 : META.p0;
-    if (card.getAttribute('data-p') !== String(pct) || !card.firstChild || card.getAttribute('data-f') === null) {
-      card.setAttribute('data-p', pct); card.setAttribute('data-f', '1');
-      card.className = 'meta-card' + (pct >= 100 ? ' lograda' : '');
-      card.innerHTML = '<div class="meta-ico">' + (pct >= 100 ? '🏆' : '🎯') + '</div><div class="meta-cuerpo">' +
-        '<div class="meta-tit">Mi meta de ' + mes + '</div>' +
-        '<div class="meta-num">' + fmtMeta(m.tipo, m.acc) + ' <span style="opacity:.6;font-weight:800">de ' + fmtMeta(m.tipo, m.val) + '</span><span class="meta-pct">' + pct + '%</span></div>' +
-        '<div class="meta-barra"><i style="width:' + Math.max(2, pct) + '%"></i></div>' +
-        '<div class="meta-frase">' + fr(pool, {falta: fmtMeta(m.tipo, m.falta)}) + '</div></div>' +
-        '<button type="button" class="btn mini" data-meta="1">✏️ Cambiar</button>';
-    }
-    // celebración (una sola vez por mes) cuando llegas al 100%
-    var clv = 'sise_meta_ok_' + sesion.clave + '_' + fechaHoyLocal().slice(0, 7), ya = null;
-    try { ya = localStorage.getItem(clv); } catch(e){}
-    if (pct >= 100 && regsListos && !ya) {
-      try { localStorage.setItem(clv, '1'); } catch(e){}
-      mostrarToast({em:'🏆', titulo:'¡Meta del mes cumplida!', texto: fr(META.p100), tipo:'sube', grande:true});
-      S.logro(); if (window.SISE_FX) SISE_FX.lluvia(30);
-    }
+    card.className = cls;
+    if (card._h !== html) { card.innerHTML = html; card._h = html; }
   }
   function abrirMeta(){
-    if (!sesion) return;
-    var pf = preferencias[sesion.clave] || {}, mes = MESN[new Date().getMonth()];
+    var t = tempActiva();
+    if (!sesion || !t) return;
+    var pf = preferencias[sesion.clave] || {}, propia = pf.metaTemp === idTemp(t) && +pf.metaValor > 0, b = baseTemp(t);
     var ov = document.createElement('div'); ov.className = 'avisopop-ov';
     ov.innerHTML = '<div class="avisopop" style="text-align:left"><div style="text-align:center"><div class="ap-em">🎯</div></div>' +
-      '<h3 style="text-align:center">Mi meta de ' + mes + '</h3>' +
-      '<p style="text-align:center">Elige cuánto quieres juntar este mes. Se mide con tus registros del mes.</p>' +
-      '<div class="campo" style="margin-bottom:12px"><label>Tipo de meta</label><select class="mTipo"><option value="soles">Soles netos (S/)</option><option value="horas">Horas extra</option></select></div>' +
-      '<div class="campo" style="margin-bottom:16px"><label class="mEt">Monto a juntar (S/)</label><input type="number" class="mValor" min="1" step="any" placeholder="Ej: 400"></div>' +
+      '<h3 style="text-align:center">Mi meta de la temporada</h3>' +
+      '<p style="text-align:center">Matrícula del ' + fechaBonita(t.inicio) + ' al ' + fechaBonita(t.fin) + '. Elige cuánto quieres juntar en soles netos y te diré cuántas horas extra y cuántos días necesitas.</p>' +
+      '<div class="aviso i" style="margin-bottom:14px">' + (b.nd
+        ? 'Llevas <b>' + soles2(b.neto) + '</b> netos en ' + b.nd + ' día' + (b.nd === 1 ? '' : 's') + '. A tu ritmo actual llegarías al cierre a ≈ <b>' + soles2(b.proySoles) + '</b>.'
+        : 'Aún no tienes registros en esta temporada.') + ' Úsalo como referencia.</div>' +
+      '<div class="campo" style="margin-bottom:16px"><label>Meta en soles netos (S/)</label><input type="number" class="mValor" min="1" step="any" placeholder="Ej: 1500"></div>' +
       '<div style="display:flex;gap:10px;flex-wrap:wrap"><button type="button" class="btn mGuardar" style="flex:1">Guardar meta</button><button type="button" class="btn gris mCancel" style="flex:1">Cancelar</button></div>' +
-      (pf.metaValor ? '<p style="text-align:center;margin:14px 0 0"><button type="button" class="btn x mini mQuitar">Quitar mi meta</button></p>' : '') + '</div>';
+      (propia ? '<p style="text-align:center;margin:14px 0 0"><button type="button" class="btn x mini mQuitar">Quitar mi meta</button></p>' : '') + '</div>';
     document.body.appendChild(ov);
-    var sel = ov.querySelector('.mTipo'), inp = ov.querySelector('.mValor');
-    if (pf.metaTipo) sel.value = pf.metaTipo;
-    if (pf.metaValor) inp.value = pf.metaValor;
-    function etiqueta(){
-      ov.querySelector('.mEt').textContent = sel.value === 'soles' ? 'Monto a juntar (S/)' : 'Horas extra a juntar';
-      inp.placeholder = sel.value === 'soles' ? 'Ej: 400' : 'Ej: 40';
-    }
-    sel.onchange = etiqueta; etiqueta();
+    var inp = ov.querySelector('.mValor');
+    if (propia) inp.value = pf.metaValor;
     function cerrar(){ ov.remove(); }
     function guardar(datos){
       if (!FIREBASE_LISTO) return alert('Sin conexión con la base de datos.');
       var base = {nombre: sesion.nombre};
       for (var k in datos) base[k] = datos[k];
-      usuariosCol.doc(sesion.clave).set(base, {merge: true}).then(function(){
-        cerrar(); var card = document.getElementById('metaCard'); if (card) card.removeAttribute('data-f'); pintarMeta();
-      }).catch(function(e){ alert('No se pudo guardar la meta: ' + e.message); });
+      usuariosCol.doc(sesion.clave).set(base, {merge: true}).then(function(){ cerrar(); pintarMeta(); })
+        .catch(function(e){ alert('No se pudo guardar la meta: ' + e.message); });
     }
     ov.querySelector('.mCancel').onclick = cerrar;
     ov.querySelector('.mGuardar').onclick = function(){
       var v = parseFloat(inp.value);
-      if (!(v > 0)) return alert('Escribe un número mayor que cero.');
-      guardar({metaTipo: sel.value, metaValor: v});
+      if (!(v > 0)) return alert('Escribe un monto mayor que cero.');
+      var del = firebase.firestore.FieldValue.delete();
+      guardar({metaValor: v, metaTemp: idTemp(t), metaTipo: del});
     };
     var q = ov.querySelector('.mQuitar');
     if (q) q.onclick = function(){
       var del = firebase.firestore.FieldValue.delete();
-      guardar({metaTipo: del, metaValor: del});
+      guardar({metaValor: del, metaTemp: del, metaTipo: del});
     };
   }
 
@@ -3498,7 +3588,7 @@ ponerBanner();
     var cl = sesion && sesion.clave, antes = cl ? racha(cl) : null, desp = cl ? racha(cl, d.fecha) : null;
     return _ag(d).then(function(x){ try { if (antes && desp) anunciarRacha(antes, desp); } catch(e){} return x; });
   };
-  window.__duoMas = {racha: racha, progresoMeta: progresoMeta, resumenTemp: resumenTemp, hayNoArchivado: hayNoArchivado};
+  window.__duoMas = {racha: racha, calcMeta: calcMeta, baseTemp: baseTemp, consejo: consejo, resumenTemp: resumenTemp, hayNoArchivado: hayNoArchivado};
   refrescar();
 })();
 </script>
