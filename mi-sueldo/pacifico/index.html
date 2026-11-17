@@ -1,0 +1,495 @@
+<!DOCTYPE html>
+<html lang="es-PE">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Universidad del Pacífico · Horas extra</title>
+<link rel="icon" href="data:image/png;base64,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">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Source+Serif+4:wght@500;600&display=swap" rel="stylesheet">
+<style>
+:root{--navy:#102044;--navy2:#1D3170;--tinta:#1B2236;--gris:#6B7385;--linea:#DDE1EA;--fondo:#F4F5F8;--suave:#EEF1F8;--err:#9B1C2E}
+*{box-sizing:border-box;margin:0}
+body{font:15px/1.5 Inter,system-ui,sans-serif;color:var(--tinta);background:var(--fondo)}
+h1,h2{font-family:'Source Serif 4',Georgia,serif;font-weight:600}
+header{background:var(--navy);color:#fff}
+.hd{max-width:1080px;margin:auto;padding:18px 22px;display:flex;align-items:center;gap:18px}
+.hd img{height:58px}.hd h1{font-size:1.4rem;line-height:1.2}
+.hd p{font-size:.74rem;opacity:.72;letter-spacing:.08em;text-transform:uppercase;margin-top:2px}
+.wrap{max-width:1080px;margin:auto;padding:26px 22px 40px}
+.card{background:#fff;border:1px solid var(--linea);border-radius:6px;padding:22px;margin-bottom:20px}
+.card>h2{font-size:1.1rem;padding-bottom:12px;margin-bottom:16px;border-bottom:1px solid var(--linea)}
+.dos{display:grid;grid-template-columns:1.1fr .9fr;gap:20px;align-items:start}
+@media(max-width:860px){.dos{grid-template-columns:1fr}}
+.fila{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:12px}
+.campo{margin-bottom:14px}
+label{display:block;font-size:.7rem;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--gris);margin-bottom:5px}
+.sub{font-size:.78rem;font-weight:600;color:var(--navy);margin:6px 0 10px;padding-top:12px;border-top:1px solid var(--linea)}
+input,select{width:100%;padding:9px 11px;border:1px solid var(--linea);border-radius:4px;font:inherit;background:#fff;color:var(--tinta)}
+input:focus,select:focus{outline:2px solid rgba(29,49,112,.25);border-color:var(--navy2)}
+.check{display:flex;gap:9px;align-items:center;margin:0 0 8px;font-size:.92rem;font-weight:400;letter-spacing:0;text-transform:none;color:var(--tinta)}
+.check input{width:auto}
+.btn{background:var(--navy);color:#fff;border:1px solid var(--navy);border-radius:4px;padding:11px 18px;font:600 .88rem Inter,sans-serif;cursor:pointer;width:100%;transition:background .2s}
+.btn:hover{background:var(--navy2)}.btn:disabled{opacity:.6;cursor:default}
+.btn.sec{background:#fff;color:var(--navy);border-color:var(--linea)}.btn.sec:hover{background:var(--suave)}
+.btn.mini{width:auto;padding:5px 11px;font-size:.78rem}
+.btn.del{color:var(--err)}
+.sesion{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;padding:9px 12px;border:1px dashed var(--linea);border-radius:4px;font-size:.9rem}
+.sesion.on{border-style:solid;background:var(--suave)}
+.aviso{padding:11px 14px;border-left:3px solid var(--navy2);background:var(--suave);font-size:.88rem;margin-bottom:14px;border-radius:0 4px 4px 0}
+.aviso.w{border-color:#B7791F;background:#FBF4E4}
+.vacio{text-align:center;color:var(--gris);padding:28px 10px;font-size:.92rem}
+.stats{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px}
+.stat{background:var(--suave);border-radius:4px;padding:13px 14px}.stat.d{background:var(--navy);color:#fff}
+.stat b{display:block;font:600 1.5rem 'Source Serif 4',serif}.stat span{font-size:.78rem;opacity:.8}
+.li{display:flex;justify-content:space-between;gap:12px;padding:8px 0;border-bottom:1px solid var(--linea);font-size:.92rem}
+.li.s{color:var(--gris);font-size:.85rem;padding-left:12px}
+.li.t{border-top:2px solid var(--navy);border-bottom:0;margin-top:6px;font-weight:600;font-size:1.05rem}
+.li span:last-child{white-space:nowrap;font-variant-numeric:tabular-nums}
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:14px;margin-bottom:20px}
+.kpi{background:#fff;border:1px solid var(--linea);border-top:3px solid var(--navy);border-radius:6px;padding:14px 16px}
+.kpi small{font-size:.7rem;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--gris)}
+.kpi b{display:block;font:600 1.45rem 'Source Serif 4',serif;margin-top:2px}
+.tabla{overflow-x:auto}
+table{width:100%;border-collapse:collapse;font-size:.88rem}
+th{text-align:left;font-size:.68rem;letter-spacing:.06em;text-transform:uppercase;color:var(--gris);padding:9px 10px;border-bottom:2px solid var(--navy);white-space:nowrap}
+td{padding:9px 10px;border-bottom:1px solid var(--linea);font-variant-numeric:tabular-nums}
+tr:hover td{background:#FAFBFD}.num{text-align:right}
+.tot td{background:var(--suave);font-weight:600}
+.tag{display:inline-block;padding:1px 8px;border-radius:99px;background:var(--suave);color:var(--navy);font-size:.72rem;font-weight:600}
+.barra{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-bottom:14px}
+.ov{position:fixed;inset:0;background:rgba(16,32,68,.55);display:none;align-items:center;justify-content:center;padding:20px;z-index:50}
+.ov.on{display:flex}
+.modal{background:#fff;border-radius:6px;max-width:390px;width:100%;padding:26px 24px;border-top:4px solid var(--navy)}
+.modal h2{font-size:1.2rem;margin-bottom:8px}.modal p{font-size:.86rem;color:var(--gris);margin-bottom:16px}
+.modal .btn{margin-top:8px}
+footer{text-align:center;color:var(--gris);font-size:.8rem;padding:10px 22px 34px}
+</style>
+</head>
+<body>
+<header><div class="hd"><img src="data:image/png;base64,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" alt="Universidad del Pacífico"><div><h1>Registro de horas extra</h1><p>Universidad del Pacífico · Lima, Perú</p></div></div></header>
+
+<div class="wrap">
+<div class="aviso w" id="avisoCon" style="display:none"><b>No se pudo conectar con la base de datos.</b> Puede usar la calculadora, pero no podrá guardar ni consultar registros hasta recargar la página con una conexión estable.</div>
+
+<div class="dos">
+  <section class="card">
+    <h2>Registrar jornada</h2>
+    <div class="aviso" id="editBanner" style="display:none">Editando el registro del <b id="editFecha"></b>. <button type="button" class="btn mini sec" id="editCancelar">Cancelar edición</button></div>
+    <div class="campo"><label>Colaborador</label>
+      <div class="sesion" id="sesionBox"><span id="sesionTexto">No ha iniciado sesión</span>
+        <span><button type="button" class="btn mini sec" id="btnPriv" style="display:none"></button> <button type="button" class="btn mini sec" id="btnSesion">Ingresar o crear usuario</button></span></div></div>
+    <div class="fila">
+      <div class="campo"><label for="sueldo">Sueldo bruto (S/)</label><input type="number" id="sueldo" value="2500" min="0" step="50"></div>
+      <div class="campo"><label for="afp">Sistema pensionario</label><select id="afp">
+        <option value="habitat">AFP Habitat (1.47%)</option><option value="integra" selected>AFP Integra (1.55%)</option>
+        <option value="prima">AFP Prima (1.60%)</option><option value="profuturo">AFP Profuturo (1.69%)</option>
+        <option value="mixta">AFP comisión mixta</option><option value="onp">ONP (13%)</option><option value="ninguno">Sin sistema</option></select></div>
+    </div>
+    <div class="sub">Horario asignado para el día</div>
+    <div class="fila">
+      <div class="campo"><label for="fecha">Fecha</label><input type="date" id="fecha"></div>
+      <div class="campo"><label for="hi">Entrada asignada</label><input type="time" id="hi"></div>
+      <div class="campo"><label for="hf">Salida asignada</label><input type="time" id="hf"></div>
+      <div class="campo"><label for="brk">Refrigerio (min)</label><input type="number" id="brk" value="60" min="0" step="15"></div>
+    </div>
+    <div class="sub">Horario real</div>
+    <div class="fila">
+      <div class="campo"><label for="ent">Entrada real</label><input type="time" id="ent"></div>
+      <div class="campo"><label for="sal">Salida real</label><input type="time" id="sal"></div>
+    </div>
+    <label class="check"><input type="checkbox" id="refri">Trabajó durante el refrigerio</label>
+    <label class="check"><input type="checkbox" id="feriado">Feriado no laborable</label>
+    <label class="check"><input type="checkbox" id="ddesc">Día de descanso trabajado</label>
+    <label class="check"><input type="checkbox" id="sust">Con descanso sustitutorio</label>
+    <button class="btn" id="guardar" style="margin-top:12px">Guardar registro</button>
+  </section>
+  <section class="card"><h2>Cálculo del día</h2><div id="res"></div></section>
+</div>
+
+<div class="kpis" id="kpis"></div>
+
+<section class="card">
+  <h2>Ranking de colaboradores</h2>
+  <div class="tabla"><table><thead><tr><th>#</th><th>Colaborador</th><th class="num">Días</th><th class="num">25%</th><th class="num">35%</th><th class="num">Descanso</th><th class="num">Total horas</th><th class="num">Acumulado neto</th><th></th></tr></thead><tbody id="tbRank"></tbody></table></div>
+  <div class="vacio" id="rankVacio">Aún no hay registros.</div>
+  <div class="aviso w" style="margin:14px 0 0">El monto acumulado es visible por defecto. Cada colaborador puede ocultar el suyo desde su recuadro de sesión; las horas siempre son visibles.</div>
+</section>
+
+<section class="card">
+  <h2>Registros guardados</h2>
+  <div class="barra"><input type="text" id="filtro" placeholder="Buscar colaborador" style="flex:1 1 240px" autocomplete="off">
+    <button class="btn mini sec" id="btnAdmin">Administración</button>
+    <button class="btn mini sec del" id="limpiar">Eliminar mis registros</button></div>
+  <div class="aviso" id="panelAdmin" style="display:none">
+    <b>Administración.</b> Borra los registros de todos los colaboradores del mes elegido. No se puede deshacer.
+    <div class="barra" style="margin:10px 0 0"><input type="month" id="adminMes" style="max-width:180px"><button class="btn mini" id="adminBorrar">Borrar mes</button><button class="btn mini sec" id="salirAdmin">Salir</button></div></div>
+  <div class="tabla"><table><thead><tr><th>Fecha</th><th>Día</th><th>Colaborador</th><th>Asignado</th><th>Real</th><th class="num">Horas extra</th><th class="num">25%</th><th class="num">35%</th><th class="num">Desc.</th><th class="num">Neto</th><th></th></tr></thead><tbody id="tbReg"></tbody></table></div>
+  <div class="vacio" id="regVacio">Aún no hay registros.</div>
+</section>
+
+<section class="card">
+  <h2>Criterios de cálculo</h2>
+  <p style="font-size:.9rem;color:var(--gris)">El horario asignado se ingresa cada día porque los turnos son rotativos. Se consideran horas extra el tiempo previo a la entrada asignada, el posterior a la salida asignada y el refrigerio trabajado. Las dos primeras horas del día se pagan con 25% y las siguientes con 35%. Un día de descanso o feriado trabajado sin descanso sustitutorio se computa íntegro con sobretasa del 100%. Valor hora: (sueldo bruto ÷ 30) ÷ 8. El neto descuenta el aporte al sistema pensionario elegido.</p>
+</section>
+</div>
+
+<div class="ov" id="login"><div class="modal">
+  <div id="lp1"><h2>Identificación</h2>
+    <p>Ingrese su nombre completo y un PIN de al menos 4 dígitos. Si es su primera vez, el PIN quedará asociado a su usuario. Solo usted puede editar o eliminar sus registros.</p>
+    <div class="campo"><label for="lNombre">Nombre completo</label><input type="text" id="lNombre" autocomplete="off"></div>
+    <div class="campo"><label for="lPin">PIN</label><input type="password" id="lPin" maxlength="6" inputmode="numeric" autocomplete="off"></div>
+    <div class="aviso w" id="lMsg" style="display:none"></div>
+    <button class="btn" id="lEntrar">Ingresar</button><button class="btn sec" id="lCancelar">Cancelar</button></div>
+  <div id="lp2" style="display:none"><h2>Bienvenido, <span id="pNombre"></span></h2>
+    <p>Complete sus datos una sola vez para que se carguen automáticamente en cada ingreso.</p>
+    <div class="campo"><label for="pSueldo">Sueldo bruto (S/)</label><input type="number" id="pSueldo" value="2500" min="0" step="50"></div>
+    <div class="campo"><label for="pAfp">Sistema pensionario</label><select id="pAfp">
+      <option value="habitat">AFP Habitat (1.47%)</option><option value="integra" selected>AFP Integra (1.55%)</option>
+      <option value="prima">AFP Prima (1.60%)</option><option value="profuturo">AFP Profuturo (1.69%)</option>
+      <option value="mixta">AFP comisión mixta</option><option value="onp">ONP (13%)</option><option value="ninguno">Sin sistema</option></select></div>
+    <div class="aviso w" id="pMsg" style="display:none"></div>
+    <button class="btn" id="pGuardar">Crear usuario</button><button class="btn sec" id="pCancelar">Cancelar</button></div>
+</div></div>
+
+<footer>Universidad del Pacífico · Herramienta de estimación. No reemplaza el cálculo oficial de Recursos Humanos.</footer>
+
+<script>
+/* Colecciones propias de esta versión: no se mezclan con los datos de SISE.
+   Si en Firestore (Reglas) aún no existen, agregue permisos para up_registros y up_usuarios. */
+var COL = {reg:'up_registros', usr:'up_usuarios'};
+var CLAVE_ADMIN = '11064773jJ@';
+var db, coleccion, usuariosCol, FB = false;
+var firebaseConfig = {
+  apiKey:"AIzaSyBBkhl0uVAK4V65ob3Gu6yf43R3gdTEmCM", authDomain:"misueldo-46e8f.firebaseapp.com",
+  projectId:"misueldo-46e8f", storageBucket:"misueldo-46e8f.firebasestorage.app",
+  messagingSenderId:"7570866395", appId:"1:7570866395:web:610f8b5dcab936c9a30cfe"
+};
+
+function $(id){ return document.getElementById(id); }
+function aMin(t){ var p = t.split(':'); return (+p[0]) * 60 + (+p[1]); }
+function hm(h){ var m = Math.round(h * 60); return Math.floor(m / 60) + ':' + String(m % 60).padStart(2,'0'); }
+function fm(m){ m = Math.round(m); return m < 60 ? m + ' min' : Math.floor(m / 60) + ' h' + (m % 60 ? ' ' + (m % 60) + ' min' : ''); }
+function soles(n){ return 'S/ ' + n.toFixed(2); }
+function dow(iso){ var p = iso.split('-'); return new Date(p[0], p[1]-1, p[2]).getDay(); }
+function fechaLarga(iso){ var p = iso.split('-'); return p[2] + '/' + p[1] + '/' + p[0]; }
+function hoyLocal(){ var d = new Date(); return d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0'); }
+function esc(t){ return String(t || '').replace(/[<>&"]/g, function(c){ return {'<':'&lt;','>':'&gt;','&':'&amp;','"':'&quot;'}[c]; }); }
+function normalizar(s){ return String(s || '').trim().toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/\s+/g,' '); }
+function hashPin(pin, clave){ var s = clave + '::' + pin, h = 5381; for (var i = 0; i < s.length; i++) h = ((h * 33) ^ s.charCodeAt(i)) >>> 0; return ((h ^ (h >>> 16)) >>> 0).toString(16); }
+function msg(id, t){ var m = $(id); m.textContent = t; m.style.display = 'block'; }
+
+var DIAS = ['Domingo','Lunes','Martes','Miércoles','Jueves','Viernes','Sábado'];
+var TASAS = {habitat:{n:'AFP Habitat',t:.10+.0137+.0147}, integra:{n:'AFP Integra',t:.10+.0137+.0155}, prima:{n:'AFP Prima',t:.10+.0137+.0160},
+  profuturo:{n:'AFP Profuturo',t:.10+.0137+.0169}, mixta:{n:'AFP comisión mixta',t:.10+.0137}, onp:{n:'ONP',t:.13}, ninguno:{n:'Sin sistema',t:0}};
+
+var registros = [], preferencias = {}, sesion = null, modoAdmin = false, editandoId = null, pendiente = null, loginCb = null, brkManual = false, filtro = '';
+
+/* ---------- Firebase ---------- */
+function cargarScript(u, ok, err){ var s = document.createElement('script'); s.src = u; s.async = true; s.onload = ok; s.onerror = err; document.head.appendChild(s); }
+function cargarFB(b, falla){ cargarScript(b + 'firebase-app-compat.js', function(){ cargarScript(b + 'firebase-firestore-compat.js', iniciarFB, falla); }, falla); }
+function sinConexion(){ FB = false; $('avisoCon').style.display = 'block'; $('regVacio').textContent = 'Sin conexión con la base de datos.'; }
+function iniciarFB(){
+  try { firebase.initializeApp(firebaseConfig); db = firebase.firestore(); coleccion = db.collection(COL.reg); usuariosCol = db.collection(COL.usr); FB = true; alListo(); }
+  catch(e){ sinConexion(); }
+}
+cargarFB('https://www.gstatic.com/firebasejs/10.14.1/', function(){ cargarFB('https://cdn.jsdelivr.net/npm/firebase@10.14.1/', sinConexion); });
+
+/* ---------- Sesión ---------- */
+function esPublico(c){ var p = preferencias[c]; return !p || typeof p.compartirMonto === 'undefined' || !!p.compartirMonto; }
+function puedeVer(c){ return !!c && ((sesion && c === sesion.clave) || esPublico(c)); }
+function pintarSesion(){
+  var on = !!sesion;
+  $('sesionBox').classList.toggle('on', on);
+  $('sesionTexto').innerHTML = on ? 'Sesión iniciada como <b>' + esc(sesion.nombre) + '</b>' : 'No ha iniciado sesión';
+  $('btnSesion').textContent = on ? 'Cerrar sesión' : 'Ingresar o crear usuario';
+  $('btnPriv').style.display = on ? '' : 'none';
+  if (on) $('btnPriv').textContent = esPublico(sesion.clave) ? 'Monto visible' : 'Monto privado';
+}
+function aplicarPerfil(p){ if (!p) return; if (p.sueldo) $('sueldo').value = p.sueldo; if (p.afp) $('afp').value = p.afp; previa(); }
+function abrirLogin(cb){
+  loginCb = cb || null; pendiente = null;
+  $('lp1').style.display = ''; $('lp2').style.display = 'none';
+  $('lNombre').value = ''; $('lPin').value = ''; $('lMsg').style.display = 'none';
+  $('login').classList.add('on'); setTimeout(function(){ $('lNombre').focus(); }, 10);
+}
+function cerrarLogin(){ $('login').classList.remove('on'); loginCb = null; pendiente = null; }
+function finalizarLogin(perfil){
+  try { localStorage.setItem('up_sesion', JSON.stringify(sesion)); } catch(e){}
+  pintarSesion(); aplicarPerfil(perfil);
+  var cb = loginCb; cerrarLogin(); pintar(); if (cb) cb();
+}
+$('lCancelar').onclick = $('pCancelar').onclick = cerrarLogin;
+$('login').addEventListener('click', function(e){ if (e.target === $('login')) cerrarLogin(); });
+$('lEntrar').onclick = function(){
+  if (!FB) return msg('lMsg', 'Sin conexión con la base de datos. Intente nuevamente en un momento.');
+  var nombre = $('lNombre').value.trim(), pin = $('lPin').value.trim(), clave = normalizar(nombre), btn = this;
+  $('lMsg').style.display = 'none';
+  if (!clave) return msg('lMsg', 'Ingrese su nombre completo.');
+  if (pin.length < 4) return msg('lMsg', 'El PIN debe tener al menos 4 dígitos.');
+  btn.disabled = true;
+  usuariosCol.doc(clave).get().then(function(doc){
+    btn.disabled = false;
+    var h = hashPin(pin, clave);
+    if (doc.exists) {
+      var d = doc.data();
+      if (d.pin !== h) return msg('lMsg', 'PIN incorrecto para ' + d.nombre + '.');
+      sesion = {nombre:d.nombre, clave:clave}; finalizarLogin(d);
+    } else {
+      pendiente = {nombre:nombre, clave:clave, hash:h}; $('pNombre').textContent = nombre;
+      $('lp1').style.display = 'none'; $('lp2').style.display = '';
+    }
+  }).catch(function(e){ btn.disabled = false; msg('lMsg', 'Error de conexión: ' + e.message); });
+};
+$('pGuardar').onclick = function(){
+  if (!pendiente) return;
+  var sueldo = +$('pSueldo').value || 0, btn = this;
+  if (sueldo <= 0) return msg('pMsg', 'Ingrese su sueldo bruto.');
+  btn.disabled = true;
+  var perfil = {nombre:pendiente.nombre, pin:pendiente.hash, compartirMonto:true, sueldo:sueldo, afp:$('pAfp').value, creado:firebase.firestore.FieldValue.serverTimestamp()};
+  usuariosCol.doc(pendiente.clave).set(perfil).then(function(){
+    sesion = {nombre:pendiente.nombre, clave:pendiente.clave}; pendiente = null; btn.disabled = false; finalizarLogin(perfil);
+  }).catch(function(e){ btn.disabled = false; msg('pMsg', 'No se pudo crear el usuario: ' + e.message); });
+};
+$('btnSesion').onclick = function(){
+  if (!sesion) return abrirLogin();
+  if (confirm('¿Cerrar la sesión de ' + sesion.nombre + '?')) { sesion = null; try { localStorage.removeItem('up_sesion'); } catch(e){} pintarSesion(); pintar(); }
+};
+$('btnPriv').onclick = function(){
+  if (!sesion || !FB) return;
+  usuariosCol.doc(sesion.clave).set({compartirMonto: !esPublico(sesion.clave)}, {merge:true}).catch(function(e){ alert('No se pudo actualizar: ' + e.message); });
+};
+
+/* ---------- Cálculo ---------- */
+function calcular(d){
+  var ji = aMin(d.hi), jf = aMin(d.hf); if (jf <= ji) jf += 1440;
+  var ini = aMin(d.ent), fin = aMin(d.sal); if (fin <= ini) fin += 1440;
+  var desc = d.ddesc || d.feriado, r100 = desc && !d.sust;
+  var r = {dia:DIAS[dow(d.fecha)], antes:0, despues:0, refri:0, h25:0, h35:0, hDesc:0, av:[]};
+  if (r100) { r.hDesc = (fin - ini) / 60; r.av.push('Sin descanso sustitutorio: se computa todo el tiempo con sobretasa del 100% (D. Leg. 713).'); }
+  else {
+    if (desc) r.av.push('Con descanso sustitutorio: sin sobretasa. Solo el tiempo fuera del horario asignado cuenta como sobretiempo.');
+    r.antes = Math.max(0, ji - ini); r.despues = Math.max(0, fin - jf); r.refri = d.refri ? d.brk : 0;
+    var x = (r.antes + r.despues + r.refri) / 60; r.h25 = Math.min(x, 2); r.h35 = Math.max(0, x - 2);
+    if (x > 4) r.av.push('Más de 4 horas extra: el sobretiempo requiere autorización de la jefatura.');
+    if (d.refri && !d.brk) r.av.push('No se indicó refrigerio para este día: no suma horas.');
+  }
+  if (fin > 1320) r.av.push('Trabajo posterior a las 22:00: podría corresponder sobretasa nocturna, no considerada aquí.');
+  r.horas = r.h25 + r.h35 + r.hDesc;
+  r.trab = Math.max(0, (fin - ini - (r100 || d.refri ? 0 : d.brk)) / 60);
+  return r;
+}
+function pagar(r, sueldo, sust){
+  var vh = sueldo / 30 / 8, p25 = r.h25 * vh * 1.25, p35 = r.h35 * vh * 1.35, pD = sust ? 0 : r.hDesc * vh * 2;
+  return {vh:vh, p25:p25, p35:p35, pD:pD, bruto:p25 + p35 + pD};
+}
+function leer(){
+  var req = ['fecha','hi','hf','ent','sal'];
+  for (var i = 0; i < req.length; i++) if (!$(req[i]).value) return null;
+  return {nombre:sesion ? sesion.nombre : '', fecha:$('fecha').value, hi:$('hi').value, hf:$('hf').value, brk:+$('brk').value || 0,
+    ent:$('ent').value, sal:$('sal').value, sueldo:+$('sueldo').value || 0, afp:$('afp').value,
+    refri:$('refri').checked, feriado:$('feriado').checked, ddesc:$('ddesc').checked, sust:$('sust').checked};
+}
+function previa(){
+  var d = leer(), box = $('res');
+  if (!d) { box.innerHTML = '<div class="vacio">Complete la fecha, el horario asignado y las horas reales de entrada y salida.</div>'; return; }
+  var r = calcular(d), p = pagar(r, d.sueldo, d.sust), ta = TASAS[d.afp], ds = p.bruto * ta.t, neto = p.bruto - ds, h = '';
+  function li(c, a, b){ h += '<div class="li ' + c + '"><span>' + a + '</span><span>' + b + '</span></div>'; }
+  h += '<div class="stats"><div class="stat"><b>' + hm(r.horas) + ' h</b><span>de sobretiempo</span></div><div class="stat d"><b>' + soles(neto) + '</b><span>neto estimado</span></div></div>';
+  if (!r.horas) h += '<div class="aviso">No hay sobretiempo: el horario real coincide con el asignado o está dentro de él.</div>';
+  li('', r.dia + (d.feriado ? ' <span class="tag">Feriado</span>' : '') + (d.ddesc ? ' <span class="tag">Descanso</span>' : ''), d.hi + ' – ' + d.hf);
+  li('s', 'Tiempo trabajado dentro del horario', r.trab.toFixed(2) + ' h');
+  if (r.antes) li('s', 'Ingreso anticipado', fm(r.antes));
+  if (r.despues) li('s', 'Permanencia posterior a la salida', fm(r.despues));
+  if (r.refri) li('s', 'Refrigerio trabajado', fm(r.refri));
+  if (r.h25) li('', 'Primeras 2 horas (25%) · ' + r.h25.toFixed(2) + ' h', soles(p.p25));
+  if (r.h35) li('', 'Desde la 3.ª hora (35%) · ' + r.h35.toFixed(2) + ' h', soles(p.p35));
+  if (r.hDesc) li('', (d.sust ? 'Descanso sustitutorio' : 'Sobretasa 100%') + ' · ' + r.hDesc.toFixed(2) + ' h', soles(p.pD));
+  li('s', 'Valor de la hora normal', soles(p.vh));
+  li('', 'Total bruto', soles(p.bruto));
+  if (ta.t) li('s', ta.n + ' (' + (ta.t * 100).toFixed(2) + '%)', '− ' + soles(ds));
+  li('t', 'Neto estimado', soles(neto));
+  r.av.forEach(function(a){ h += '<div class="aviso w" style="margin:10px 0 0">' + a + '</div>'; });
+  box.innerHTML = h;
+}
+
+/* ---------- Guardar, editar, borrar ---------- */
+function armar(d){
+  var r = calcular(d), p = pagar(r, d.sueldo, d.sust);
+  return {nombre:d.nombre, claveNombre:normalizar(d.nombre), fecha:d.fecha, dia:r.dia, jor:d.hi + '–' + d.hf, brk:d.brk, real:d.ent + '–' + d.sal,
+    h25:r.h25, h35:r.h35, hDesc:r.hDesc, horas:r.horas, sust:d.sust, feriado:d.feriado, ddesc:d.ddesc, refri:d.refri,
+    bruto:p.bruto, neto:p.bruto * (1 - TASAS[d.afp].t)};
+}
+function pintarEdicion(){ $('editBanner').style.display = editandoId ? '' : 'none'; $('guardar').textContent = editandoId ? 'Guardar cambios' : 'Guardar registro'; }
+function salirEdicion(limpiar){
+  editandoId = null; pintarEdicion();
+  if (limpiar) { $('ent').value = $('sal').value = ''; ['refri','feriado','ddesc','sust'].forEach(function(i){ $(i).checked = false; }); previa(); }
+}
+$('editCancelar').onclick = function(){ salirEdicion(true); };
+document.addEventListener('click', function(e){
+  var b = e.target.closest ? e.target.closest('[data-edit]') : null; if (!b) return;
+  var r = registros.filter(function(x){ return x.id === b.getAttribute('data-edit'); })[0];
+  if (!r || !sesion || r.claveNombre !== sesion.clave) return;
+  var re = r.real.split('–'), jo = r.jor.split('–');
+  $('fecha').value = r.fecha; $('hi').value = jo[0]; $('hf').value = jo[1]; $('brk').value = r.brk || 0; brkManual = true;
+  $('ent').value = re[0]; $('sal').value = re[1];
+  ['refri','feriado','ddesc','sust'].forEach(function(i){ $(i).checked = !!r[i]; });
+  editandoId = r.id; $('editFecha').textContent = fechaLarga(r.fecha); pintarEdicion(); previa();
+  $('fecha').scrollIntoView({behavior:'smooth', block:'center'});
+});
+$('guardar').onclick = function(){
+  if (!sesion) return abrirLogin(function(){ $('guardar').click(); });
+  var d = leer(); if (!d) return alert('Complete la fecha, el horario asignado y el horario real.');
+  if (!FB) return alert('Sin conexión con la base de datos. Intente nuevamente en un momento.');
+  var dups = registros.filter(function(r){ return r.claveNombre === sesion.clave && r.fecha === d.fecha && r.id !== editandoId; });
+  if (dups.length && !confirm('Ya existe un registro suyo del ' + fechaLarga(d.fecha) + '. ¿Desea reemplazarlo por este?')) return;
+  var viejos = dups.slice();
+  if (editandoId) { var v = registros.filter(function(x){ return x.id === editandoId; })[0]; if (v && v.claveNombre === sesion.clave) viejos.push(v); }
+  var btn = $('guardar'); btn.disabled = true;
+  var antes = viejos.length ? (function(){ var l = db.batch(); viejos.forEach(function(r){ l.delete(coleccion.doc(r.id)); }); return l.commit(); })() : Promise.resolve();
+  antes.then(function(){ return coleccion.add(armar(d)); }).then(function(){ if (editandoId) salirEdicion(false); $('kpis').scrollIntoView({behavior:'smooth'}); })
+    .catch(function(e){ alert('No se pudo guardar: ' + e.message); }).then(function(){ btn.disabled = false; });
+};
+function borrar(id){
+  var r = registros.filter(function(x){ return x.id === id; })[0]; if (!r || !FB) return;
+  if (!sesion) return abrirLogin(function(){ borrar(id); });
+  if (r.claveNombre !== sesion.clave && !modoAdmin) return alert('Solo puede eliminar sus propios registros.');
+  if (confirm('¿Eliminar el registro del ' + fechaLarga(r.fecha) + '?')) coleccion.doc(id).delete().catch(function(e){ alert('No se pudo eliminar: ' + e.message); });
+}
+function borrarLote(lista, ok){
+  var p = Promise.resolve();
+  for (var i = 0; i < lista.length; i += 400) (function(sl){ p = p.then(function(){ var l = db.batch(); sl.forEach(function(r){ l.delete(coleccion.doc(r.id)); }); return l.commit(); }); })(lista.slice(i, i + 400));
+  p.then(function(){ if (ok) alert(ok); }).catch(function(e){ alert('No se pudo eliminar: ' + e.message); });
+}
+$('limpiar').onclick = function(){
+  if (!FB) return;
+  if (!sesion) return abrirLogin(function(){ $('limpiar').click(); });
+  var mios = registros.filter(function(r){ return r.claveNombre === sesion.clave; });
+  if (!mios.length) return alert('No tiene registros propios.');
+  if (confirm('Se eliminarán sus ' + mios.length + ' registros. Esta acción no se puede deshacer. ¿Continuar?')) borrarLote(mios);
+};
+$('btnAdmin').onclick = function(){
+  if (!modoAdmin) { var c = prompt('Ingrese la clave de administración:'); if (c === null) return; if (c !== CLAVE_ADMIN) return alert('Clave incorrecta.'); modoAdmin = true; $('adminMes').value = hoyLocal().slice(0, 7); pintar(); }
+  $('panelAdmin').style.display = 'block';
+};
+$('salirAdmin').onclick = function(){ modoAdmin = false; $('panelAdmin').style.display = 'none'; pintar(); };
+$('adminBorrar').onclick = function(){
+  var mes = $('adminMes').value; if (!mes) return alert('Elija un mes.');
+  var l = registros.filter(function(r){ return r.fecha.slice(0, 7) === mes; });
+  if (!l.length) return alert('No hay registros en ese mes.');
+  if (confirm('¿Borrar los ' + l.length + ' registros de todos los colaboradores en ' + mes + '? No se puede deshacer.')) borrarLote(l, 'Registros de ' + mes + ' eliminados.');
+};
+$('filtro').addEventListener('input', function(){ filtro = normalizar(this.value); pintar(); });
+
+/* ---------- Pintado ---------- */
+function pintar(){
+  var vista = filtro ? registros.filter(function(r){ return normalizar(r.nombre).indexOf(filtro) !== -1; }) : registros, h = '', i;
+  $('regVacio').style.display = vista.length ? 'none' : 'block';
+  $('regVacio').textContent = filtro ? 'Ningún registro coincide con la búsqueda.' : 'Aún no hay registros.';
+  for (i = 0; i < vista.length; i++) {
+    var r = vista[i], mio = sesion && r.claveNombre === sesion.clave;
+    h += '<tr><td>' + fechaLarga(r.fecha).slice(0, 5) + '</td><td>' + r.dia + (r.feriado ? ' <span class="tag">Fer.</span>' : '') + (r.ddesc ? ' <span class="tag">Desc.</span>' : '') + '</td>' +
+      '<td>' + esc(r.nombre) + (mio ? ' <span class="tag">Usted</span>' : '') + '</td><td>' + r.jor.replace('–', ' – ') + '</td><td>' + r.real.replace('–', ' – ') + '</td>' +
+      '<td class="num"><b>' + (r.horas ? hm(r.horas) : '—') + '</b></td><td class="num">' + (r.h25 ? r.h25.toFixed(2) : '—') + '</td><td class="num">' + (r.h35 ? r.h35.toFixed(2) : '—') + '</td>' +
+      '<td class="num">' + (r.hDesc ? r.hDesc.toFixed(2) : '—') + '</td><td class="num">' + (puedeVer(r.claveNombre) ? soles(r.neto) : 'Privado') + '</td>' +
+      '<td style="white-space:nowrap">' + (mio ? '<button type="button" class="btn mini sec" data-edit="' + r.id + '">Editar</button> ' : '') +
+      (mio || modoAdmin ? '<button type="button" class="btn mini sec del" onclick="borrar(\'' + r.id + '\')">Eliminar</button>' : '') + '</td></tr>';
+  }
+  $('tbReg').innerHTML = h;
+
+  var mapa = {}, lista = [];
+  registros.forEach(function(g){
+    var m = mapa[g.claveNombre]; if (!m) { m = mapa[g.claveNombre] = {nombre:g.nombre, clave:g.claveNombre, dias:0, h25:0, h35:0, hDesc:0, horas:0, neto:0}; lista.push(m); }
+    m.dias++; m.h25 += g.h25; m.h35 += g.h35; m.hDesc += g.hDesc; m.horas += g.horas; m.neto += g.neto;
+  });
+  lista.sort(function(a, b){ return b.horas - a.horas; });
+  var totH = 0, totN = 0, vis = 0;
+  h = '';
+  lista.forEach(function(e, n){
+    var v = puedeVer(e.clave); totH += e.horas; if (v) { totN += e.neto; vis++; }
+    h += '<tr><td><b>' + (n + 1) + '</b></td><td>' + esc(e.nombre) + (sesion && e.clave === sesion.clave ? ' <span class="tag">Usted</span>' : '') + '</td><td class="num">' + e.dias + '</td>' +
+      '<td class="num">' + e.h25.toFixed(2) + '</td><td class="num">' + e.h35.toFixed(2) + '</td><td class="num">' + e.hDesc.toFixed(2) + '</td>' +
+      '<td class="num"><b>' + e.horas.toFixed(2) + '</b> (' + hm(e.horas) + ')</td><td class="num">' + (v ? '<b>' + soles(e.neto) + '</b>' : 'Privado') + '</td>' +
+      '<td><button type="button" class="btn mini sec btn-xl" data-c="' + esc(e.clave) + '">Descargar Excel</button></td></tr>';
+  });
+  $('tbRank').innerHTML = h;
+  $('rankVacio').style.display = lista.length ? 'none' : 'block';
+  $('kpis').innerHTML = lista.length
+    ? '<div class="kpi"><small>Líder en horas</small><b style="font-size:1.1rem">' + esc(lista[0].nombre) + '</b>' + lista[0].horas.toFixed(2) + ' h en ' + lista[0].dias + ' día(s)</div>' +
+      '<div class="kpi"><small>Colaboradores con registros</small><b>' + lista.length + '</b>' + registros.length + ' jornadas registradas</div>' +
+      '<div class="kpi"><small>Horas extra del equipo</small><b>' + totH.toFixed(1) + '</b>promedio ' + (totH / lista.length).toFixed(1) + ' h por colaborador</div>' +
+      '<div class="kpi"><small>Acumulado neto visible</small><b>' + soles(totN) + '</b>' + vis + ' de ' + lista.length + ' comparten su monto</div>' : '';
+}
+
+/* ---------- Excel por colaborador ---------- */
+var EXC = ['https://cdnjs.cloudflare.com/ajax/libs/exceljs/4.4.0/exceljs.min.js', 'https://cdn.jsdelivr.net/npm/exceljs@4.4.0/dist/exceljs.min.js'];
+function cargarExcel(ok, falla){ if (window.ExcelJS) return ok(); (function t(i){ if (i >= EXC.length) return falla(); cargarScript(EXC[i], ok, function(){ t(i + 1); }); })(0); }
+function obs(r){
+  var o = [], p = r.real.split('–'), j = r.jor.split('–'), e = aMin(p[0]), s = aMin(p[1]), ji = aMin(j[0]), jf = aMin(j[1]);
+  if (s <= e) s += 1440; if (jf <= ji) jf += 1440;
+  if (r.feriado) o.push('Feriado trabajado' + (r.sust ? ' (con descanso sustitutorio)' : ' (sin descanso sustitutorio)'));
+  if (r.ddesc) o.push('Día de descanso trabajado' + (r.sust ? ' (con descanso sustitutorio)' : ' (sin descanso sustitutorio)'));
+  if (!((r.feriado || r.ddesc) && !r.sust)) {
+    if (e < ji) o.push('Ingreso anticipado: ' + p[0] + ' (' + fm(ji - e) + ' antes de las ' + j[0] + ')');
+    if (s > jf) o.push('Salida posterior: ' + p[1] + ' (' + fm(s - jf) + ' después de las ' + j[1] + ')');
+  } else o.push('Todo el tiempo trabajado cuenta como sobretiempo (' + fm(s - e) + ')');
+  if (r.refri) o.push('Trabajó durante su refrigerio');
+  return o.length ? o.map(function(t){ return '• ' + t; }).join('\n') : 'Sin novedades';
+}
+document.addEventListener('click', function(e){
+  var b = e.target.closest ? e.target.closest('.btn-xl') : null; if (!b) return;
+  var regs = registros.filter(function(r){ return r.claveNombre === b.getAttribute('data-c'); }).sort(function(a, c){ return a.fecha < c.fecha ? -1 : 1; });
+  if (!regs.length) return;
+  var txt = b.textContent; b.disabled = true; b.textContent = 'Generando…';
+  function fin(){ b.disabled = false; b.textContent = txt; }
+  cargarExcel(function(){ try { excel(regs).then(fin, function(x){ fin(); alert('No se pudo crear el Excel: ' + x.message); }); } catch(x){ fin(); alert('No se pudo crear el Excel: ' + x.message); } },
+    function(){ fin(); alert('No se pudo cargar el generador de Excel. Revise su conexión.'); });
+});
+function excel(regs){
+  var AZ = 'FF102044', BA = 'FFEEF1F8', LI = 'FFDDE1EA', b1 = {style:'thin', color:{argb:LI}}, bd = {top:b1, bottom:b1, left:b1, right:b1};
+  var wb = new ExcelJS.Workbook(), ws = wb.addWorksheet('Horas extra', {views:[{state:'frozen', ySplit:1}]}), n = regs.length, tot = 0;
+  var cols = [['Fecha', 12], ['Colaborador', 34], ['Horario asignado', 19], ['Entrada y salida real', 21], ['Horas extra', 14], ['Observaciones', 70]];
+  ws.columns = cols.map(function(c){ return {width:c[1]}; });
+  cols.forEach(function(c, i){ var x = ws.getCell(1, i + 1); x.value = c[0]; x.fill = {type:'pattern', pattern:'solid', fgColor:{argb:AZ}}; x.font = {bold:true, color:{argb:'FFFFFFFF'}}; x.alignment = {vertical:'middle', horizontal:i === 1 || i === 5 ? 'left' : 'center', wrapText:true}; x.border = bd; });
+  ws.getRow(1).height = 30;
+  regs.forEach(function(r, i){
+    var p = r.real.split('–'), o = obs(r), row = ws.getRow(i + 2), f = r.fecha.split('-'); tot += r.horas;
+    row.height = Math.max(22, o.split('\n').length * 16 + 6);
+    [new Date(Date.UTC(+f[0], +f[1] - 1, +f[2])), r.nombre.toUpperCase(), r.jor.replace('–', ' – '), p[0] + ' – ' + p[1], r.horas / 24, o].forEach(function(v, c){
+      var x = row.getCell(c + 1); x.value = v; x.border = bd; x.alignment = {vertical:'middle', horizontal:c === 1 || c === 5 ? 'left' : 'center', wrapText:c === 5};
+      if (c === 0) x.numFmt = 'dd/mm/yyyy'; if (c === 4) x.numFmt = 'hh:mm:ss'; if (i % 2 === 0) x.fill = {type:'pattern', pattern:'solid', fgColor:{argb:BA}};
+    });
+  });
+  var ft = n + 2; ws.mergeCells(ft, 1, ft, 4); ws.getCell(ft, 1).value = 'TOTAL ACUMULADO';
+  ws.getCell(ft, 5).value = {formula:'SUM(E2:E' + (n + 1) + ')', result:tot / 24}; ws.getCell(ft, 5).numFmt = '[h]:mm:ss'; ws.getCell(ft, 6).value = n + ' día(s) registrado(s)';
+  for (var c = 1; c <= 6; c++) { var x = ws.getCell(ft, c); x.fill = {type:'pattern', pattern:'solid', fgColor:{argb:AZ}}; x.font = {bold:true, color:{argb:'FFFFFFFF'}}; x.border = bd; x.alignment = {vertical:'middle', horizontal:c === 6 ? 'left' : 'center'}; }
+  var nombre = 'Horas_extra_' + regs[0].nombre.replace(/[^\wÁÉÍÓÚÜáéíóúüÑñ]+/g, '_') + '_' + hoyLocal() + '.xlsx';
+  return wb.xlsx.writeBuffer().then(function(buf){
+    var u = URL.createObjectURL(new Blob([buf], {type:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'})), a = document.createElement('a');
+    a.href = u; a.download = nombre; document.body.appendChild(a); a.click(); setTimeout(function(){ URL.revokeObjectURL(u); a.remove(); }, 1500);
+  });
+}
+
+/* ---------- Arranque ---------- */
+['fecha','hi','hf','brk','ent','sal','sueldo','afp','refri','feriado','ddesc','sust'].forEach(function(id){ $(id).addEventListener('input', previa); $(id).addEventListener('change', previa); });
+$('brk').addEventListener('input', function(){ brkManual = true; });
+$('fecha').addEventListener('change', function(){ if (!brkManual && this.value) { var w = dow(this.value); $('brk').value = (w === 0 || w === 6) ? 0 : 60; previa(); } });
+$('fecha').value = hoyLocal();
+previa(); pintarSesion();
+
+function alListo(){
+  $('avisoCon').style.display = 'none';
+  try { var s = localStorage.getItem('up_sesion'); if (s) sesion = JSON.parse(s); } catch(e){ sesion = null; }
+  pintarSesion();
+  coleccion.orderBy('fecha').onSnapshot(function(snap){
+    registros = snap.docs.map(function(d){ var x = d.data(); x.id = d.id; return x; }); pintar();
+  }, function(e){ $('regVacio').style.display = 'block'; $('regVacio').textContent = 'No se pudo leer la base de datos: ' + e.message; });
+  usuariosCol.onSnapshot(function(snap){
+    preferencias = {}; snap.docs.forEach(function(d){ preferencias[d.id] = d.data(); });
+    pintarSesion(); if (sesion && preferencias[sesion.clave] && !window.__perfil) { window.__perfil = 1; aplicarPerfil(preferencias[sesion.clave]); } pintar();
+  }, function(){});
+}
+</script>
+</body>
+</html>
