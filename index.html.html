@@ -3647,12 +3647,23 @@ ponerBanner();
 .bt-cr button{flex:none;width:30px;height:32px;border:2px solid var(--linea);border-radius:10px;background:var(--papel);color:var(--tinta);font-weight:900;cursor:pointer}
 .bt-cr button:hover{border-color:var(--rojo)}
 .bt-nuevo{display:flex;gap:6px;margin-top:8px}.bt-nuevo input{flex:1;min-width:0;padding:7px 10px!important}
+.bt-busca{width:100%}
+.bt-notas{margin-top:8px;padding:8px 12px 12px;border-radius:12px;background:var(--papel-os)}
+.bt-nota{display:flex;gap:8px;align-items:flex-start;padding:6px 0;border-bottom:1px dashed var(--linea);font-weight:700;font-size:.93rem;line-height:1.3}
+.bt-nota small{display:block;color:var(--gris);font-weight:900;font-size:.72rem;letter-spacing:.05em}
+.bt-nota button{margin-left:auto;border:0;background:transparent;color:var(--gris);cursor:pointer;font-weight:900;padding:2px 6px}
+.bt-nin{display:flex;gap:6px;margin-top:9px}.bt-nin input{flex:1;min-width:0;padding:7px 10px!important}
+.bt-eq-f{display:grid;grid-template-columns:1.7fr .8fr .9fr .8fr 1fr;gap:8px;align-items:center;padding:11px 4px;border-bottom:1px solid var(--linea);font-weight:800}
+.bt-eq-f.h{font-size:.72rem;letter-spacing:.05em;text-transform:uppercase;color:var(--gris)}
+.bt-eq-f.t{border-bottom:0;border-top:2px solid var(--linea);font-weight:900}
+.bt-eq-f .r{color:#FF0E49}
+@media(max-width:560px){.bt-eq-f{grid-template-columns:1.5fr .7fr .8fr .7fr}.bt-eq-f>:last-child{display:none}}
 </style>
 <script id="bitacora-js">
 (function(){
-  var COL = 'bitacora';
+  var COL = 'bitacora', COL_EQ = 'bitacora_equipo';
   var P_COL = ['#E5113F','#F08A00','#0E8C89','#1D5C97','#7C3AA0','#847A67'];
-  var datos = null, clave = null, unsub = null, ov = null, filtro = '', editId = null, errorMsg = '';
+  var datos = null, clave = null, unsub = null, ov = null, filtro = '', busq = '', abiertas = {}, eqOv = null, eqUnsub = null, editId = null, errorMsg = '';
   function $b(id){ return document.getElementById(id); }
   function X(t){ return String(t == null ? '' : t).replace(/[<>&"]/g, function(c){ return {'<':'&lt;','>':'&gt;','&':'&amp;','"':'&quot;'}[c]; }); }
   function uid(){ return Math.random().toString(36).slice(2, 8) + Date.now().toString(36).slice(-3); }
@@ -3664,7 +3675,7 @@ ponerBanner();
   }
   function norm(d){
     var b = porDefecto();
-    return {etq:(d.etq && d.etq.length ? d.etq : b.etq), sub:(d.sub || b.sub), tareas:(d.tareas || [])};
+    return {etq:(d.etq && d.etq.length ? d.etq : b.etq), sub:(d.sub || b.sub), tareas:(d.tareas || []), compartir:!!d.compartir};
   }
   function color(i){ return P_COL[Math.min(i, P_COL.length - 1)]; }
   function iE(id){ for (var i = 0; i < datos.etq.length; i++) if (datos.etq[i].id === id) return i; return datos.etq.length; }
@@ -3677,10 +3688,20 @@ ponerBanner();
   /* ---------- guardado ---------- */
   function guardar(){
     if (!window.db || !clave) return;
-    window.db.collection(COL).doc(clave).set({nombre:window.sesion ? window.sesion.nombre : '', etq:datos.etq, sub:datos.sub, tareas:datos.tareas, ts:Date.now()})
+    window.db.collection(COL).doc(clave).set({nombre:window.sesion ? window.sesion.nombre : '', etq:datos.etq, sub:datos.sub, tareas:datos.tareas, compartir:!!datos.compartir, ts:Date.now()})
       .then(function(){ errorMsg = ''; }).catch(function(e){ errorMsg = 'No se pudo guardar: ' + e.message; pintar(); });
+    if (datos.compartir) subirResumen();
     pintar();
   }
+  /* resumen para el panel de equipo: solo cantidades, nunca el contenido */
+  function subirResumen(){
+    if (!window.db || !clave) return;
+    var pend = datos.tareas.filter(function(t){ return !t.d; }), h = hoy();
+    window.db.collection(COL_EQ).doc(clave).set({nombre:window.sesion ? window.sesion.nombre : '', pend:pend.length,
+      alto:pend.filter(function(t){ return t.e === datos.etq[0].id; }).length, altoN:datos.etq[0].n,
+      venc:pend.filter(function(t){ return t.f && t.f < h; }).length, ts:Date.now()}).catch(function(){});
+  }
+  function quitarResumen(){ if (window.db && clave) window.db.collection(COL_EQ).doc(clave).delete().catch(function(){}); }
   function suscribir(){
     if (unsub) { try { unsub(); } catch(e){} unsub = null; }
     datos = null; errorMsg = '';
@@ -3690,6 +3711,7 @@ ponerBanner();
     }, function(e){ errorMsg = e.code === 'permission-denied' ? 'Falta la regla de «bitacora» en Firestore.' : 'Error: ' + e.message; pintarBoton(); pintar(); });
   }
   function revisarSesion(){
+    verEq();
     var c = window.sesion && window.sesion.clave ? window.sesion.clave : null;
     if (c !== clave || (c && !unsub && window.db)) { clave = c; suscribir(); }
   }
@@ -3705,21 +3727,46 @@ ponerBanner();
   function abrir(){
     if (ov) return;
     ov = document.createElement('div'); ov.className = 'noticias-ov';
-    ov.innerHTML = '<aside class="noticias ancho" role="dialog" aria-label="Bitácora"><div class="not-head"><div style="flex:1"><h2>📝 Mi bitácora</h2><small>Tus pendientes, ordenados solos por prioridad</small></div><button type="button" class="not-x" aria-label="Cerrar">✕</button></div><div class="bt-cuerpo" id="btCuerpo"></div></aside>';
+    ov.innerHTML = '<aside class="noticias ancho" role="dialog" aria-label="Bitácora"><div class="not-head"><div style="flex:1"><h2>📝 Mi bitácora</h2><small>Tus pendientes, ordenados solos por prioridad</small></div><button type="button" class="btn mini gris" id="btEq" style="display:none;margin-right:6px">👥 Equipo</button><button type="button" class="not-x" aria-label="Cerrar">✕</button></div><div class="bt-cuerpo" id="btCuerpo"></div></aside>';
     document.body.appendChild(ov);
     function cerrar(){ ov.remove(); ov = null; editId = null; document.removeEventListener('keydown', tecla); }
-    function tecla(e){ if (e.key === 'Escape') cerrar(); }
+    function tecla(e){ if (e.key === 'Escape' && !eqOv) cerrar(); }
     document.addEventListener('keydown', tecla);
     ov.addEventListener('click', function(e){ if (e.target === ov) cerrar(); });
     ov.querySelector('.not-x').onclick = cerrar;
+    ov.querySelector('#btEq').onclick = abrirEquipo; verEq();
     ov.addEventListener('click', clic); ov.addEventListener('change', cambio);
+    ov.addEventListener('input', function(e){ if (e.target.id === 'btBus') { busq = nT(e.target.value.trim()); pintar(); } });
     ov.addEventListener('keydown', function(e){
       if (e.key === 'Enter' && e.target.getAttribute('data-nuevo')) { e.preventDefault(); agregarEtiqueta(e.target.getAttribute('data-nuevo')); }
       if (e.key === 'Enter' && (e.ctrlKey || e.metaKey) && e.target.id === 'btT') agregarTarea();
+      if (e.key === 'Enter' && e.target.classList && e.target.classList.contains('bt-nin-i')) { e.preventDefault(); agregarNota(e.target.getAttribute('data-tid')); }
     });
     armar();
   }
   btn.onclick = abrir;
+  function verEq(){ var e = $b('btEq'); if (e) e.style.display = window.modoAdmin ? '' : 'none'; }
+  function abrirEquipo(){
+    if (eqOv || !window.db) return;
+    eqOv = document.createElement('div'); eqOv.className = 'noticias-ov';
+    eqOv.innerHTML = '<aside class="noticias ancho" role="dialog" aria-label="Panel de equipo"><div class="not-head"><div style="flex:1"><h2>👥 Panel de equipo</h2><small>Pendientes de los asesores que decidieron compartirlos</small></div><button type="button" class="not-x" aria-label="Cerrar">✕</button></div><div class="bt-cuerpo"><div class="bt-caja" id="btEqC"><div class="bt-vacio">Cargando…</div></div></div></aside>';
+    document.body.appendChild(eqOv);
+    function cerrar(){ if (eqUnsub) { try { eqUnsub(); } catch(x){} eqUnsub = null; } eqOv.remove(); eqOv = null; document.removeEventListener('keydown', tecla); }
+    function tecla(e){ if (e.key === 'Escape') cerrar(); }
+    document.addEventListener('keydown', tecla);
+    eqOv.addEventListener('click', function(e){ if (e.target === eqOv) cerrar(); });
+    eqOv.querySelector('.not-x').onclick = cerrar;
+    eqUnsub = window.db.collection(COL_EQ).onSnapshot(function(snap){
+      var f = snap.docs.map(function(d){ return d.data(); }).sort(function(a, c){ return (c.venc - a.venc) || (c.pend - a.pend); }), c = $b('btEqC'); if (!c) return;
+      var tp = 0, tv = 0, ta = 0;
+      var h = '<div class="bt-eq-f h"><span>Asesor</span><span>Pendientes</span><span>Prioridad alta</span><span>Vencidas</span><span>Actualizado</span></div>' + f.map(function(x){
+        tp += x.pend; tv += x.venc; ta += x.alto;
+        return '<div class="bt-eq-f"><span>' + X(x.nombre) + '</span><span>' + x.pend + '</span><span>' + x.alto + ' <small style="color:var(--gris)">' + X(x.altoN) + '</small></span><span class="' + (x.venc ? 'r' : '') + '">' + x.venc + '</span><span style="color:var(--gris);font-size:.85rem">' + hr(x.ts) + '</span></div>';
+      }).join('');
+      c.innerHTML = f.length ? h + '<div class="bt-eq-f t"><span>Total (' + f.length + ' asesor' + (f.length === 1 ? '' : 'es') + ')</span><span>' + tp + '</span><span>' + ta + '</span><span>' + tv + '</span><span></span></div><div class="bt-ayuda">Solo aparecen los asesores que activaron «Compartir con el equipo». Ves cantidades, no el contenido de sus tareas.</div>'
+        : '<div class="bt-vacio">Ningún asesor ha compartido su resumen todavía.</div>';
+    }, function(e){ var c = $b('btEqC'); if (c) c.innerHTML = '<div class="bt-vacio">' + (e.code === 'permission-denied' ? 'Falta la regla de «bitacora_equipo» en Firestore.' : 'Error: ' + X(e.message)) + '</div>'; });
+  }
 
   function armar(){
     var c = $b('btCuerpo'); if (!c) return;
@@ -3733,9 +3780,11 @@ ponerBanner();
       '<div class="bt-acc"><button type="button" class="btn" data-a="add" id="btAdd">Agregar</button><button type="button" class="btn gris" data-a="cancelar" id="btCan" style="display:none">Cancelar</button></div>' +
       '<div class="bt-ayuda">Orden automático: siempre primero la etiqueta de mayor prioridad, aunque otra tarea sea más reciente; dentro de cada etiqueta va primero la más antigua, según la fecha y hora en que se registró. Ctrl + Enter para agregar.</div>' +
       '<div id="btErr" class="bt-ayuda" style="color:var(--rojo)"></div></div>' +
-      '<div class="bt-filtros" id="btFil"></div><div id="btLista"></div>' +
+      '<input type="search" id="btBus" class="bt-busca" placeholder="Buscar en tus tareas y notas…" autocomplete="off"><div class="bt-filtros" id="btFil"></div><div id="btLista"></div>' +
       '<details class="bt-det" id="btDone"><summary id="btDoneS"></summary><div id="btDoneL"></div></details>' +
-      '<details class="bt-det"><summary>Etiquetas y sub-etiquetas</summary><div class="bt-cfg" id="btCfg"></div></details>';
+      '<details class="bt-det"><summary>Etiquetas y sub-etiquetas</summary><div class="bt-cfg" id="btCfg"></div></details>' +
+      '<label class="bt-ayuda" style="display:flex;gap:9px;align-items:flex-start;cursor:pointer;text-transform:none;letter-spacing:0;font-size:.88rem"><input type="checkbox" id="btComp" style="width:20px!important;height:20px;padding:0!important;flex:none;accent-color:#FF0E49"><span>Compartir con el equipo cuántas tareas tengo pendientes. Solo se ven las cantidades; nunca el contenido de mis tareas ni de mis notas.</span></label>';
+    $b('btBus').value = busq;
     selects(); pintar();
   }
   function selects(){
@@ -3746,21 +3795,37 @@ ponerBanner();
     if (ve && iE(ve) < datos.etq.length) e.value = ve; else e.value = datos.etq[Math.floor(datos.etq.length / 2)].id;
     if (vs && iS(vs) < datos.sub.length) s.value = vs;
   }
+  function notasHtml(t){
+    var n = t.n || [], ab = !!abiertas[t.id];
+    var h = '<div class="bt-meta" style="margin-top:7px"><button type="button" class="bt-chip' + (ab ? ' on' : '') + '" style="padding:1px 11px;font-size:.74rem" data-a="notas" data-id="' + t.id + '">Notas de seguimiento' + (n.length ? ' (' + n.length + ')' : '') + '</button></div>';
+    if (!ab) return h;
+    return h + '<div class="bt-notas">' + n.map(function(x){
+      return '<div class="bt-nota"><div><small>' + hr(x.c) + '</small>' + X(x.t) + '</div><button type="button" data-a="delnota" data-id="' + t.id + '" data-nid="' + x.i + '" aria-label="Quitar nota">✕</button></div>';
+    }).join('') + '<div class="bt-nin"><input type="text" class="bt-nin-i" data-tid="' + t.id + '" maxlength="300" placeholder="Ej.: Llamé, no contestó"><button type="button" class="btn mini" data-a="addnota" data-id="' + t.id + '">Agregar</button></div></div>';
+  }
+  function leerNin(){ var o = {foco:null, v:{}}; ov.querySelectorAll('.bt-nin-i').forEach(function(i){ if (i.value) o.v[i.getAttribute('data-tid')] = i.value; if (i === document.activeElement) o.foco = i.getAttribute('data-tid'); }); return o; }
+  function ponerNin(o){ ov.querySelectorAll('.bt-nin-i').forEach(function(i){ var id = i.getAttribute('data-tid'); if (o.v[id]) i.value = o.v[id]; if (o.foco === id) i.focus(); }); }
+  function nT(s){ return String(s || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, ''); }
+  function coincide(t){
+    if (!busq) return true;
+    return nT(t.t + ' ' + nomS(t.s) + ' ' + (t.n || []).map(function(x){ return x.t; }).join(' ')).indexOf(busq) >= 0;
+  }
   function filaTarea(t, col){
     var h = hoy(), meta = '';
     if (t.s && nomS(t.s)) meta += '<span>' + X(nomS(t.s)) + '</span>';
     if (t.c) meta += '<span title="Fecha y hora de registro">Registrada ' + hr(t.c) + '</span>';
     if (t.f) meta += '<span class="' + (!t.d && t.f < h ? 've' : (!t.d && t.f === h ? 'ho' : '')) + '">' + (!t.d && t.f < h ? 'Vencida · ' : (t.f === h && !t.d ? 'Hoy · ' : '')) + corta(t.f) + '</span>';
     return '<div class="bt-t' + (t.d ? ' hecha' : '') + '" style="border-left-color:' + col + '"><input type="checkbox" data-a="chk" data-id="' + t.id + '"' + (t.d ? ' checked' : '') + ' aria-label="Completada">' +
-      '<div class="tx"><p>' + X(t.t) + '</p>' + (meta ? '<div class="bt-meta">' + meta + '</div>' : '') + '</div>' +
+      '<div class="tx"><p>' + X(t.t) + '</p>' + (meta ? '<div class="bt-meta">' + meta + '</div>' : '') + notasHtml(t) + '</div>' +
       '<div class="ac">' + (t.d ? '' : '<button type="button" class="btn mini gris" data-a="edit" data-id="' + t.id + '">Editar</button>') + '<button type="button" class="btn mini gris" data-a="del" data-id="' + t.id + '" aria-label="Eliminar">✕</button></div></div>';
   }
   function pintar(){
     if (!ov) return;
     if (!$b('btLista')) { armar(); return; }
     if (!datos) return;
-    $b('btErr').textContent = errorMsg;
-    var pend = datos.tareas.filter(function(t){ return !t.d; }), hechas = datos.tareas.filter(function(t){ return t.d; });
+    $b('btErr').textContent = errorMsg; $b('btComp').checked = !!datos.compartir;
+    var nin = leerNin();
+    var pend = datos.tareas.filter(function(t){ return !t.d; }), hechas = datos.tareas.filter(function(t){ return t.d && coincide(t); });
     /* filtros por sub-etiqueta */
     var chips = '<button type="button" class="bt-chip' + (filtro === '' ? ' on' : '') + '" data-a="fil" data-v="">Todas (' + pend.length + ')</button>';
     datos.sub.forEach(function(s){ var n = pend.filter(function(t){ return t.s === s.id; }).length; chips += '<button type="button" class="bt-chip' + (filtro === s.id ? ' on' : '') + '" data-a="fil" data-v="' + s.id + '">' + X(s.n) + ' (' + n + ')</button>'; });
@@ -3768,20 +3833,20 @@ ponerBanner();
     if (sn) chips += '<button type="button" class="bt-chip' + (filtro === '-' ? ' on' : '') + '" data-a="fil" data-v="-">Sin sub-etiqueta (' + sn + ')</button>';
     $b('btFil').innerHTML = chips;
     /* lista agrupada por etiqueta, ya ordenada */
-    var vis = pend.filter(function(t){ return filtro === '' || (filtro === '-' ? (!t.s || iS(t.s) >= datos.sub.length) : t.s === filtro); }).sort(ordenar), h = '';
+    var vis = pend.filter(function(t){ return coincide(t) && (filtro === '' || (filtro === '-' ? (!t.s || iS(t.s) >= datos.sub.length) : t.s === filtro)); }).sort(ordenar), h = '';
     datos.etq.forEach(function(e, i){
       var g = vis.filter(function(t){ return iE(t.e) === i; });
       if (g.length) h += '<div class="bt-gh"><i style="background:' + color(i) + '"></i>' + X(e.n) + ' <span>' + g.length + '</span></div>' + g.map(function(t){ return filaTarea(t, color(i)); }).join('');
     });
     var huer = vis.filter(function(t){ return iE(t.e) >= datos.etq.length; });
     if (huer.length) h += '<div class="bt-gh"><i style="background:#847A67"></i>Sin etiqueta <span>' + huer.length + '</span></div>' + huer.map(function(t){ return filaTarea(t, '#847A67'); }).join('');
-    $b('btLista').innerHTML = h || '<div class="bt-caja bt-vacio">' + (pend.length ? 'No hay tareas con ese filtro.' : 'No tienes tareas pendientes. Agrega la primera arriba.') + '</div>';
+    $b('btLista').innerHTML = h || '<div class="bt-caja bt-vacio">' + (pend.length ? 'No hay tareas con ese filtro o búsqueda.' : 'No tienes tareas pendientes. Agrega la primera arriba.') + '</div>';
     /* completadas */
     hechas.sort(function(a, b){ return (b.x || 0) - (a.x || 0); });
     $b('btDone').style.display = hechas.length ? '' : 'none';
     $b('btDoneS').textContent = 'Completadas (' + hechas.length + ')';
     $b('btDoneL').innerHTML = hechas.map(function(t){ return filaTarea(t, '#847A67'); }).join('') + '<div class="bt-acc" style="padding-bottom:12px"><button type="button" class="btn mini gris" data-a="limpiar">Borrar completadas</button></div>';
-    pintarCfg();
+    pintarCfg(); ponerNin(nin);
   }
   function listaCfg(k, arr){
     return arr.map(function(x, i){
@@ -3816,12 +3881,21 @@ ponerBanner();
     var i = arr.map(function(x){ return x.id; }).indexOf(id), j = i + d; if (i < 0 || j < 0 || j >= arr.length) return;
     var t = arr[i]; arr[i] = arr[j]; arr[j] = t;
   }
+  function agregarNota(id){
+    var i = ov.querySelector('.bt-nin-i[data-tid="' + id + '"]'), tx = i ? i.value.trim() : ''; if (!tx) return;
+    datos.tareas.forEach(function(t){ if (t.id === id) { t.n = t.n || []; t.n.push({i:uid(), t:tx, c:Date.now()}); } });
+    i.value = ''; guardar();
+    var ni = ov.querySelector('.bt-nin-i[data-tid="' + id + '"]'); if (ni) ni.focus();
+  }
   function clic(e){
     var b = e.target.closest ? e.target.closest('[data-a]') : null; if (!b || b.tagName === 'INPUT' && b.type === 'text') return;
     var a = b.getAttribute('data-a'), id = b.getAttribute('data-id'), fila = b.closest('.bt-cr'), k = fila ? fila.getAttribute('data-k') : b.getAttribute('data-k');
     if (a === 'login') { if (typeof abrirLogin === 'function') abrirLogin(); return; }
     if (!datos) return;
     if (a === 'add') agregarTarea();
+    else if (a === 'notas') { abiertas[id] = !abiertas[id]; pintar(); }
+    else if (a === 'addnota') agregarNota(id);
+    else if (a === 'delnota') { var nid = b.getAttribute('data-nid'); datos.tareas.forEach(function(t){ if (t.id === id) t.n = (t.n || []).filter(function(x){ return x.i !== nid; }); }); guardar(); }
     else if (a === 'cancelar') { salirEdicion(); $b('btT').value = ''; $b('btF').value = ''; }
     else if (a === 'fil') { filtro = b.getAttribute('data-v'); pintar(); }
     else if (a === 'edit') {
@@ -3846,6 +3920,7 @@ ponerBanner();
   }
   function cambio(e){
     var el = e.target, a = el.getAttribute('data-a'); if (!datos) return;
+    if (el.id === 'btComp') { datos.compartir = el.checked; if (!el.checked) quitarResumen(); guardar(); return; }
     if (a === 'chk') {
       datos.tareas.forEach(function(t){ if (t.id === el.getAttribute('data-id')) { t.d = el.checked; t.x = el.checked ? Date.now() : 0; } });
       if (editId === el.getAttribute('data-id')) salirEdicion();
