@@ -3604,5 +3604,261 @@ ponerBanner();
   refrescar();
 })();
 </script>
+<style id="bitacora-css">
+/* ===== BITÁCORA ===== */
+#btnBitacora{border:0;border-radius:99px;padding:9px 16px;font-weight:900;font-size:.8rem;cursor:pointer;background:#fff;color:#B4002F;box-shadow:0 4px 0 rgba(0,0,0,.25);transition:transform .1s,box-shadow .1s;white-space:nowrap}
+#btnBitacora:active{transform:translateY(3px);box-shadow:0 1px 0 rgba(0,0,0,.25)}
+#btnBitacora .nb{animation:none}
+@media(max-width:560px){#btnBitacora{padding:7px 11px;font-size:.7rem}}
+.bt-cuerpo{padding:18px;display:flex;flex-direction:column;gap:16px}
+.bt-caja{background:var(--crema);border:2px solid var(--linea);border-bottom-width:5px;border-radius:20px;padding:16px}
+.bt-caja h3{font-size:1.05rem;margin-bottom:10px;text-transform:none;letter-spacing:0}
+.bt-caja textarea{width:100%;min-height:64px;padding:11px 13px;border:2px solid var(--linea);border-radius:14px;background:var(--papel);color:var(--tinta);font:inherit;font-weight:700;resize:vertical}
+.bt-caja textarea:focus{outline:0;border-color:var(--rojo)}
+.bt-fila{display:flex;gap:10px;flex-wrap:wrap;margin:10px 0}
+.bt-fila>*{flex:1 1 150px;min-width:0}
+.bt-acc{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.bt-ayuda{font-size:.82rem;color:var(--gris);font-weight:700;margin-top:8px}
+.bt-filtros{display:flex;gap:7px;flex-wrap:wrap}
+.bt-chip{border:2px solid var(--linea);background:var(--crema);color:var(--tinta);border-radius:99px;padding:3px 13px;font:inherit;font-weight:800;font-size:.85rem;cursor:pointer}
+.bt-chip.on{background:var(--rojo);border-color:var(--rojo);color:#fff}
+.bt-gh{display:flex;align-items:center;gap:9px;margin:6px 0 8px;font-weight:900;font-size:.95rem;letter-spacing:.06em;text-transform:uppercase}
+.bt-gh i{width:13px;height:13px;border-radius:50%;flex:none}
+.bt-gh span{color:var(--gris);font-size:.8rem}
+.bt-t{display:flex;gap:12px;align-items:flex-start;padding:11px 13px;margin-bottom:8px;background:var(--crema);border:2px solid var(--linea);border-left-width:7px;border-radius:16px}
+.bt-t input[type=checkbox]{flex:none;width:22px!important;height:22px;margin-top:2px;padding:0!important;accent-color:#FF0E49}
+.bt-t .tx{flex:1;min-width:0}
+.bt-t p{white-space:pre-wrap;word-break:break-word;font-weight:700;line-height:1.3}
+.bt-t.hecha p{text-decoration:line-through;color:var(--gris)}
+.bt-meta{display:flex;gap:7px;flex-wrap:wrap;margin-top:5px;font-size:.74rem;font-weight:900;letter-spacing:.04em;text-transform:uppercase}
+.bt-meta span{padding:2px 9px;border-radius:99px;background:var(--papel-os);color:var(--gris-os)}
+.bt-meta .ve{background:#FF0E49;color:#fff}.bt-meta .ho{background:#FFC800;color:#5C4300}
+.bt-t .ac{display:flex;gap:4px;flex:none}
+.bt-vacio{text-align:center;padding:26px 10px;color:var(--gris);font-weight:800}
+.bt-det{border:2px solid var(--linea);border-radius:18px;background:var(--crema);padding:2px 14px}
+.bt-det>summary{cursor:pointer;padding:12px 0;font-weight:900;letter-spacing:.03em}
+.bt-det[open]>summary{border-bottom:2px solid var(--linea);margin-bottom:12px}
+.bt-cfg{display:grid;grid-template-columns:1fr 1fr;gap:18px;padding-bottom:14px}
+@media(max-width:640px){.bt-cfg{grid-template-columns:1fr}}
+.bt-cfg h4{font-size:.95rem;margin-bottom:8px;text-transform:uppercase;letter-spacing:.05em}
+.bt-cr{display:flex;gap:5px;align-items:center;margin-bottom:6px}
+.bt-cr i{width:13px;height:13px;border-radius:50%;flex:none}
+.bt-cr input{flex:1;min-width:0;padding:7px 10px!important;font-size:.95rem}
+.bt-cr button{flex:none;width:30px;height:32px;border:2px solid var(--linea);border-radius:10px;background:var(--papel);color:var(--tinta);font-weight:900;cursor:pointer}
+.bt-cr button:hover{border-color:var(--rojo)}
+.bt-nuevo{display:flex;gap:6px;margin-top:8px}.bt-nuevo input{flex:1;min-width:0;padding:7px 10px!important}
+</style>
+<script id="bitacora-js">
+(function(){
+  var COL = 'bitacora';
+  var P_COL = ['#E5113F','#F08A00','#0E8C89','#1D5C97','#7C3AA0','#847A67'];
+  var datos = null, clave = null, unsub = null, ov = null, filtro = '', editId = null, errorMsg = '';
+  function $b(id){ return document.getElementById(id); }
+  function X(t){ return String(t == null ? '' : t).replace(/[<>&"]/g, function(c){ return {'<':'&lt;','>':'&gt;','&':'&amp;','"':'&quot;'}[c]; }); }
+  function uid(){ return Math.random().toString(36).slice(2, 8) + Date.now().toString(36).slice(-3); }
+  function hoy(){ var d = new Date(); return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0'); }
+  function corta(f){ var p = f.split('-'); return p[2] + '/' + p[1]; }
+  function porDefecto(){
+    return {etq:[{id:'e1', n:'Alto'}, {id:'e2', n:'Medio'}, {id:'e3', n:'Bajo'}],
+            sub:[{id:'s1', n:'Matricular'}, {id:'s2', n:'Seguimiento'}, {id:'s3', n:'Llamar'}], tareas:[]};
+  }
+  function norm(d){
+    var b = porDefecto();
+    return {etq:(d.etq && d.etq.length ? d.etq : b.etq), sub:(d.sub || b.sub), tareas:(d.tareas || [])};
+  }
+  function color(i){ return P_COL[Math.min(i, P_COL.length - 1)]; }
+  function iE(id){ for (var i = 0; i < datos.etq.length; i++) if (datos.etq[i].id === id) return i; return datos.etq.length; }
+  function iS(id){ for (var i = 0; i < datos.sub.length; i++) if (datos.sub[i].id === id) return i; return datos.sub.length; }
+  function nomS(id){ var i = iS(id); return i < datos.sub.length ? datos.sub[i].n : ''; }
+  /* orden automático: etiqueta (prioridad) → sub-etiqueta → fecha → creación */
+  function ordenar(a, b){ return iE(a.e) - iE(b.e) || iS(a.s) - iS(b.s) || (a.f || '9999').localeCompare(b.f || '9999') || a.c - b.c; }
+
+  /* ---------- guardado ---------- */
+  function guardar(){
+    if (!window.db || !clave) return;
+    window.db.collection(COL).doc(clave).set({nombre:window.sesion ? window.sesion.nombre : '', etq:datos.etq, sub:datos.sub, tareas:datos.tareas, ts:Date.now()})
+      .then(function(){ errorMsg = ''; }).catch(function(e){ errorMsg = 'No se pudo guardar: ' + e.message; pintar(); });
+    pintar();
+  }
+  function suscribir(){
+    if (unsub) { try { unsub(); } catch(e){} unsub = null; }
+    datos = null; errorMsg = '';
+    if (!clave || !window.db) { pintarBoton(); pintar(); return; }
+    unsub = window.db.collection(COL).doc(clave).onSnapshot(function(d){
+      datos = d.exists ? norm(d.data()) : porDefecto(); pintarBoton(); pintar();
+    }, function(e){ errorMsg = e.code === 'permission-denied' ? 'Falta la regla de «bitacora» en Firestore.' : 'Error: ' + e.message; pintarBoton(); pintar(); });
+  }
+  function revisarSesion(){
+    var c = window.sesion && window.sesion.clave ? window.sesion.clave : null;
+    if (c !== clave || (c && !unsub && window.db)) { clave = c; suscribir(); }
+  }
+
+  /* ---------- botón del header ---------- */
+  var btn = document.createElement('button'); btn.id = 'btnBitacora'; btn.type = 'button';
+  var acc = document.querySelector('.hdr-acciones'), nb = $b('btnNoticias');
+  if (acc) acc.insertBefore(btn, nb || acc.firstChild); else document.querySelector('header').appendChild(btn);
+  function pendientes(){ return datos ? datos.tareas.filter(function(t){ return !t.d; }).length : 0; }
+  function pintarBoton(){ var n = pendientes(); btn.innerHTML = '📝 Bitácora' + (n ? '<span class="nb">' + (n > 99 ? '99+' : n) + '</span>' : ''); }
+
+  /* ---------- panel ---------- */
+  function abrir(){
+    if (ov) return;
+    ov = document.createElement('div'); ov.className = 'noticias-ov';
+    ov.innerHTML = '<aside class="noticias ancho" role="dialog" aria-label="Bitácora"><div class="not-head"><div style="flex:1"><h2>📝 Mi bitácora</h2><small>Tus pendientes, ordenados solos por prioridad</small></div><button type="button" class="not-x" aria-label="Cerrar">✕</button></div><div class="bt-cuerpo" id="btCuerpo"></div></aside>';
+    document.body.appendChild(ov);
+    function cerrar(){ ov.remove(); ov = null; editId = null; document.removeEventListener('keydown', tecla); }
+    function tecla(e){ if (e.key === 'Escape') cerrar(); }
+    document.addEventListener('keydown', tecla);
+    ov.addEventListener('click', function(e){ if (e.target === ov) cerrar(); });
+    ov.querySelector('.not-x').onclick = cerrar;
+    ov.addEventListener('click', clic); ov.addEventListener('change', cambio);
+    ov.addEventListener('keydown', function(e){
+      if (e.key === 'Enter' && e.target.getAttribute('data-nuevo')) { e.preventDefault(); agregarEtiqueta(e.target.getAttribute('data-nuevo')); }
+      if (e.key === 'Enter' && (e.ctrlKey || e.metaKey) && e.target.id === 'btT') agregarTarea();
+    });
+    armar();
+  }
+  btn.onclick = abrir;
+
+  function armar(){
+    var c = $b('btCuerpo'); if (!c) return;
+    if (!clave) {
+      c.innerHTML = '<div class="bt-caja bt-vacio">Para usar tu bitácora primero identifícate.<br><br><button type="button" class="btn" data-a="login">Entrar / crear usuario</button></div>'; return;
+    }
+    if (!datos) { c.innerHTML = '<div class="bt-caja bt-vacio">' + (errorMsg || 'Cargando tu bitácora…') + '</div>'; return; }
+    c.innerHTML = '<div class="bt-caja"><h3 id="btTitForm">Nueva tarea</h3>' +
+      '<textarea id="btT" maxlength="500" placeholder="Escribe aquí lo que tienes pendiente o quieres dejar anotado…"></textarea>' +
+      '<div class="bt-fila"><select id="btE"></select><select id="btS"></select><input type="date" id="btF" title="Para el día (opcional)"></div>' +
+      '<div class="bt-acc"><button type="button" class="btn" data-a="add" id="btAdd">Agregar</button><button type="button" class="btn gris" data-a="cancelar" id="btCan" style="display:none">Cancelar</button></div>' +
+      '<div class="bt-ayuda">Orden automático: primero la etiqueta de mayor prioridad, luego la sub-etiqueta y luego la fecha. Ctrl + Enter para agregar.</div>' +
+      '<div id="btErr" class="bt-ayuda" style="color:var(--rojo)"></div></div>' +
+      '<div class="bt-filtros" id="btFil"></div><div id="btLista"></div>' +
+      '<details class="bt-det" id="btDone"><summary id="btDoneS"></summary><div id="btDoneL"></div></details>' +
+      '<details class="bt-det"><summary>Etiquetas y sub-etiquetas</summary><div class="bt-cfg" id="btCfg"></div></details>';
+    selects(); pintar();
+  }
+  function selects(){
+    var e = $b('btE'), s = $b('btS'); if (!e || !datos) return;
+    var ve = e.value, vs = s.value;
+    e.innerHTML = datos.etq.map(function(x, i){ return '<option value="' + x.id + '">Prioridad: ' + X(x.n) + '</option>'; }).join('');
+    s.innerHTML = '<option value="">Sin sub-etiqueta</option>' + datos.sub.map(function(x){ return '<option value="' + x.id + '">' + X(x.n) + '</option>'; }).join('');
+    if (ve && iE(ve) < datos.etq.length) e.value = ve; else e.value = datos.etq[Math.floor(datos.etq.length / 2)].id;
+    if (vs && iS(vs) < datos.sub.length) s.value = vs;
+  }
+  function filaTarea(t, col){
+    var h = hoy(), meta = '';
+    if (t.s && nomS(t.s)) meta += '<span>' + X(nomS(t.s)) + '</span>';
+    if (t.f) meta += '<span class="' + (!t.d && t.f < h ? 've' : (!t.d && t.f === h ? 'ho' : '')) + '">' + (!t.d && t.f < h ? 'Vencida · ' : (t.f === h && !t.d ? 'Hoy · ' : '')) + corta(t.f) + '</span>';
+    return '<div class="bt-t' + (t.d ? ' hecha' : '') + '" style="border-left-color:' + col + '"><input type="checkbox" data-a="chk" data-id="' + t.id + '"' + (t.d ? ' checked' : '') + ' aria-label="Completada">' +
+      '<div class="tx"><p>' + X(t.t) + '</p>' + (meta ? '<div class="bt-meta">' + meta + '</div>' : '') + '</div>' +
+      '<div class="ac">' + (t.d ? '' : '<button type="button" class="btn mini gris" data-a="edit" data-id="' + t.id + '">Editar</button>') + '<button type="button" class="btn mini gris" data-a="del" data-id="' + t.id + '" aria-label="Eliminar">✕</button></div></div>';
+  }
+  function pintar(){
+    if (!ov) return;
+    if (!$b('btLista')) { armar(); return; }
+    if (!datos) return;
+    $b('btErr').textContent = errorMsg;
+    var pend = datos.tareas.filter(function(t){ return !t.d; }), hechas = datos.tareas.filter(function(t){ return t.d; });
+    /* filtros por sub-etiqueta */
+    var chips = '<button type="button" class="bt-chip' + (filtro === '' ? ' on' : '') + '" data-a="fil" data-v="">Todas (' + pend.length + ')</button>';
+    datos.sub.forEach(function(s){ var n = pend.filter(function(t){ return t.s === s.id; }).length; chips += '<button type="button" class="bt-chip' + (filtro === s.id ? ' on' : '') + '" data-a="fil" data-v="' + s.id + '">' + X(s.n) + ' (' + n + ')</button>'; });
+    var sn = pend.filter(function(t){ return !t.s || iS(t.s) >= datos.sub.length; }).length;
+    if (sn) chips += '<button type="button" class="bt-chip' + (filtro === '-' ? ' on' : '') + '" data-a="fil" data-v="-">Sin sub-etiqueta (' + sn + ')</button>';
+    $b('btFil').innerHTML = chips;
+    /* lista agrupada por etiqueta, ya ordenada */
+    var vis = pend.filter(function(t){ return filtro === '' || (filtro === '-' ? (!t.s || iS(t.s) >= datos.sub.length) : t.s === filtro); }).sort(ordenar), h = '';
+    datos.etq.forEach(function(e, i){
+      var g = vis.filter(function(t){ return iE(t.e) === i; });
+      if (g.length) h += '<div class="bt-gh"><i style="background:' + color(i) + '"></i>' + X(e.n) + ' <span>' + g.length + '</span></div>' + g.map(function(t){ return filaTarea(t, color(i)); }).join('');
+    });
+    var huer = vis.filter(function(t){ return iE(t.e) >= datos.etq.length; });
+    if (huer.length) h += '<div class="bt-gh"><i style="background:#847A67"></i>Sin etiqueta <span>' + huer.length + '</span></div>' + huer.map(function(t){ return filaTarea(t, '#847A67'); }).join('');
+    $b('btLista').innerHTML = h || '<div class="bt-caja bt-vacio">' + (pend.length ? 'No hay tareas con ese filtro.' : 'No tienes tareas pendientes. Agrega la primera arriba.') + '</div>';
+    /* completadas */
+    hechas.sort(function(a, b){ return (b.x || 0) - (a.x || 0); });
+    $b('btDone').style.display = hechas.length ? '' : 'none';
+    $b('btDoneS').textContent = 'Completadas (' + hechas.length + ')';
+    $b('btDoneL').innerHTML = hechas.map(function(t){ return filaTarea(t, '#847A67'); }).join('') + '<div class="bt-acc" style="padding-bottom:12px"><button type="button" class="btn mini gris" data-a="limpiar">Borrar completadas</button></div>';
+    pintarCfg();
+  }
+  function listaCfg(k, arr){
+    return arr.map(function(x, i){
+      return '<div class="bt-cr" data-k="' + k + '" data-id="' + x.id + '">' + (k === 'etq' ? '<i style="background:' + color(i) + '"></i>' : '') +
+        '<input type="text" value="' + X(x.n) + '" maxlength="30" data-a="ren" aria-label="Nombre"><button type="button" data-a="up" title="Subir prioridad">↑</button><button type="button" data-a="dn" title="Bajar prioridad">↓</button><button type="button" data-a="delc" title="Eliminar">✕</button></div>';
+    }).join('');
+  }
+  function pintarCfg(){
+    var c = $b('btCfg'); if (!c) return;
+    var af = document.activeElement, nk = af && af.getAttribute ? af.getAttribute('data-nuevo') : null;
+    if (af && af.getAttribute && af.getAttribute('data-a') === 'ren' && c.contains(af)) return; /* no interrumpir al renombrar */
+    c.innerHTML = '<div><h4>Etiquetas (prioridad)</h4>' + listaCfg('etq', datos.etq) + '<div class="bt-nuevo"><input type="text" maxlength="30" placeholder="Nueva etiqueta" data-nuevo="etq"><button type="button" class="btn mini" data-a="addc" data-k="etq">+</button></div><div class="bt-ayuda">La de arriba es la de mayor prioridad.</div></div>' +
+      '<div><h4>Sub-etiquetas</h4>' + listaCfg('sub', datos.sub) + '<div class="bt-nuevo"><input type="text" maxlength="30" placeholder="Nueva sub-etiqueta" data-nuevo="sub"><button type="button" class="btn mini" data-a="addc" data-k="sub">+</button></div><div class="bt-ayuda">También se ordenan de arriba hacia abajo.</div></div>';
+    if (nk) { var ni = c.querySelector('[data-nuevo="' + nk + '"]'); if (ni) ni.focus(); }
+  }
+
+  /* ---------- acciones ---------- */
+  function agregarTarea(){
+    var tx = $b('btT').value.trim(); if (!tx) { $b('btT').focus(); return; }
+    var e = $b('btE').value, s = $b('btS').value, f = $b('btF').value;
+    if (editId) { datos.tareas.forEach(function(t){ if (t.id === editId) { t.t = tx; t.e = e; t.s = s; t.f = f; } }); salirEdicion(); }
+    else datos.tareas.push({id:uid(), t:tx, e:e, s:s, f:f, d:false, c:Date.now()});
+    $b('btT').value = ''; $b('btF').value = '';
+    guardar(); $b('btT').focus();
+  }
+  function salirEdicion(){ editId = null; if ($b('btAdd')) { $b('btAdd').textContent = 'Agregar'; $b('btCan').style.display = 'none'; $b('btTitForm').textContent = 'Nueva tarea'; } }
+  function agregarEtiqueta(k){
+    var inp = ov.querySelector('[data-nuevo="' + k + '"]'), n = inp.value.trim(); if (!n) return;
+    datos[k].push({id:(k === 'etq' ? 'e' : 's') + uid(), n:n}); inp.value = ''; guardar(); selects();
+  }
+  function mover(arr, id, d){
+    var i = arr.map(function(x){ return x.id; }).indexOf(id), j = i + d; if (i < 0 || j < 0 || j >= arr.length) return;
+    var t = arr[i]; arr[i] = arr[j]; arr[j] = t;
+  }
+  function clic(e){
+    var b = e.target.closest ? e.target.closest('[data-a]') : null; if (!b || b.tagName === 'INPUT' && b.type === 'text') return;
+    var a = b.getAttribute('data-a'), id = b.getAttribute('data-id'), fila = b.closest('.bt-cr'), k = fila ? fila.getAttribute('data-k') : b.getAttribute('data-k');
+    if (a === 'login') { if (typeof abrirLogin === 'function') abrirLogin(); return; }
+    if (!datos) return;
+    if (a === 'add') agregarTarea();
+    else if (a === 'cancelar') { salirEdicion(); $b('btT').value = ''; $b('btF').value = ''; }
+    else if (a === 'fil') { filtro = b.getAttribute('data-v'); pintar(); }
+    else if (a === 'edit') {
+      var t = datos.tareas.filter(function(x){ return x.id === id; })[0]; if (!t) return;
+      editId = id; $b('btT').value = t.t; $b('btE').value = t.e; $b('btS').value = t.s || ''; $b('btF').value = t.f || '';
+      $b('btAdd').textContent = 'Guardar cambios'; $b('btCan').style.display = ''; $b('btTitForm').textContent = 'Editando tarea';
+      $b('btT').focus(); $b('btT').scrollIntoView({behavior:'smooth', block:'center'});
+    }
+    else if (a === 'del') { if (confirm('¿Eliminar esta tarea?')) { datos.tareas = datos.tareas.filter(function(x){ return x.id !== id; }); if (editId === id) salirEdicion(); guardar(); } }
+    else if (a === 'limpiar') { if (confirm('¿Borrar todas las tareas completadas?')) { datos.tareas = datos.tareas.filter(function(x){ return !x.d; }); guardar(); } }
+    else if (a === 'up' || a === 'dn') { mover(datos[k], fila.getAttribute('data-id'), a === 'up' ? -1 : 1); guardar(); selects(); }
+    else if (a === 'addc') agregarEtiqueta(k);
+    else if (a === 'delc') {
+      var cid = fila.getAttribute('data-id');
+      if (k === 'etq' && datos.etq.length <= 1) return alert('Debe quedar al menos una etiqueta de prioridad.');
+      if (!confirm('¿Eliminar «' + fila.querySelector('input').value + '»? Las tareas que la usan pasarán a ' + (k === 'etq' ? 'la etiqueta de menor prioridad.' : '«Sin sub-etiqueta».'))) return;
+      datos[k] = datos[k].filter(function(x){ return x.id !== cid; });
+      datos.tareas.forEach(function(t){ if (k === 'etq' && t.e === cid) t.e = datos.etq[datos.etq.length - 1].id; if (k === 'sub' && t.s === cid) t.s = ''; });
+      if (filtro === cid) filtro = '';
+      guardar(); selects();
+    }
+  }
+  function cambio(e){
+    var el = e.target, a = el.getAttribute('data-a'); if (!datos) return;
+    if (a === 'chk') {
+      datos.tareas.forEach(function(t){ if (t.id === el.getAttribute('data-id')) { t.d = el.checked; t.x = el.checked ? Date.now() : 0; } });
+      if (editId === el.getAttribute('data-id')) salirEdicion();
+      guardar();
+    } else if (a === 'ren') {
+      var f = el.closest('.bt-cr'), k = f.getAttribute('data-k'), n = el.value.trim();
+      datos[k].forEach(function(x){ if (x.id === f.getAttribute('data-id')) x.n = n || x.n; });
+      guardar(); selects(); pintarCfg();
+    }
+  }
+
+  setInterval(revisarSesion, 700); revisarSesion(); pintarBoton();
+  window.__bitacora = {abrir:abrir};
+})();
+</script>
+
 </body>
 </html>
