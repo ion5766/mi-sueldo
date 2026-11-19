@@ -3660,24 +3660,24 @@ ponerBanner();
   function corta(f){ var p = f.split('-'); return p[2] + '/' + p[1]; }
   function porDefecto(){
     return {etq:[{id:'e1', n:'Alto'}, {id:'e2', n:'Medio'}, {id:'e3', n:'Bajo'}],
-            sub:[{id:'s1', n:'Matricular'}, {id:'s2', n:'Seguimiento'}, {id:'s3', n:'Llamar'}], tareas:[], ord:'desc'};
+            sub:[{id:'s1', n:'Matricular'}, {id:'s2', n:'Seguimiento'}, {id:'s3', n:'Llamar'}], tareas:[]};
   }
   function norm(d){
     var b = porDefecto();
-    return {etq:(d.etq && d.etq.length ? d.etq : b.etq), sub:(d.sub || b.sub), tareas:(d.tareas || []), ord:(d.ord === 'asc' ? 'asc' : 'desc')};
+    return {etq:(d.etq && d.etq.length ? d.etq : b.etq), sub:(d.sub || b.sub), tareas:(d.tareas || [])};
   }
   function color(i){ return P_COL[Math.min(i, P_COL.length - 1)]; }
   function iE(id){ for (var i = 0; i < datos.etq.length; i++) if (datos.etq[i].id === id) return i; return datos.etq.length; }
   function iS(id){ for (var i = 0; i < datos.sub.length; i++) if (datos.sub[i].id === id) return i; return datos.sub.length; }
   function nomS(id){ var i = iS(id); return i < datos.sub.length ? datos.sub[i].n : ''; }
-  /* orden automático: la etiqueta de mayor prioridad siempre va arriba; dentro de cada una, por fecha y hora de registro */
-  function ordenar(a, b){ return iE(a.e) - iE(b.e) || (datos.ord === 'asc' ? a.c - b.c : b.c - a.c); }
+  /* orden automático: la etiqueta de mayor prioridad siempre va arriba; dentro de cada una, la más antigua primero (por fecha y hora de registro) */
+  function ordenar(a, b){ return iE(a.e) - iE(b.e) || a.c - b.c; }
   function hr(ts){ var d = new Date(ts), p = function(n){ return String(n).padStart(2, '0'); }; return p(d.getDate()) + '/' + p(d.getMonth() + 1) + ' ' + p(d.getHours()) + ':' + p(d.getMinutes()); }
 
   /* ---------- guardado ---------- */
   function guardar(){
     if (!window.db || !clave) return;
-    window.db.collection(COL).doc(clave).set({nombre:window.sesion ? window.sesion.nombre : '', etq:datos.etq, sub:datos.sub, tareas:datos.tareas, ord:datos.ord, ts:Date.now()})
+    window.db.collection(COL).doc(clave).set({nombre:window.sesion ? window.sesion.nombre : '', etq:datos.etq, sub:datos.sub, tareas:datos.tareas, ts:Date.now()})
       .then(function(){ errorMsg = ''; }).catch(function(e){ errorMsg = 'No se pudo guardar: ' + e.message; pintar(); });
     pintar();
   }
@@ -3731,9 +3731,9 @@ ponerBanner();
       '<textarea id="btT" maxlength="500" placeholder="Escribe aquí lo que tienes pendiente o quieres dejar anotado…"></textarea>' +
       '<div class="bt-fila"><select id="btE"></select><select id="btS"></select><input type="date" id="btF" title="Para el día (opcional)"></div>' +
       '<div class="bt-acc"><button type="button" class="btn" data-a="add" id="btAdd">Agregar</button><button type="button" class="btn gris" data-a="cancelar" id="btCan" style="display:none">Cancelar</button></div>' +
-      '<div class="bt-ayuda">Orden automático: siempre primero la etiqueta de mayor prioridad, aunque otra tarea sea más reciente; dentro de cada etiqueta se ordena por la fecha y hora en que se registró. Ctrl + Enter para agregar.</div>' +
+      '<div class="bt-ayuda">Orden automático: siempre primero la etiqueta de mayor prioridad, aunque otra tarea sea más reciente; dentro de cada etiqueta va primero la más antigua, según la fecha y hora en que se registró. Ctrl + Enter para agregar.</div>' +
       '<div id="btErr" class="bt-ayuda" style="color:var(--rojo)"></div></div>' +
-      '<div class="bt-acc" style="justify-content:space-between"><div class="bt-filtros" id="btFil"></div><select id="btOrd" style="flex:none;width:auto" title="Orden dentro de cada prioridad"><option value="desc">Más recientes primero</option><option value="asc">Más antiguas primero</option></select></div><div id="btLista"></div>' +
+      '<div class="bt-filtros" id="btFil"></div><div id="btLista"></div>' +
       '<details class="bt-det" id="btDone"><summary id="btDoneS"></summary><div id="btDoneL"></div></details>' +
       '<details class="bt-det"><summary>Etiquetas y sub-etiquetas</summary><div class="bt-cfg" id="btCfg"></div></details>';
     selects(); pintar();
@@ -3759,7 +3759,7 @@ ponerBanner();
     if (!ov) return;
     if (!$b('btLista')) { armar(); return; }
     if (!datos) return;
-    $b('btErr').textContent = errorMsg; $b('btOrd').value = datos.ord;
+    $b('btErr').textContent = errorMsg;
     var pend = datos.tareas.filter(function(t){ return !t.d; }), hechas = datos.tareas.filter(function(t){ return t.d; });
     /* filtros por sub-etiqueta */
     var chips = '<button type="button" class="bt-chip' + (filtro === '' ? ' on' : '') + '" data-a="fil" data-v="">Todas (' + pend.length + ')</button>';
@@ -3846,7 +3846,6 @@ ponerBanner();
   }
   function cambio(e){
     var el = e.target, a = el.getAttribute('data-a'); if (!datos) return;
-    if (el.id === 'btOrd') { datos.ord = el.value; guardar(); return; }
     if (a === 'chk') {
       datos.tareas.forEach(function(t){ if (t.id === el.getAttribute('data-id')) { t.d = el.checked; t.x = el.checked ? Date.now() : 0; } });
       if (editId === el.getAttribute('data-id')) salirEdicion();
