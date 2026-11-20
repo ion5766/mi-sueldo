@@ -3696,21 +3696,24 @@ ponerBanner();
   /* ---------- guardado ---------- */
   function guardar(){
     if (!window.db || !clave) return;
+    var pr = datos.compartir ? subirResumen() : Promise.resolve('');
     window.db.collection(COL).doc(clave).set({nombre:window.sesion ? window.sesion.nombre : '', etq:datos.etq, sub:datos.sub, tareas:datos.tareas, compartir:!!datos.compartir, ts:Date.now()})
-      .then(function(){ errorMsg = ''; estado('✓ Guardado en Firebase · ' + hr(Date.now()).slice(6)); })
+      .then(function(){ errorMsg = ''; return pr; })
+      .then(function(m){ estado(m || ('✓ Guardado en Firebase · ' + hr(Date.now()).slice(6)), !!m); })
       .catch(function(e){ var m = 'No se pudo guardar en Firebase (' + e.message + '). Se restauró lo último que sí quedó guardado.'; suscribir(); errorMsg = m; estado(m, true); });
     estado('Guardando…');
-    if (datos.compartir) subirResumen();
     pintar();
   }
   function estado(t, mal){ var e = $b('btEstado'); if (!e) return; e.textContent = t; e.style.color = mal ? '#FF0E49' : ''; }
   /* resumen para el panel de equipo: solo cantidades, nunca el contenido */
   function subirResumen(){
-    if (!window.db || !clave) return;
+    if (!window.db || !clave) return Promise.resolve('');
     var pend = datos.tareas.filter(function(t){ return !t.d; }), h = hoy();
-    window.db.collection(COL_EQ).doc(clave).set({nombre:window.sesion ? window.sesion.nombre : '', pend:pend.length,
+    return window.db.collection(COL_EQ).doc(clave).set({nombre:window.sesion ? window.sesion.nombre : '', pend:pend.length,
       alto:pend.filter(function(t){ return t.e === datos.etq[0].id; }).length, altoN:datos.etq[0].n,
-      venc:pend.filter(function(t){ return t.f && t.f < h; }).length, ts:Date.now()}).catch(function(){});
+      venc:pend.filter(function(t){ return t.f && t.f < h; }).length, ts:Date.now()}).then(function(){ return ''; }).catch(function(e){
+      return 'Tus tareas se guardaron, pero no se pudo compartir el resumen: ' + (e && e.code === 'permission-denied' ? 'falta la regla «bitacora_equipo» en Firebase.' : e.message);
+    });
   }
   function quitarResumen(){ if (window.db && clave) window.db.collection(COL_EQ).doc(clave).delete().catch(function(){}); }
   /* ---------- resumen al entrar a la página ---------- */
@@ -3819,7 +3822,7 @@ ponerBanner();
       '<input type="search" id="btBus" class="bt-busca" placeholder="Buscar en tus tareas y notas…" autocomplete="off"><div class="bt-filtros" id="btFil"></div><div id="btLista"></div>' +
       '<details class="bt-det" id="btDone"><summary id="btDoneS"></summary><div id="btDoneL"></div></details>' +
       '<details class="bt-det"><summary>Etiquetas y sub-etiquetas</summary><div class="bt-cfg" id="btCfg"></div></details>' +
-      '<label class="bt-ayuda" style="display:flex;gap:9px;align-items:flex-start;cursor:pointer;text-transform:none;letter-spacing:0;font-size:.88rem"><input type="checkbox" id="btComp" style="width:20px!important;height:20px;padding:0!important;flex:none;accent-color:#FF0E49"><span>Compartir con el equipo cuántas tareas tengo pendientes. Solo se ven las cantidades; nunca el contenido de mis tareas ni de mis notas.</span></label>' +
+      '<label class="bt-ayuda" style="display:flex;gap:9px;align-items:flex-start;cursor:pointer;text-transform:none;letter-spacing:0;font-size:.88rem"><input type="checkbox" id="btComp" style="width:20px!important;height:20px;padding:0!important;flex:none;accent-color:#FF0E49"><span>Compartir con el administrador cuántas tareas tengo pendientes. Solo ve cantidades en su panel «Equipo»; nunca el contenido de mis tareas ni de mis notas. Los demás asesores no ven nada.</span></label>' +
       '<div class="bt-acc" style="justify-content:space-between"><button type="button" class="btn mini gris" data-a="borrartodo">Eliminar toda mi bitácora</button><span class="bt-ayuda" id="btEstado" style="margin:0"></span></div>';
     $b('btBus').value = busq;
     selects(); pintar();
