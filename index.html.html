@@ -3685,6 +3685,19 @@ ponerBanner();
     var b = porDefecto();
     return {etq:(d.etq && d.etq.length ? d.etq : b.etq), sub:(d.sub || b.sub), tareas:(d.tareas || []), compartir:!!d.compartir};
   }
+  var REP = {d:'Diaria', l:'Lun–Vie', s:'Semanal', m:'Mensual'}, msgExtra = '', diaPintado = hoy();
+  function activa(t){ return !t.d && !(t.v && t.v > hoy()); }   /* las repeticiones futuras quedan ocultas hasta su fecha */
+  function iso(d){ return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0'); }
+  function paso(f, r){
+    var p = f.split('-'), d = new Date(+p[0], +p[1] - 1, +p[2], 12);
+    if (r === 'd') d.setDate(d.getDate() + 1);
+    else if (r === 'l') { do { d.setDate(d.getDate() + 1); } while (d.getDay() === 0 || d.getDay() === 6); }
+    else if (r === 's') d.setDate(d.getDate() + 7);
+    else if (r === 'm') { var dia = d.getDate(); d.setDate(1); d.setMonth(d.getMonth() + 1); d.setDate(Math.min(dia, new Date(d.getFullYear(), d.getMonth() + 1, 0).getDate())); }
+    return iso(d);
+  }
+  /* próxima fecha: siempre posterior a hoy y a la fecha de la tarea */
+  function siguiente(t){ var h = hoy(), n = paso(t.f || h, t.r), g = 0; while (n <= h && g++ < 400) n = paso(n, t.r); return n; }
   function color(i){ return P_COL[Math.min(i, P_COL.length - 1)]; }
   function iE(id){ for (var i = 0; i < datos.etq.length; i++) if (datos.etq[i].id === id) return i; return datos.etq.length; }
   function iS(id){ for (var i = 0; i < datos.sub.length; i++) if (datos.sub[i].id === id) return i; return datos.sub.length; }
@@ -3699,7 +3712,7 @@ ponerBanner();
     var pr = datos.compartir ? subirResumen() : Promise.resolve('');
     window.db.collection(COL).doc(clave).set({nombre:window.sesion ? window.sesion.nombre : '', etq:datos.etq, sub:datos.sub, tareas:datos.tareas, compartir:!!datos.compartir, ts:Date.now()})
       .then(function(){ errorMsg = ''; return pr; })
-      .then(function(m){ estado(m || ('✓ Guardado en Firebase · ' + hr(Date.now()).slice(6)), !!m); })
+      .then(function(m){ estado(m || ('✓ Guardado en Firebase · ' + hr(Date.now()).slice(6) + (msgExtra ? ' · ' + msgExtra : '')), !!m); msgExtra = ''; })
       .catch(function(e){ var m = 'No se pudo guardar en Firebase (' + e.message + '). Se restauró lo último que sí quedó guardado.'; suscribir(); errorMsg = m; estado(m, true); });
     estado('Guardando…');
     pintar();
@@ -3708,7 +3721,7 @@ ponerBanner();
   /* resumen para el panel de equipo: solo cantidades, nunca el contenido */
   function subirResumen(){
     if (!window.db || !clave) return Promise.resolve('');
-    var pend = datos.tareas.filter(function(t){ return !t.d; }), h = hoy();
+    var pend = datos.tareas.filter(activa), h = hoy();
     return window.db.collection(COL_EQ).doc(clave).set({nombre:window.sesion ? window.sesion.nombre : '', pend:pend.length,
       alto:pend.filter(function(t){ return t.e === datos.etq[0].id; }).length, altoN:datos.etq[0].n,
       venc:pend.filter(function(t){ return t.f && t.f < h; }).length, ts:Date.now()}).then(function(){ return ''; }).catch(function(e){
@@ -3722,7 +3735,7 @@ ponerBanner();
   function mostrarResumen(){
     if (!datos || !clave || resumenHecho[clave] || ov) return;
     resumenHecho[clave] = true;
-    var pend = datos.tareas.filter(function(t){ return !t.d; }); if (!pend.length) return;
+    var pend = datos.tareas.filter(activa); if (!pend.length) return;
     var h = hoy(), venc = pend.filter(function(t){ return t.f && t.f < h; }).length, hoyN = pend.filter(function(t){ return t.f === h; }).length;
     var alta = pend.filter(function(t){ return t.e === datos.etq[0].id; }).length, n = pend.length;
     var nom = ((window.sesion && window.sesion.nombre) || '').split(' ')[0]; nom = nom.charAt(0).toUpperCase() + nom.slice(1).toLowerCase();
@@ -3750,6 +3763,7 @@ ponerBanner();
   }
   function revisarSesion(){
     verEq();
+    if (hoy() !== diaPintado) { diaPintado = hoy(); pintarBoton(); pintar(); }
     var c = window.sesion && window.sesion.clave ? window.sesion.clave : null;
     if (c !== clave || (c && !unsub && window.db)) { clave = c; suscribir(); }
   }
@@ -3758,7 +3772,7 @@ ponerBanner();
   var btn = document.createElement('button'); btn.id = 'btnBitacora'; btn.type = 'button';
   var acc = document.querySelector('.hdr-acciones'), nb = $b('btnNoticias');
   if (acc) acc.insertBefore(btn, nb || acc.firstChild); else document.querySelector('header').appendChild(btn);
-  function pendientes(){ return datos ? datos.tareas.filter(function(t){ return !t.d; }).length : 0; }
+  function pendientes(){ return datos ? datos.tareas.filter(activa).length : 0; }
   function pintarBoton(){ var n = pendientes(); btn.innerHTML = '📝 Bitácora' + (n ? '<span class="nb">' + (n > 99 ? '99+' : n) + '</span>' : ''); }
 
   /* ---------- panel ---------- */
@@ -3815,12 +3829,13 @@ ponerBanner();
     if (!datos) { c.innerHTML = '<div class="bt-caja bt-vacio">' + (errorMsg || 'Cargando tu bitácora…') + '</div>'; return; }
     c.innerHTML = '<div class="bt-caja"><h3 id="btTitForm">Nueva tarea</h3>' +
       '<textarea id="btT" maxlength="500" placeholder="Escribe aquí lo que tienes pendiente o quieres dejar anotado…"></textarea>' +
-      '<div class="bt-fila"><select id="btE"></select><select id="btS"></select><input type="date" id="btF" title="Para el día (opcional)"></div>' +
+      '<div class="bt-fila"><select id="btE"></select><select id="btS"></select><input type="date" id="btF" title="Para el día (opcional)"><select id="btR" title="Repetir"><option value="">No se repite</option><option value="d">Se repite todos los días</option><option value="l">Se repite de lunes a viernes</option><option value="s">Se repite cada semana</option><option value="m">Se repite cada mes</option></select></div>' +
       '<div class="bt-acc"><button type="button" class="btn" data-a="add" id="btAdd">Agregar</button><button type="button" class="btn gris" data-a="cancelar" id="btCan" style="display:none">Cancelar</button></div>' +
-      '<div class="bt-ayuda">Orden automático: siempre primero la etiqueta de mayor prioridad, aunque otra tarea sea más reciente; dentro de cada etiqueta va primero la más antigua, según la fecha y hora en que se registró. Ctrl + Enter para agregar.</div>' +
+      '<div class="bt-ayuda">Orden automático: siempre primero la etiqueta de mayor prioridad, aunque otra tarea sea más reciente; dentro de cada etiqueta va primero la más antigua, según la fecha y hora en que se registró. Si una tarea se repite, al completarla vuelve a aparecer sola en su próxima fecha. Ctrl + Enter para agregar.</div>' +
       '<div id="btErr" class="bt-ayuda" style="color:var(--rojo)"></div></div>' +
       '<input type="search" id="btBus" class="bt-busca" placeholder="Buscar en tus tareas y notas…" autocomplete="off"><div class="bt-filtros" id="btFil"></div><div id="btLista"></div>' +
       '<details class="bt-det" id="btDone"><summary id="btDoneS"></summary><div id="btDoneL"></div></details>' +
+      '<details class="bt-det" id="btFut"><summary id="btFutS"></summary><div id="btFutL"></div></details>' +
       '<details class="bt-det"><summary>Etiquetas y sub-etiquetas</summary><div class="bt-cfg" id="btCfg"></div></details>' +
       '<label class="bt-ayuda" style="display:flex;gap:9px;align-items:flex-start;cursor:pointer;text-transform:none;letter-spacing:0;font-size:.88rem"><input type="checkbox" id="btComp" style="width:20px!important;height:20px;padding:0!important;flex:none;accent-color:#FF0E49"><span>Compartir con el administrador cuántas tareas tengo pendientes. Solo ve cantidades en su panel «Equipo»; nunca el contenido de mis tareas ni de mis notas. Los demás asesores no ven nada.</span></label>' +
       '<div class="bt-acc" style="justify-content:space-between"><button type="button" class="btn mini gris" data-a="borrartodo">Eliminar toda mi bitácora</button><span class="bt-ayuda" id="btEstado" style="margin:0"></span></div>';
@@ -3854,6 +3869,7 @@ ponerBanner();
     var h = hoy(), meta = '';
     if (t.s && nomS(t.s)) meta += '<span>' + X(nomS(t.s)) + '</span>';
     if (t.c) meta += '<span title="Fecha y hora de registro">Registrada ' + hr(t.c) + '</span>';
+    if (t.r) meta += '<span title="Se repite">↻ ' + REP[t.r] + '</span>';
     if (t.f) meta += '<span class="' + (!t.d && t.f < h ? 've' : (!t.d && t.f === h ? 'ho' : '')) + '">' + (!t.d && t.f < h ? 'Vencida · ' : (t.f === h && !t.d ? 'Hoy · ' : '')) + corta(t.f) + '</span>';
     return '<div class="bt-t' + (t.d ? ' hecha' : '') + '" style="border-left-color:' + col + '"><input type="checkbox" data-a="chk" data-id="' + t.id + '"' + (t.d ? ' checked' : '') + ' aria-label="Completada">' +
       '<div class="tx"><p>' + X(t.t) + '</p>' + (meta ? '<div class="bt-meta">' + meta + '</div>' : '') + notasHtml(t) + '</div>' +
@@ -3865,7 +3881,7 @@ ponerBanner();
     if (!datos) return;
     $b('btErr').textContent = errorMsg; $b('btComp').checked = !!datos.compartir;
     var nin = leerNin();
-    var pend = datos.tareas.filter(function(t){ return !t.d; }), hechas = datos.tareas.filter(function(t){ return t.d && coincide(t); });
+    var pend = datos.tareas.filter(activa), hechas = datos.tareas.filter(function(t){ return t.d && coincide(t); });
     /* filtros por sub-etiqueta */
     var chips = '<button type="button" class="bt-chip' + (filtro === '' ? ' on' : '') + '" data-a="fil" data-v="">Todas (' + pend.length + ')</button>';
     datos.sub.forEach(function(s){ var n = pend.filter(function(t){ return t.s === s.id; }).length; chips += '<button type="button" class="bt-chip' + (filtro === s.id ? ' on' : '') + '" data-a="fil" data-v="' + s.id + '">' + X(s.n) + ' (' + n + ')</button>'; });
@@ -3886,6 +3902,10 @@ ponerBanner();
     $b('btDone').style.display = hechas.length ? '' : 'none';
     $b('btDoneS').textContent = 'Completadas (' + hechas.length + ')';
     $b('btDoneL').innerHTML = hechas.map(function(t){ return filaTarea(t, '#847A67'); }).join('') + '<div class="bt-acc" style="padding-bottom:12px"><button type="button" class="btn mini gris" data-a="limpiar">Borrar completadas</button></div>';
+    var fut = datos.tareas.filter(function(t){ return !t.d && !activa(t) && coincide(t); }).sort(function(a, c){ return (a.v || '').localeCompare(c.v || ''); });
+    $b('btFut').style.display = fut.length ? '' : 'none';
+    $b('btFutS').textContent = 'Próximas repeticiones (' + fut.length + ')';
+    $b('btFutL').innerHTML = fut.map(function(t){ return filaTarea(t, '#847A67'); }).join('');
     pintarCfg(); ponerNin(nin);
   }
   function listaCfg(k, arr){
@@ -3906,10 +3926,10 @@ ponerBanner();
   /* ---------- acciones ---------- */
   function agregarTarea(){
     var tx = $b('btT').value.trim(); if (!tx) { $b('btT').focus(); return; }
-    var e = $b('btE').value, s = $b('btS').value, f = $b('btF').value;
-    if (editId) { datos.tareas.forEach(function(t){ if (t.id === editId) { t.t = tx; t.e = e; t.s = s; t.f = f; } }); salirEdicion(); }
-    else datos.tareas.push({id:uid(), t:tx, e:e, s:s, f:f, d:false, c:Date.now()});
-    $b('btT').value = ''; $b('btF').value = '';
+    var e = $b('btE').value, s = $b('btS').value, f = $b('btF').value, r = $b('btR').value;
+    if (editId) { datos.tareas.forEach(function(t){ if (t.id === editId) { t.t = tx; t.e = e; t.s = s; t.f = f; t.r = r; } }); salirEdicion(); }
+    else datos.tareas.push({id:uid(), t:tx, e:e, s:s, f:f, r:r, d:false, c:Date.now()});
+    $b('btT').value = ''; $b('btF').value = ''; $b('btR').value = '';
     guardar(); $b('btT').focus();
   }
   function salirEdicion(){ editId = null; if ($b('btAdd')) { $b('btAdd').textContent = 'Agregar'; $b('btCan').style.display = 'none'; $b('btTitForm').textContent = 'Nueva tarea'; } }
@@ -3940,11 +3960,11 @@ ponerBanner();
     else if (a === 'notas') { abiertas[id] = !abiertas[id]; pintar(); }
     else if (a === 'addnota') agregarNota(id);
     else if (a === 'delnota') { var nid = b.getAttribute('data-nid'); datos.tareas.forEach(function(t){ if (t.id === id) t.n = (t.n || []).filter(function(x){ return x.i !== nid; }); }); guardar(); }
-    else if (a === 'cancelar') { salirEdicion(); $b('btT').value = ''; $b('btF').value = ''; }
+    else if (a === 'cancelar') { salirEdicion(); $b('btT').value = ''; $b('btF').value = ''; $b('btR').value = ''; }
     else if (a === 'fil') { filtro = b.getAttribute('data-v'); pintar(); }
     else if (a === 'edit') {
       var t = datos.tareas.filter(function(x){ return x.id === id; })[0]; if (!t) return;
-      editId = id; $b('btT').value = t.t; $b('btE').value = t.e; $b('btS').value = t.s || ''; $b('btF').value = t.f || '';
+      editId = id; $b('btT').value = t.t; $b('btE').value = t.e; $b('btS').value = t.s || ''; $b('btF').value = t.f || ''; $b('btR').value = t.r || '';
       $b('btAdd').textContent = 'Guardar cambios'; $b('btCan').style.display = ''; $b('btTitForm').textContent = 'Editando tarea';
       $b('btT').focus(); $b('btT').scrollIntoView({behavior:'smooth', block:'center'});
     }
@@ -3966,7 +3986,19 @@ ponerBanner();
     var el = e.target, a = el.getAttribute('data-a'); if (!datos) return;
     if (el.id === 'btComp') { datos.compartir = el.checked; if (!el.checked) quitarResumen(); guardar(); return; }
     if (a === 'chk') {
-      datos.tareas.forEach(function(t){ if (t.id === el.getAttribute('data-id')) { t.d = el.checked; t.x = el.checked ? Date.now() : 0; } });
+      var nuevas = [];
+      datos.tareas.forEach(function(t){
+        if (t.id !== el.getAttribute('data-id')) return;
+        t.d = el.checked; t.x = el.checked ? Date.now() : 0;
+        if (el.checked && t.r && !t.sig) {
+          var nf = siguiente(t), nt = {id:uid(), t:t.t, e:t.e, s:t.s, f:nf, v:nf, r:t.r, d:false, c:Date.now()};
+          nuevas.push(nt); t.sig = nt.id; msgExtra = 'se repetirá el ' + corta(nf);
+        } else if (!el.checked && t.sig) {
+          var sg = t.sig; delete t.sig;
+          datos.tareas = datos.tareas.filter(function(x){ return !(x.id === sg && !x.d); });   /* ya no hace falta la repetición */
+        }
+      });
+      nuevas.forEach(function(x){ datos.tareas.push(x); });
       if (editId === el.getAttribute('data-id')) salirEdicion();
       guardar();
     } else if (a === 'ren') {
